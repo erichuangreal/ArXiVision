@@ -1,0 +1,56 @@
+[
+  {
+    "query": "How many rated critiques are included in the conceptual arguments dataset?",
+    "expected_paper": "2607.27499v1",
+    "expected_pages": [3],
+    "ground_truth": "The dataset contains 951 rated critiques."
+  },
+  {
+    "query": "What dimensions are used to rate critiques in the conceptual arguments dataset?",
+    "expected_paper": "2607.27499v1",
+    "expected_pages": [3, 24],
+    "ground_truth": "Critiques are rated on centrality, strength, correctness, clarity, dead weight, single issue, and an overall holistic rating."
+  },
+  {
+    "query": "What is the weighted pairwise ranking error rate used to evaluate models?",
+    "expected_paper": "2607.27499v1",
+    "expected_pages": [7, 18],
+    "ground_truth": "On each position the metric takes the proportion of comparisons between critiques that the model ranks wrongly, weighted by the difference in the human ratings for those critiques, averaged over pairs and then over positions. It only measures whether the model can tell which of two critiques is better, not absolute quality."
+  },
+  {
+    "query": "Which safety properties do public service AI governance frameworks foreground?",
+    "expected_paper": "2607.25648v1",
+    "expected_pages": [1],
+    "ground_truth": "Accuracy, bias, explainability, and accountability."
+  },
+  {
+    "query": "Why is human-in-the-loop oversight problematic for general-purpose AI performing analytical work?",
+    "expected_paper": "2607.25648v1",
+    "expected_pages": [1, 11],
+    "ground_truth": "Human oversight works for narrow AI because the tool is built for a role the human can already oversee. For many tasks general-purpose AI is proposed to perform, the principle is conceptually incoherent: meaningful review would require the human to do the analytical work themselves."
+  },
+  {
+    "query": "What did the bibliometric pilot find about independent verification in alignment research?",
+    "expected_paper": "2607.24243v1",
+    "expected_pages": [6],
+    "ground_truth": "Independent verification (marker E3) was present in 0.0% of the ten papers coded (95% CI 0.0-27.8%); none cited an independent replication, third-party audit, or external red-team study of the central claim."
+  },
+  {
+    "query": "What is the primary governance target of ECAISA?",
+    "expected_paper": "2607.24243v1",
+    "expected_pages": [1, 16],
+    "ground_truth": "Auditability rather than certification. ECAISA does not certify that a system is safe; it specifies the conditions under which a safety claim can be independently reconstructed, contested, and updated."
+  },
+  {
+    "query": "What accuracy does ResNet-50 achieve on the ImageNet benchmark according to these papers?",
+    "answerable": false
+  },
+  {
+    "query": "What do these papers say about using CRISPR for gene editing?",
+    "answerable": false
+  },
+  {
+    "query": "How do these papers recommend configuring Kubernetes autoscaling for model serving?",
+    "answerable": false
+  }
+]

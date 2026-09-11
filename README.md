@@ -61,10 +61,31 @@ flowchart TD
         I --> J
         J --> K
     end
+```
 
+# Evaluation
+
+`evaluate_results.py` scores the system against `evaluation_questions.json`.
+
+**Retrieval** (metadata only, no model calls): Hit@1, Hit@4, paper-level Hit@4, and MRR@4.
+
+**Grounding** (deterministic — parses the answer text and compares it to the chunks that were actually retrieved, so no model can hallucinate its way to a pass):
+- *citation validity* — every arXiv ID and page number cited was really retrieved. This catches invented sources.
+- *citation correctness* — the cited page is one of the pages that actually contains the answer.
+- *numeric grounding* — every figure quoted in the answer appears in the retrieved text. Catches altered statistics.
+- *name grounding* — every person named appears in the retrieved text. Catches invented attribution.
+- *citation coverage* — how many asserting sentences carry a citation, since the prompt requires one per claim.
+
+**Abstention**: unanswerable questions (marked `"answerable": false`) should be refused, and answerable ones should not be. Both directions are measured, because a system that refuses everything would otherwise score perfectly.
+
+**Judged** (LLM-as-judge): correctness, support, citation, and completeness, scored 0-2 against a human-written reference answer.
+
+Note on cosine similarity: `RAGClass.evaluate()` compares an embedding of the whole answer to an embedding of the whole ground truth. This measures whether the two are *about the same topic*, not whether the answer is true. An answer that reports a figure as 90% when the paper says 0% will still clear the 0.80 threshold, because almost every word around the number matches. Treat it as a rough smoke test for drift, not as a validity check — the grounding metrics above are the ones that actually detect hallucinated facts and citations.
+
+Sample size note: with a handful of questions, one question is worth double-digit percentage points. Differences between runs are noise until the question set is much larger.
 
 Model Reliability Note
 
 Smaller or weaker language models may misinterpret retrieved chunks, give too much weight to less relevant evidence, or make claims that are not fully supported by the provided text. RAG reduces hallucination by grounding the model in retrieved sources, but it does not eliminate hallucinations.
 
-Testing has confirmed that models like gpt-nano and deepseek-v4-flash extract data from the wrong chunks. Currently the model is set to use gpt-4.
+Testing has confirmed that models like gpt-nano and deepseek-v4-flash extract data from the wrong chunks. Currently the model is set to use gpt-4. Switched to gpt-5-nano for testing.
