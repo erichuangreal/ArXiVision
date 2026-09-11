@@ -1,4 +1,5 @@
 import numpy as np
+import hashlib
 import json
 import re
 from langchain_core.documents import Document
@@ -12,9 +13,15 @@ from langchain_classic.chains.combine_documents import create_stuff_documents_ch
 from langchain_core.runnables import RunnableLambda
 from pathlib import Path
 
+EMBEDDING_MODEL = "text-embedding-3-small"
+
+
 class RAGClass:
-    def __init__(self, data_path) :
+    def __init__(self, data_path, persist_directory="chroma_store") :
         self.data_path = Path(data_path)
+        self.persist_directory = Path(persist_directory)
+        self.chunk_size = None
+        self.chunk_overlap = None
         self.documents = []
         self.text_chunks = []
         self.vectorstore = None
@@ -76,14 +83,77 @@ class RAGClass:
         return self.documents
     
     def split_documents(self, chunk_size=500, chunk_overlap=50):
+        self.chunk_size = chunk_size
+        self.chunk_overlap = chunk_overlap
         text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
         self.text_chunks = text_splitter.split_documents(self.documents)
         print(f"Split documents into {len(self.text_chunks)} chunks.")
-            
-    def create_vectorstore(self):
-        self.embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
-        self.vectorstore = Chroma.from_documents(self.text_chunks, embedding=self.embeddings)
+
+    def fingerprint(self):
+        # Identifies the corpus, chunking, and model behind a store, so a stale
+        # one is rebuilt rather than silently serving outdated chunks.
+        chunk_digests = sorted(
+            hashlib.sha256(
+                (chunk.page_content + repr(sorted(chunk.metadata.items()))).encode("utf-8")
+            ).hexdigest()
+            for chunk in self.text_chunks
+        )
+        header = f"{EMBEDDING_MODEL}|{self.chunk_size}|{self.chunk_overlap}|{len(chunk_digests)}"
+        return hashlib.sha256(
+            (header + "".join(chunk_digests)).encode("utf-8")
+        ).hexdigest()
+
+    def load_vectorstore(self, fingerprint_path, fingerprint):
+        # Returns a stored vectorstore only if it matches and is non-empty.
+        if not fingerprint_path.exists():
+            return None
+        if fingerprint_path.read_text(encoding="utf-8").strip() != fingerprint:
+            print("Corpus, chunking, or embedding model changed. Rebuilding.")
+            return None
+
+        vectorstore = Chroma(
+            persist_directory=str(self.persist_directory),
+            embedding_function=self.embeddings
+        )
+        if not vectorstore.get(limit=1)["ids"]:
+            print("Stored vectorstore is empty. Rebuilding.")
+            return None
+        return vectorstore
+
+    def create_vectorstore(self, rebuild=False):
+        if not self.text_chunks:
+            raise ValueError("No chunks to embed. Call split_documents() first.")
+
+        self.embeddings = OpenAIEmbeddings(model=EMBEDDING_MODEL)
+        fingerprint = self.fingerprint()
+        fingerprint_path = self.persist_directory / "fingerprint.txt"
+
+        if not rebuild:
+            self.vectorstore = self.load_vectorstore(fingerprint_path, fingerprint)
+            if self.vectorstore is not None:
+                print(f"Loaded vectorstore from {self.persist_directory} (no re-embedding).")
+                return self.vectorstore
+
+        # Drop the collection rather than the files: Chroma caches an open client
+        # per directory, and deleting the database under it turns it readonly.
+        # Cleared first so a crash mid-build cannot leave a matching fingerprint.
+        fingerprint_path.unlink(missing_ok=True)
+        if (self.persist_directory / "chroma.sqlite3").exists():
+            Chroma(
+                persist_directory=str(self.persist_directory),
+                embedding_function=self.embeddings
+            ).delete_collection()
+        self.persist_directory.mkdir(parents=True, exist_ok=True)
+
+        print(f"Embedding {len(self.text_chunks)} chunks into {self.persist_directory}...")
+        self.vectorstore = Chroma.from_documents(
+            self.text_chunks,
+            embedding=self.embeddings,
+            persist_directory=str(self.persist_directory)
+        )
+        fingerprint_path.write_text(fingerprint, encoding="utf-8")
         print("Vectorstore created with embeddings.")
+        return self.vectorstore
 
     def setup_retriever(self):
         if self.vectorstore is None:
