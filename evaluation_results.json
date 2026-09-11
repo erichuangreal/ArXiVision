@@ -1,0 +1,94 @@
+{
+  "summary": {
+    "retrieval": {
+      "hit@1": 0.8571428571428571,
+      "hit@4": 1.0,
+      "paper_hit@4": 1.0,
+      "mrr@4": 0.9285714285714286
+    },
+    "grounding": {
+      "answers_citing_anything": 1.0,
+      "citation_validity": 1.0,
+      "citation_correctness": 1.0,
+      "citation_coverage": 1.0,
+      "numeric_grounding": 1.0,
+      "name_grounding": 1.0
+    },
+    "abstention": {
+      "abstention_rate": 0.3333333333333333,
+      "false_refusal_rate": 0.0
+    }
+  },
+  "questions": [
+    {
+      "query": "How many rated critiques are included in the conceptual arguments dataset?",
+      "answer": "951 rated critiques. Source: A dataset of rated conceptual arguments, Page 3 (Table 1 overview).",
+      "abstained": false,
+      "citations_valid": true,
+      "citations_correct": true,
+      "ungrounded_numbers": [],
+      "ungrounded_names": [],
+      "claims_cited": "1/1"
+    },
+    {
+      "query": "What dimensions are used to rate critiques in the conceptual arguments dataset?",
+      "answer": "The critiques are rated on seven dimensions: centrality, strength, correctness, clarity, dead weight, single-issue focus (extent to which the critique focuses on a single issue), and an overall score (holistic rating). All seven are scored from zero to one. (Paper: A dataset of rated conceptual arguments, Page 24)",
+      "abstained": false,
+      "citations_valid": true,
+      "citations_correct": true,
+      "ungrounded_numbers": [],
+      "ungrounded_names": [],
+      "claims_cited": "3/3"
+    },
+    {
+      "query": "What is the weighted pairwise ranking error rate used to evaluate models?",
+      "answer": "- The weighted pairwise ranking error rate is a loss that measures how often a model gets the relative ordering of two critiques wrong, but this loss is weighted by how much the human distinguishes those two critiques. (Cooper et al., page 18)\n\n- Example: if two critiques i and j have human scores 0.45 and 0.43, respectively, the loss is 0.02 if the model ranks j over i, 0.01 if the model is indifferent, and 0 otherwise (i.e., if the model ranks i over j). In general, the loss is ra,iovr \u2212 ra,jovr when the model disagrees with the human preference, 0 when it agrees, and (\u02c6ra,iovr \u2212 \u02c6ra,jovr)/2 when the model is indifferent. (Cooper et al., page 18)\n\n- This metric is used to produce model rankings; for example, Table 5 reports a ranking of models using the weighted pairwise ranking error rate (loss aggregated across 255 arguments and 856 critique pairs). (Cooper et al., page 10)",
+      "abstained": false,
+      "citations_valid": true,
+      "citations_correct": true,
+      "ungrounded_numbers": [],
+      "ungrounded_names": [],
+      "claims_cited": "4/4"
+    },
+    {
+      "query": "Which safety properties do public service AI governance frameworks foreground?",
+      "answer": "- Accuracy. (Relins & Birks, 2026, p.1)\n- Bias. (Relins & Birks, 2026, p.1)\n- Explainability. (Relins & Birks, 2026, p.1)\n- Accountability. (Relins & Birks, 2026, p.1)",
+      "abstained": false,
+      "citations_valid": true,
+      "citations_correct": true,
+      "ungrounded_numbers": [],
+      "ungrounded_names": [],
+      "claims_cited": "4/4"
+    },
+    {
+      "query": "Why is human-in-the-loop oversight problematic for general-purpose AI performing analytical work?",
+      "answer": "- Because general-purpose AI automates the human\u2019s analytical work, its outputs become extended analyses rather than discrete results. Verifying a potential error requires the reviewer to know or derive the correct analysis themselves, effectively forcing them to replicate the system\u2019s work. If the reviewer could produce the correct analysis, the system\u2019s contribution would be redundant; if they cannot, meaningful verification becomes replicating the system\u2019s analysis. This makes human-in-the-loop oversight incoherent: the level of automation promised is achievable only if human oversight is relaxed, but genuine oversight requires time, attention, and expertise that such adoption is supposed to free up. (Relins & Birks, 2024, p. 11)\n\n- The authors also emphasize that for GPAI, this mismatch undermines the safety benefits of oversight, since the very act of oversight would entail redoing the analytical work the GPAI performed. (Relins & Birks, 2024, p. 11)",
+      "abstained": false,
+      "citations_valid": true,
+      "citations_correct": true,
+      "ungrounded_numbers": [],
+      "ungrounded_names": [],
+      "claims_cited": "7/7"
+    },
+    {
+      "query": "What did the bibliometric pilot find about independent verification in alignment research?",
+      "answer": "The bibliometric pilot found that independent verification was absent in every paper coded; none cited independent replication, a third-party audit, or an external red-team study of its central claim. Even allowing for the small sample, the upper Wilson bound is 27.8%, which the author notes is sufficient to establish that this practice cannot be common in alignment research. This supports the view that institutionalized independent verification is largely absent from the field. [Navaie, 2607.24243v1, page 6]",
+      "abstained": false,
+      "citations_valid": true,
+      "citations_correct": true,
+      "ungrounded_numbers": [],
+      "ungrounded_names": [],
+      "claims_cited": "4/4"
+    },
+    {
+      "query": "What is the primary governance target of ECAISA?",
+      "answer": "Auditability. ECAISA targets auditability\u2014specifying the conditions under which a safety claim can be independently reconstructed, contested, and updated\u2014rather than certification (page 16).",
+      "abstained": false,
+      "citations_valid": true,
+      "citations_correct": true,
+      "ungrounded_numbers": [],
+      "ungrounded_names": [],
+      "claims_cited": "1/1"
+    }
+  ]
+}

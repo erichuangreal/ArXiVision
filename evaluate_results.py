@@ -69,9 +69,8 @@ def is_expected(doc, test):
 
 
 # 1. Retrieval
-# Did the retriever put the right chunk in front of the model? Nothing here
-# calls the answering model, so this section isolates retrieval failures from
-# generation failures. If Hit@4 is low, no prompt change will fix the answers.
+# No model call here, so retrieval failures stay separate from generation ones.
+# If Hit@4 is low, no prompt change will fix the answers.
 
 def evaluate_retrieval(rag, tests):
     hits_at_1 = 0
@@ -215,9 +214,8 @@ def check_citations(answer, docs, test):
     invalid_ids = cited_ids - retrieved_ids
     invalid_pages = cited_pages - retrieved_pages
 
-    # Note: IDs and pages are checked as separate sets rather than as pairs,
-    # because the model writes citations in free prose and pairing them up
-    # reliably is not worth the parsing.
+    # Checked as separate sets, not pairs: the model cites in free prose and
+    # pairing IDs to pages reliably is not worth the parsing.
     valid = not invalid_ids and not invalid_pages
     cited_anything = bool(cited_ids or cited_pages)
 
@@ -258,10 +256,8 @@ def check_numbers(answer, context_text):
 
 
 def check_names(answer, context_text, known_authors):
-    # Two probes: any author from the corpus named in the answer must appear in
-    # the retrieved text, and any other title-case name-like phrase must too.
-    # The second probe is a heuristic and will occasionally flag a phrase that
-    # is not a person, so treat "missing" as a prompt to look, not a verdict.
+    # Corpus authors and title-case phrases must both appear in the retrieved
+    # text. The second probe is a heuristic, so treat "missing" as a prompt to look.
     candidates = set()
 
     for author in known_authors:
@@ -284,25 +280,61 @@ def check_names(answer, context_text, known_authors):
     return found, missing
 
 
+# A blank line, bullet, or numbered item starts a block. The model cites once per
+# block, so the block is the unit a citation covers.
+BLOCK_PATTERN = re.compile(r"\n\s*\n|\n(?=\s*(?:[-*•]|\d+[.)]\s))")
+
+
+def split_offsets(text, pattern):
+    # Returns (start, end) ranges rather than substrings, so citation positions
+    # found in the full answer can be matched back against each range.
+    cuts = (
+        [0]
+        + [match.end() for match in pattern.finditer(text)]
+        + [len(text)]
+    )
+    return list(zip(cuts, cuts[1:]))
+
+
+SENTENCE_PATTERN = re.compile(r"(?<=[.!?])\s+")
+
+
 def check_citation_coverage(answer):
     # The system prompt asks for a citation on every factual claim. This counts
-    # how many asserting sentences actually carry one.
-    sentences = [s.strip() for s in re.split(r"(?<=[.!?])\s+", answer) if s.strip()]
+    # how many asserting sentences sit under one.
+    _, _, spans = extract_citations(answer)
+
+    # Both splits run on a masked copy so the period in "p. 11" is not read as a
+    # sentence end, which would sever every citation from the claim it supports.
+    masked = mask_spans(answer, spans)
 
     claims = 0
     cited = 0
     uncited = []
 
-    for sentence in sentences:
-        # Skip very short fragments and refusals, which assert nothing.
-        if len(sentence) < 25 or looks_like_abstention(sentence):
-            continue
-        claims += 1
-        ids, pages, _ = extract_citations(sentence)
-        if ids or pages:
-            cited += 1
-        else:
-            uncited.append(sentence)
+    for block_start, block_end in split_offsets(masked, BLOCK_PATTERN):
+        # A trailing citation covers every claim in its bullet. Charging each
+        # sentence separately caps a well-cited answer at roughly a third.
+        block_cited = any(
+            s < block_end and e > block_start for s, e in spans
+        )
+
+        block = masked[block_start:block_end]
+        for offset_start, offset_end in split_offsets(block, SENTENCE_PATTERN):
+            sentence = answer[
+                block_start + offset_start:block_start + offset_end
+            ].strip()
+
+            # Skip very short fragments, bare citations, and refusals, which
+            # assert nothing.
+            if len(sentence) < 25 or looks_like_abstention(sentence):
+                continue
+
+            claims += 1
+            if block_cited:
+                cited += 1
+            else:
+                uncited.append(sentence)
 
     return claims, cited, uncited
 
@@ -316,10 +348,14 @@ def collect_authors(paper_metadata):
 
 
 def format_context(docs):
+    # Must mirror the document_prompt in RAGClass.setup_qa_chain: the model sees
+    # title and authors too, so grounding has to be checked against the same text.
     parts = []
     for doc in docs:
         parts.append(
-            f"[{doc.metadata.get('arxiv_id')} page {doc.metadata.get('page_number')}] "
+            f"[{doc.metadata.get('arxiv_id')} page {doc.metadata.get('page_number')}]\n"
+            f"Paper: {doc.metadata.get('title')}\n"
+            f"Authors: {doc.metadata.get('authors')}\n\n"
             f"{doc.page_content}"
         )
     return "\n\n".join(parts)
