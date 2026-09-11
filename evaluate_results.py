@@ -138,8 +138,9 @@ PAGE_PATTERN = re.compile(
 # Numbers, with optional decimal part, thousands separators and percent sign.
 NUMBER_PATTERN = re.compile(r"\d+(?:,\d{3})*(?:\.\d+)?%?")
 
-# Title-case sequences of two or more words, used as a rough person-name probe.
-NAME_PATTERN = re.compile(r"\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+\b")
+# Spaces only, not \s: across a newline this glued a bullet's last word to the
+# next block's first word and reported the pair as an ungrounded name.
+NAME_PATTERN = re.compile(r"\b[A-Z][a-z]+(?:[ ]+[A-Z][a-z]+)+\b")
 
 # Title-case phrases that are common in this domain and are not people.
 NAME_STOPWORDS = {
@@ -149,26 +150,32 @@ NAME_STOPWORDS = {
     "Table", "Section", "Figure", "Appendix", "Page"
 }
 
-ABSTENTION_MARKERS = [
-    "do not contain enough information",
-    "does not contain enough information",
-    "not contain enough information",
-    "insufficient information",
-    "not enough information",
-    "do not contain",
-    "does not contain",
-    "cannot answer",
-    "can't answer",
-    "no information",
-    "not addressed",
-    "not discussed",
-    "not mentioned",
-]
+# A refusal is a source word near a negated reporting verb. Matching stems this
+# way catches "do not discuss", which a fixed phrase list missed.
+SOURCE_WORDS = r"(?:papers?|context|sources?|documents?|excerpts?|text)"
+NEGATIONS = (
+    r"(?:do(?:es)?\s+not|do\s?n'?t|does\s?n'?t|did\s+not|cannot|can'?t"
+    r"|lack\w*|contain\s+no|provide\s+no|include\s+no)"
+)
+REPORTING_VERBS = (
+    r"(?:contain|discuss|mention|address|provide|cover|include|report"
+    r"|specify|state|say|give|offer|answer)"
+)
+
+ABSTENTION_PATTERN = re.compile(
+    rf"\b{SOURCE_WORDS}\b[^.!?]{{0,60}}?\b{NEGATIONS}\s+(?:\w+\s+){{0,2}}{REPORTING_VERBS}\b"
+    rf"|\b{NEGATIONS}\s+(?:\w+\s+){{0,3}}\b{SOURCE_WORDS}\b"
+    rf"|\b(?:insufficient|not\s+enough|no)\s+(?:relevant\s+)?information\b"
+    rf"|\b(?:cannot|can'?t|unable\s+to)\s+(?:be\s+)?(?:answer|determine|establish)",
+    re.IGNORECASE
+)
 
 
 def looks_like_abstention(answer):
-    lowered = answer.lower()
-    return any(marker in lowered for marker in ABSTENTION_MARKERS)
+    # Only the opening block: a refusal leads, while a real answer may note what
+    # a paper "does not discuss" partway through and is not a refusal.
+    head = re.split(r"\n\s*\n", answer.strip())[0]
+    return bool(ABSTENTION_PATTERN.search(head))
 
 
 def normalise_number(token):
