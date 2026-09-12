@@ -158,37 +158,33 @@ def split_offsets(text, pattern):
     return list(zip(cuts, cuts[1:]))
 
 
-SENTENCE_PATTERN = re.compile(r"(?<=[.!?])\s+")
+def iter_claim_blocks(answer):
+    # One claim inventory shared by coverage and support checks, so their
+    # denominators agree instead of counting sentences vs. bullets separately.
+    _, _, spans = extract_citations(answer)
+    masked = mask_spans(answer, spans)
+
+    for block_start, block_end in split_offsets(masked, BLOCK_PATTERN):
+        block = answer[block_start:block_end].strip()
+        if is_claim(block):
+            yield block
 
 
 def check_citation_coverage(answer):
     # Share of claims sitting under a citation. One citation covers the answer.
     _, _, spans = extract_citations(answer)
-
     answer_cited = bool(spans)
-
-    # Split on a masked copy so the period in "p. 11" is not a sentence end.
-    masked = mask_spans(answer, spans)
 
     claims = 0
     cited = 0
     uncited = []
 
-    for block_start, block_end in split_offsets(masked, BLOCK_PATTERN):
-        block = masked[block_start:block_end]
-        for offset_start, offset_end in split_offsets(block, SENTENCE_PATTERN):
-            sentence = answer[
-                block_start + offset_start:block_start + offset_end
-            ].strip()
-
-            if not is_claim(sentence):
-                continue
-
-            claims += 1
-            if answer_cited:
-                cited += 1
-            else:
-                uncited.append(sentence)
+    for block in iter_claim_blocks(answer):
+        claims += 1
+        if answer_cited:
+            cited += 1
+        else:
+            uncited.append(block)
 
     return claims, cited, uncited
 
@@ -220,24 +216,22 @@ def claim_anchors(text):
 
 def check_claim_support(answer, docs):
     # Checks each claim against the page it cites, catching misattribution.
-    _, _, spans = extract_citations(answer)
-    masked = mask_spans(answer, spans)
-
-    total = 0
+    # Uses the same claim inventory as check_citation_coverage, and reports a
+    # claim with no checkable facts (no numbers/acronyms/proper nouns) as
+    # "not applicable" rather than silently excluding it from the count —
+    # otherwise "0/0" reads as a pass instead of "nothing to check."
+    assessed = 0
     supported = 0
+    not_applicable = 0
     weak = []
 
-    for block_start, block_end in split_offsets(masked, BLOCK_PATTERN):
-        block = answer[block_start:block_end].strip()
-        if not is_claim(block):
-            continue
-
+    for block in iter_claim_blocks(answer):
         _, cited_pages, _ = extract_citations(block)
         if cited_pages:
             scoped = [d for d in docs if d.metadata.get("page_number") in cited_pages]
             # A page never retrieved supports nothing; no fallback.
             if not scoped:
-                total += 1
+                assessed += 1
                 weak.append({
                     "claim": block[:120],
                     "missing": ["<cites unretrieved page>"]
@@ -249,19 +243,20 @@ def check_claim_support(answer, docs):
 
         anchors = claim_anchors(block)
         if not anchors:
+            not_applicable += 1
             continue
 
         lowered = source.lower()
         missing = [a for a in sorted(anchors) if a not in lowered]
         score = (len(anchors) - len(missing)) / len(anchors)
 
-        total += 1
+        assessed += 1
         if score >= SUPPORT_THRESHOLD:
             supported += 1
         else:
             weak.append({"claim": block[:120], "missing": missing[:6]})
 
-    return total, supported, weak
+    return assessed, supported, not_applicable, weak
 
 
 def collect_authors(paper_metadata):
@@ -296,8 +291,9 @@ def evaluate_grounding(rag, tests, known_authors):
     grounded_names = 0
     total_claims = 0
     cited_claims = 0
-    total_supported = 0
+    total_assessed = 0
     supported_claims = 0
+    total_not_applicable = 0
 
     per_question = []
 
@@ -311,7 +307,7 @@ def evaluate_grounding(rag, tests, known_authors):
         numbers_found, numbers_missing = check_numbers(answer, context_text)
         names_found, names_missing = check_names(answer, context_text, known_authors)
         claims, cited, uncited = check_citation_coverage(answer)
-        n_claims, n_supported, weak = check_claim_support(answer, docs)
+        n_assessed, n_supported, n_not_applicable, weak = check_claim_support(answer, docs)
 
         if citations["cited_anything"]:
             answers_with_citations += 1
@@ -326,8 +322,9 @@ def evaluate_grounding(rag, tests, known_authors):
         grounded_names += len(names_found)
         total_claims += claims
         cited_claims += cited
-        total_supported += n_claims
+        total_assessed += n_assessed
         supported_claims += n_supported
+        total_not_applicable += n_not_applicable
 
         per_question.append({
             "query": test["query"],
@@ -338,7 +335,8 @@ def evaluate_grounding(rag, tests, known_authors):
             "ungrounded_numbers": numbers_missing,
             "ungrounded_names": names_missing,
             "claims_cited": f"{cited}/{claims}",
-            "claims_supported": f"{n_supported}/{n_claims}",
+            "claims_supported": f"{n_supported}/{n_assessed}",
+            "claims_not_applicable": n_not_applicable,
             "weak_claims": weak
         })
 
@@ -351,7 +349,8 @@ def evaluate_grounding(rag, tests, known_authors):
             "\nUngrounded numbers:", numbers_missing,
             "\nUngrounded names:", names_missing,
             "\nClaims cited:", f"{cited}/{claims}",
-            "\nClaims supported by their cited page:", f"{n_supported}/{n_claims}",
+            "\nClaims supported by their cited page:", f"{n_supported}/{n_assessed}",
+            "| not applicable (no checkable facts):", n_not_applicable,
             "\nWeakly supported:", weak,
             "\nUncited claims:", uncited
         )
@@ -368,7 +367,8 @@ def evaluate_grounding(rag, tests, known_authors):
             if answers_with_citations else 0.0
         ),
         "citation_coverage": cited_claims / total_claims if total_claims else 0.0,
-        "claim_support": supported_claims / total_supported if total_supported else 1.0,
+        "claim_support": supported_claims / total_assessed if total_assessed else 1.0,
+        "claims_not_applicable": total_not_applicable,
         "numeric_grounding": grounded_numbers / total_numbers if total_numbers else 1.0,
         "name_grounding": grounded_names / total_names if total_names else 1.0
     }

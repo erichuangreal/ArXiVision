@@ -223,6 +223,10 @@ class RAGClass:
                 For every factual claim:
                 - It must be supported by the retrieved context.
                 - Cite the corresponding source with page numbers.
+                - Keep any scope or sample-size qualifier the source itself
+                  states (e.g. "in this pilot of 10 papers", "on short
+                  documents only"). Do not generalize a finding past the
+                  scope the source claims for it.
 
                 If a claim cannot be supported by the retrieved context,
                 do not include it.
@@ -231,8 +235,11 @@ class RAGClass:
                 the question at all, make the first line of your reply exactly """
                 + ABSTENTION_SENTINEL
                 + """
-                and then say briefly what is missing. If you can answer the
-                question, even partly, answer it and never write """
+                and then say briefly what is missing. Phrase this as a gap in
+                what was retrieved ("the retrieved passages don't address..."),
+                not as a claim about what the papers do or don't contain overall,
+                since you only see a retrieved subset of each paper. If you can
+                answer the question, even partly, answer it and never write """
                 + ABSTENTION_SENTINEL
                 + """ anywhere in your reply.
 

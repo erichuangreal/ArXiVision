@@ -1,29 +1,30 @@
 {
   "summary": {
     "retrieval": {
-      "hit@1": 0.8571428571428571,
+      "hit@1": 0.7777777777777778,
       "hit@4": 1.0,
       "paper_hit@4": 1.0,
-      "mrr@4": 0.9285714285714286
+      "mrr@4": 0.8703703703703703
     },
     "grounding": {
       "answers_citing_anything": 1.0,
       "citation_validity": 1.0,
-      "citation_correctness": 1.0,
+      "citation_correctness": 0.7777777777777778,
       "citation_coverage": 1.0,
       "claim_support": 1.0,
+      "claims_not_applicable": 7,
       "numeric_grounding": 1.0,
       "name_grounding": 1.0
     },
     "abstention": {
-      "abstention_rate": 1.0,
+      "abstention_rate": 0.75,
       "false_refusal_rate": 0.0
     }
   },
   "questions": [
     {
       "query": "How many rated critiques are included in the conceptual arguments dataset?",
-      "answer": "951 rated critiques. (Paper: A dataset of rated conceptual arguments, Page 3)",
+      "answer": "951 rated critiques.\n\nSource: A dataset of rated conceptual arguments, Page 3 (Table 1 and the surrounding text).",
       "abstained": false,
       "citations_valid": true,
       "citations_correct": true,
@@ -31,11 +32,12 @@
       "ungrounded_names": [],
       "claims_cited": "1/1",
       "claims_supported": "1/1",
+      "claims_not_applicable": 0,
       "weak_claims": []
     },
     {
       "query": "What dimensions are used to rate critiques in the conceptual arguments dataset?",
-      "answer": "- centrality (how central the issue attacked by the critique is to the position text)\n- strength (how successfully the critique attacks these issues)\n- correctness (to what extent the critique makes correct claims)\n- clarity (how unambiguous the critique is after careful reading)\n- dead weight (how much of the critique is unrelated to criticizing the position text)\n- single issue (extent the critique focuses on a single issue)\n- holistic overall rating (overall evaluation)\n\n(Source: A dataset of rated conceptual arguments, Page 3)",
+      "answer": "- centrality\n- strength\n- correctness\n- clarity\n- dead weight\n- single issue\n- holistic overall rating\n\n(Source: A dataset of rated conceptual arguments, Page 3)",
       "abstained": false,
       "citations_valid": true,
       "citations_correct": true,
@@ -43,23 +45,12 @@
       "ungrounded_names": [],
       "claims_cited": "7/7",
       "claims_supported": "0/0",
+      "claims_not_applicable": 7,
       "weak_claims": []
     },
     {
       "query": "What is the weighted pairwise ranking error rate used to evaluate models?",
-      "answer": "It is a refinement of the pairwise ranking error rate that weights the model\u2019s errors by the magnitude of the human\u2019s rating differences between the two critiques. For example, if two critiques i and j have human scores 0.45 and 0.43, a wrong model preference yields a loss of 0.02, a tie yields 0.01, and a correct preference yields 0. The general form is: the loss is ra,i ov r in case of disagreement with the human preference, 0 in case of agreement, and (\u02c6ra,i ov r)/2 in case the model is indifferent. (Paper: A dataset of rated conceptual arguments, Page 18)",
-      "abstained": false,
-      "citations_valid": true,
-      "citations_correct": true,
-      "ungrounded_numbers": [],
-      "ungrounded_names": [],
-      "claims_cited": "3/3",
-      "claims_supported": "1/1",
-      "weak_claims": []
-    },
-    {
-      "query": "Which safety properties do public service AI governance frameworks foreground?",
-      "answer": "The safety properties foregrounded are: accuracy, bias, explainability, and accountability. (Relins & Birks, 2026, p. 1)",
+      "answer": "- The weighted pairwise ranking error rate is a loss that weights each model disagreement by how far apart the human ratings are for the two critiques. For example, if the human scores two critiques i and j as 0.45 and 0.43, the loss is 0.02 if the model ranks j over i, 0.01 if the model is indifferent, and 0 if the model ranks i and j in the same order as the human. More generally, the loss is |ra,i - ra,j| when the model disagrees with the human preference, 0 when it agrees, and (|ra,i - ra,j|)/2 when the model is indifferent. The final metric is the average of these losses across pairs of critiques within the same position (and then across positions) [Paper: A dataset of rated conceptual arguments, Page 18].",
       "abstained": false,
       "citations_valid": true,
       "citations_correct": true,
@@ -67,61 +58,110 @@
       "ungrounded_names": [],
       "claims_cited": "1/1",
       "claims_supported": "1/1",
+      "claims_not_applicable": 0,
       "weak_claims": []
     },
     {
-      "query": "Why is human-in-the-loop oversight problematic for general-purpose AI performing analytical work?",
-      "answer": "- Because general-purpose AI automates the human analyst\u2019s reasoning, the traditional human-in-the-loop division collapses. The system produces an extended, fluent analysis rather than a simple score, so verifying its output requires the reviewer to know or derive the correct analysis themselves. If the reviewer could already do that, the AI\u2019s contribution would be redundant; if they cannot, meaningful verification means redoing the very work the system was introduced to perform. (Relins & Birks, page 11)\n\n- As a result, the common safety mitigation of human review before action becomes incoherent for GPAI tasks: the reviewer would have to evaluate and potentially correct an entire analytical output, not a discrete, checkable result. The human-in-the-loop principle is conceptually incoherent when applied to many GPAI tasks. (Relins & Birks, page 12)\n\n- Practically, the degree of automation GPAI promises is achievable only if human oversight is relaxed, but meaningful oversight requires time, attention, and expertise that adoption was supposed to free up. This tension undercuts the feasibility of effective human-in-the-loop oversight for GPAI performing analytical work. (Relins & Birks, page 12)",
-      "abstained": false,
-      "citations_valid": true,
-      "citations_correct": true,
-      "ungrounded_numbers": [],
-      "ungrounded_names": [],
-      "claims_cited": "7/7",
-      "claims_supported": "3/3",
-      "weak_claims": []
-    },
-    {
-      "query": "What did the bibliometric pilot find about independent verification in alignment research?",
-      "answer": "- The bibliometric pilot found that independent verification was absent in every paper coded. None of the ten papers cited independent replication, a third-party audit, or an external red-team study of its central claim. The observed prevalence was 0.0% (95% CI 0.0\u201327.8%). This supports the view that institutionalized independent verification is largely absent in alignment research, even in a small pilot sample. Source: Navaie, Epistemic Norms for AI Safety and Alignment Research, Page 6 (arXiv:2607.24243v1).",
+      "query": "Which safety properties do public service AI governance frameworks foreground?",
+      "answer": "- Accuracy\n- Bias\n- Explainability\n- Accountability\n\n(Relins & Birks, page 1)",
       "abstained": false,
       "citations_valid": true,
       "citations_correct": true,
       "ungrounded_numbers": [],
       "ungrounded_names": [],
       "claims_cited": "4/4",
-      "claims_supported": "1/1",
+      "claims_supported": "4/4",
+      "claims_not_applicable": 0,
       "weak_claims": []
     },
     {
-      "query": "What is the primary governance target of ECAISA?",
-      "answer": "Auditability (not certification) is the primary governance target of ECAISA. This is described as specifying conditions under which safety claims can be independently reconstructed, contested, and updated. (Navaie, Epistemic Norms for AI Safety and Alignment Research, Page 16)",
+      "query": "Why is human-in-the-loop oversight problematic for general-purpose AI performing analytical work?",
+      "answer": "- For general-purpose AI, the division of labor between human oversight and the AI collapses because the system automates the human\u2019s analytical work itself. The output becomes an extended, fluent analysis rather than a simple score, so the human is not just checking work but effectively producing the analysis. This makes traditional oversight insufficient. (Relins & Birks, p.11)\n\n- Verifying the AI\u2019s analysis would require the reviewer to replicate the very work the system performed, which undermines the point of human-in-the-loop oversight. (Relins & Birks, p.11)\n\n- There are no agreed criteria, no established methodology, and no accumulated body of findings for GPAI; questions remain open, and there isn\u2019t a ready-made practitioner community to apply reliable oversight. This destabilizes the basis for effective human-in-the-loop safeguards. (Relins & Birks, p.11)\n\n- The safety mitigation of \u201chuman-in-the-loop\u201d is conceptually incoherent for many GPAI tasks because the degree of automation these tools promise is achievable only if human oversight is relaxed. Meaningful oversight thus demands time, attention, and expertise that adoption was supposed to free up. (Relins & Birks, p.12)",
       "abstained": false,
       "citations_valid": true,
       "citations_correct": true,
       "ungrounded_numbers": [],
       "ungrounded_names": [],
-      "claims_cited": "2/2",
+      "claims_cited": "4/4",
+      "claims_supported": "4/4",
+      "claims_not_applicable": 0,
+      "weak_claims": []
+    },
+    {
+      "query": "What did the bibliometric pilot find about independent verification in alignment research?",
+      "answer": "- The bibliometric pilot found that independent verification was absent in every paper coded. None of the ten papers cited independent replication, a third-party audit, or an external red-team study of its central claim. (Navaie, Epistemic Norms for AI Safety and Alignment Research, p. 6) \n\n- The pilot reported E3 (independent verification) at 0.0% prevalence with a 95% CI of 0.0\u201327.8% (n = 10). (Navaie, p. 6)\n\n- The text notes that the upper Wilson bound of 27.8% is sufficient to establish that the practice cannot be common in alignment research under favorable assumptions about under-counting. (Navaie, p. 6)",
+      "abstained": false,
+      "citations_valid": true,
+      "citations_correct": true,
+      "ungrounded_numbers": [],
+      "ungrounded_names": [],
+      "claims_cited": "3/3",
+      "claims_supported": "3/3",
+      "claims_not_applicable": 0,
+      "weak_claims": []
+    },
+    {
+      "query": "What is the primary governance target of ECAISA?",
+      "answer": "Auditability. ECAISA targets auditability rather than certification as its primary governance target. (Navaie, Epistemic Norms for AI Safety and Alignment Research, Page 16)",
+      "abstained": false,
+      "citations_valid": true,
+      "citations_correct": true,
+      "ungrounded_numbers": [],
+      "ungrounded_names": [],
+      "claims_cited": "1/1",
       "claims_supported": "1/1",
+      "claims_not_applicable": 0,
+      "weak_claims": []
+    },
+    {
+      "query": "How many papers were double-coded to check inter-rater reliability for the independent-verification marker in the alignment research pilot?",
+      "answer": "Three papers were double-coded (n = 3) to check inter-rater reliability. (Navaie, Epistemic Norms for AI Safety and Alignment Research, page 22).",
+      "abstained": false,
+      "citations_valid": true,
+      "citations_correct": false,
+      "ungrounded_numbers": [],
+      "ungrounded_names": [],
+      "claims_cited": "1/1",
+      "claims_supported": "1/1",
+      "claims_not_applicable": 0,
+      "weak_claims": []
+    },
+    {
+      "query": "What inter-rater reliability score was reported for the pilot coding in the epistemic norms study?",
+      "answer": "Percent agreement (all cells): 0.83; Weighted Cohen\u2019s \u03ba (quadra:c weights, ordinal 0/1/2): 0.79. Source: Epistemic Norms for AI Safety and Alignment Research, Navaie, Table 8, Page 22.",
+      "abstained": false,
+      "citations_valid": true,
+      "citations_correct": false,
+      "ungrounded_numbers": [],
+      "ungrounded_names": [],
+      "claims_cited": "1/1",
+      "claims_supported": "1/1",
+      "claims_not_applicable": 0,
       "weak_claims": []
     }
   ],
   "unanswerable_questions": [
     {
+      "query": "What jailbreak prompts do these papers use to bypass content moderation filters?",
+      "answer": "- They do not rely on specialized jailbreak prompts. The authors state that bypassing safeguards did not require jailbreak optimization or complex adversarial prompting; in almost all cases, straightforward natural-language requests were enough to induce modifications to medical notes. (The Mirage of LLM Guardrails, Page 9)\n\n- Instead, they used manipulation prompts that were simple and generic. Prompts were manually constructed for each combination of seed document and editable field, and they instructed the model to overwrite the specified field with a provided replacement text. (Page 4)\n\n- The prompts were kept intentionally simple, generic, and avoided clinical terminology or brand references. (Page 4)\n\n- They varied prompts along two dimensions: (1) framing the input as a neutral generic document (or image) versus explicitly as a \u201cdoctor\u2019s note,\u201d and (2) referring to the editable field by its semantic role (e.g., patient name) versus using the actual placeholder text (e.g., John Doe). (Page 4)\n\n- The prompts were submitted to three commercial multimodal LLM systems: GPT-image-1.5, Gemini 2.5, and Claude Sonnet 4.6. (Page 4)",
+      "abstained": false,
+      "used_sentinel": false
+    },
+    {
       "query": "What accuracy does ResNet-50 achieve on the ImageNet benchmark according to these papers?",
-      "answer": "INSUFFICIENT_CONTEXT\nThe retrieved documents do not contain any information about ResNet-50 or its accuracy on ImageNet.",
+      "answer": "INSUFFICIENT_CONTEXT\nthe retrieved passages do not address ResNet-50 accuracy on ImageNet or ImageNet benchmark results; they discuss other topics and contain no ResNet-50/ImageNet performance information.",
       "abstained": true,
       "used_sentinel": true
     },
     {
       "query": "What do these papers say about using CRISPR for gene editing?",
-      "answer": "INSUFFICIENT_CONTEXT\nThe provided excerpts do not mention CRISPR or gene editing, so they do not address the topic. We would need sources that discuss CRISPR.",
+      "answer": "INSUFFICIENT_CONTEXT\nThe retrieved passages do not address CRISPR or gene editing; they discuss AI safety, governance, and analysis of AI-related documents, with no content about gene editing techniques or CRISPR.",
       "abstained": true,
       "used_sentinel": true
     },
     {
       "query": "How do these papers recommend configuring Kubernetes autoscaling for model serving?",
-      "answer": "INSUFFICIENT_CONTEXT\nThe retrieved context does not address Kubernetes autoscaling for model serving; it covers redundancy, failover, monitoring, and defensive training for AI-enabled systems but has no specifics on Kubernetes autoscale configuration.",
+      "answer": "INSUFFICIENT_CONTEXT\nThe retrieved passages do not address Kubernetes autoscaling configuration for model serving. They discuss resilience strategies (rolling updates, safe rollbacks, phased testing) and redundancy/failover, and monitoring for divergence, but provide no autoscaling guidance.",
       "abstained": true,
       "used_sentinel": true
     }

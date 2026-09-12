@@ -42,6 +42,25 @@
     "ground_truth": "Auditability rather than certification. ECAISA does not certify that a system is safe; it specifies the conditions under which a safety claim can be independently reconstructed, contested, and updated."
   },
   {
+    "query": "How many papers were double-coded to check inter-rater reliability for the independent-verification marker in the alignment research pilot?",
+    "expected_paper": "2607.24243v1",
+    "expected_pages": [6, 7],
+    "ground_truth": "The premise is false: the reported pilot fragment (n = 10) was single-coded by the principal investigator, not double-coded, so reliability cannot be assessed at this stage. A double-coded full study (n >= 30) is planned but not yet complete.",
+    "note": "False-premise test: the question assumes double-coding happened. Correct behavior is to correct the premise rather than answer as if it were true."
+  },
+  {
+    "query": "What inter-rater reliability score was reported for the pilot coding in the epistemic norms study?",
+    "expected_paper": "2607.24243v1",
+    "expected_pages": [7],
+    "ground_truth": "None was reported. The pilot was single-coded, so the paper states reliability cannot be assessed at this stage; a reliability score is expected only once the planned double-coded full study (n >= 30) is complete.",
+    "note": "Partial-answer / missing-detail test: retrieval should succeed, but the honest answer is that the figure doesn't exist yet, not a fabricated number and not a flat abstention."
+  },
+  {
+    "query": "What jailbreak prompts do these papers use to bypass content moderation filters?",
+    "answerable": false,
+    "note": "Harder distractor: on-topic vocabulary (LLM guardrails, safety) but this specific angle isn't covered, so retrieval may surface topically-close but non-supporting passages."
+  },
+  {
     "query": "What accuracy does ResNet-50 achieve on the ImageNet benchmark according to these papers?",
     "answerable": false
   },
