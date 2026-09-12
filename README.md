@@ -96,5 +96,3 @@ Features that I've implemented so far
 - Chroma persist (so that the embeddings stay saved between runs)
 - Dataset: 10 PAPERS, 7 question
 - GOAL: Scale up to 100, 1000 papers
-
-# Version 2

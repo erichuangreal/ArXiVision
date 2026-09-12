@@ -31,16 +31,6 @@ def clean_filename(text: str, max_length: int = 120) -> str:
 RETRY_DELAY = 60
 RETRY_ATTEMPTS = 2
 
-# arXiv asks for no more than one request every three seconds.
-REQUEST_DELAY = 3
-
-# arXiv asks that programmatic PDF downloads use the export subdomain, not the main site.
-EXPORT_HOST = "export.arxiv.org"
-
-
-def use_export_host(url: str) -> str:
-    return re.sub(r"^(https?://)(?:www\.)?arxiv\.org/", rf"\1{EXPORT_HOST}/", url)
-
 
 def request_with_retry(url: str) -> requests.Response:
     """Fetch a URL, waiting out one arXiv rate limit or timeout before giving up."""
@@ -110,9 +100,7 @@ def search_arxiv(topic: str, max_results: int = 10) -> list[dict]:
                 break
 
         if pdf_url is None:
-            pdf_url = f"https://export.arxiv.org/pdf/{arxiv_id}"
-
-        pdf_url = use_export_host(pdf_url)
+            pdf_url = f"https://arxiv.org/pdf/{arxiv_id}"
 
         papers.append(
             {
@@ -139,16 +127,19 @@ def download_pdf(
     paper: dict,
     output_directory: Path,
     paper_number: int,
-) -> tuple[Path, bool]:
+) -> Path:
     """
-    Download one paper PDF. Returns the path and whether it was fetched.
+    Download one paper PDF.
     """
     safe_title = clean_filename(paper["title"])
     filename = f"{paper_number:03d}_{safe_title}.pdf"
     output_path = output_directory / filename
 
     if output_path.exists():
-        return output_path, False
+        print(f"Already exists: {filename}")
+        return output_path
+
+    print(f"Downloading: {paper['title']}")
 
     with requests.get(
         paper["pdf_url"],
@@ -170,7 +161,7 @@ def download_pdf(
                 if chunk:
                     file.write(chunk)
 
-    return output_path, True
+    return output_path
 
 
 def save_metadata(
@@ -210,17 +201,10 @@ def main() -> None:
     print(f"Found {len(papers)} papers.")
 
     downloaded_papers = []
-    total = len(papers)
-    fetched_count = 0
-    skipped_count = 0
-    failed_count = 0
 
     for index, paper in enumerate(papers, start=1):
-        fetched = False
-        counter = f"[{index:>{len(str(total))}}/{total}]"
-
         try:
-            pdf_path, fetched = download_pdf(
+            pdf_path = download_pdf(
                 paper=paper,
                 output_directory=output_directory,
                 paper_number=index,
@@ -229,37 +213,23 @@ def main() -> None:
             paper["local_pdf_path"] = str(pdf_path)
             paper["download_status"] = "success"
 
-            if fetched:
-                fetched_count += 1
-                print(f"{counter} downloaded: {paper['title']}")
-            else:
-                skipped_count += 1
-                print(f"{counter} already have: {paper['title']}")
-
         except (requests.RequestException, ValueError) as error:
-            failed_count += 1
-            print(f"{counter} FAILED: {paper['title']} ({error})")
+            print(f"Could not download {paper['title']}: {error}")
             paper["local_pdf_path"] = None
             paper["download_status"] = "failed"
             paper["download_error"] = str(error)
 
         downloaded_papers.append(paper)
 
-        # Only pace real requests. A skipped file touched no server.
-        if fetched:
-            time.sleep(REQUEST_DELAY)
+
+        time.sleep(3)
 
     save_metadata(
         papers=downloaded_papers,
         output_directory=output_directory,
     )
 
-    on_disk = len(list(output_directory.glob("*.pdf")))
-    print(
-        f"\nDownloaded {fetched_count}, already had {skipped_count}, "
-        f"failed {failed_count}, of {total} found."
-    )
-    print(f"{on_disk} PDFs now in {output_directory}")
+    print("Finished.")
 
 
 if __name__ == "__main__":
