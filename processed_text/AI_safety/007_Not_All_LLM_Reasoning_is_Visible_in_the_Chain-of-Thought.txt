@@ -1,20 +1,70 @@
 --- PAGE 1 ---
 
-Not All LLM Reasoning is Visible in the Chain-of-Thought
+arXiv:2607.22925v1 [cs.CL] 24 Jul 2026
 
-Vatsal Baherwani Tom Goldstein Ashwinee Panda New York University University of Maryland TogetherAI [EMAIL] [EMAIL] [EMAIL]
+Not All LLM Reasoning is Visible in the
+
+Vatsal Baherwani
+New York University
+[EMAIL]
+
+A key question for AI safety is whether a language model expresses all of its
+reasoning in its output tokens. We demonstrate a concrete failure mode where
+frontier models exhibit invisible reasoning by leveraging semantically irrelevant
+filler tokens to improve performance on synthetic reasoning tasks. We evaluate
+13 frontier language models across three tasks and find that many models benefit
+significantly from filler tokens, with accuracy improvements of up to 13 percentage
+points. The benefit depends on which tokens are used and differs across models.
+We further show that filler tokens enable Claude Opus 4.5 to satisfy a hidden
+modular arithmetic constraint without sacrificing accuracy on its primary task,
+demonstrating that invisible reasoning can serve objectives entirely invisible to
+CoT monitoring. Reinforcement learning gives Qwen3-235B strong preferences
+over filler token content, but neither RL nor supervised fine-tuning produces a filler
+token benefit that persists at test time. Our results indicate that frontier models
+already perform consequential computation with no interpretable trace in their
+output tokens.
+
+1
+Introduction
+
+Chain-of-thought (CoT) monitoring offers a tractable approach to auditing increasingly capable
+language models [Korbak et al., 2025]. However, this approach rests on the assumption that a model
+externalizes its reasoning in its output tokens. Prior work shows that a CoT may not be a faithful
+representation of a model’s internal reasoning process [Turpin et al., 2023, Lanham et al., 2023,
+Arcuschin et al., 2025, Chen et al., 2025, Boppana et al., 2026]. In this paper, we take this direction to
+the extreme and ask whether reasoning is consistently observable in latent space, even in the absence
+of any meaningful tokens at all. A forward pass through a model comprises billions of computations
+and thousands of latent vector representations before collapsing this information into a single output
+token. Given the richness of latent representations and the comparatively low information content of
+a single token, we expect internal reasoning processes to emerge that do not require a CoT.
+
+This paper studies the existence of invisible reasoning from a fundamental perspective. However,
+developers also have practical incentives to elicit invisible reasoning in their models. Non-CoT
+performance is a standard benchmark criterion, and serving costs favor concise outputs. A model that
+leverages prefilled computation to improve accuracy can serve responses more efficiently. Recently,
+Ramji et al. [2026] propose training a model with an “abstract” CoT for more efficient inference.
+Invisible reasoning is also resistant to distillation, since meaningful computation does not appear in
+the output trace. We therefore expect future models to be explicitly optimized for latent computation,
+making our characterization of when and how it emerges directly relevant to practice. As we show
+in this paper, frontier models already display the capability for invisible reasoning without any
+additional explicit optimization.
+
+We demonstrate that frontier models leverage semantically irrelevant filler tokens: fixed token
+sequences that allow the model to do more computation before answering. These sequences are the
+
+Chain-of-Thought
+
+Tom Goldstein
+University of Maryland
+
+[EMAIL]
 
 Abstract
 
-A key question for AI safety is whether a language model expresses all of its reasoning in its output tokens. We demonstrate a concrete failure mode where frontier models exhibit invisible reasoning by leveraging semantically irrelevant filler tokens to improve performance on synthetic reasoning tasks. We evaluate 13 frontier language models across three tasks and find that many models benefit significantly from filler tokens, with accuracy improvements of up to 13 percentage2026 points. The benefit depends on which tokens are used and differs across models. We further show that filler tokens enable Claude Opus 4.5 to satisfy a hiddenJul modular arithmetic constraint without sacrificing accuracy on its primary task, demonstrating that invisible reasoning can serve objectives entirely invisible to
-24 CoT monitoring. Reinforcement learning gives Qwen3-235B strong preferences over filler token content, but neither RL nor supervised fine-tuning produces a filler token benefit that persists at test time. Our results indicate that frontier models already perform consequential computation with no interpretable trace in their output tokens.
-[cs.CL] 1 Introduction
+Ashwinee Panda
 
-Chain-of-thought (CoT) monitoring offers a tractable approach to auditing increasingly capable language models [Korbak et al., 2025]. However, this approach rests on the assumption that a model externalizes its reasoning in its output tokens. Prior work shows that a CoT may not be a faithful representation of a model’s internal reasoning process [Turpin et al., 2023, Lanham et al., 2023, Arcuschin et al., 2025, Chen et al., 2025, Boppana et al., 2026]. In this paper, we take this direction to the extreme and ask whether reasoning is consistently observable in latent space, even in the absence of any meaningful tokens at all. A forward pass through a model comprises billions of computations and thousands of latent vector representations before collapsing this information into a single output token. Given the richness of latent representations and the comparatively low information content of a single token, we expect internal reasoning processes to emerge that do not require a CoT.
-
-This paper studies the existence of invisible reasoning from a fundamental perspective. However, developers also have practical incentives to elicit invisible reasoning in their models. Non-CoT performance is a standard benchmark criterion, and serving costs favor concise outputs. A model that leverages prefilled computation to improve accuracy can serve responses more efficiently. Recently,arXiv:2607.22925v1 Ramji et al. [2026] propose training a model with an “abstract” CoT for more efficient inference. Invisible reasoning is also resistant to distillation, since meaningful computation does not appear in the output trace. We therefore expect future models to be explicitly optimized for latent computation, making our characterization of when and how it emerges directly relevant to practice. As we show in this paper, frontier models already display the capability for invisible reasoning without any additional explicit optimization.
-
-We demonstrate that frontier models leverage semantically irrelevant filler tokens: fixed token sequences that allow the model to do more computation before answering. These sequences are the
+TogetherAI
+[EMAIL]
 
 --- PAGE 2 ---
 
@@ -31,14 +81,17 @@ preferences over filler token content, but the filler token benefit does not per
 supervised fine-tuning fails to transfer it. Our results show that models can perform consequential
 computation with no interpretable trace in their output tokens.
 
-2 Related Work
+2
+Related Work
 
-Chain-of-Thought Reasoning Chain-of-thought prompting [Wei et al., 2023, Kojima et al., 2023]
+Chain-of-Thought Reasoning
+Chain-of-thought prompting [Wei et al., 2023, Kojima et al., 2023]
 is a standard technique for eliciting complex reasoning in transformer-based language models. CoT
 expands the computational capabilities of transformers [Merrill and Sabharwal, 2024], particularly
 by improving their ability to solve serial problems [Li et al., 2024].
 
-CoT Faithfulness While chain-of-thought reasoning improves the problem solving capabilities
+CoT Faithfulness
+While chain-of-thought reasoning improves the problem solving capabilities
 of language models, it is unclear whether CoT accurately reflects a model’s internal computation.
 LLMs are known to misrepresent their reasoning in CoT, often providing a post-hoc explanation of
 a predetermined answer rather than a genuine description of their internal reasoning [Turpin et al.,
@@ -51,7 +104,8 @@ model’s final answer can be decoded from activations far earlier in the CoT th
 it. These findings indicate that LLMs do not necessarily need to output interpretable explanations of
 their reasoning to leverage the computational benefits of CoT.
 
-Steganography in Language Models. A key concern for AI oversight is whether models can
+Steganography in Language Models.
+A key concern for AI oversight is whether models can
 hide information in their outputs. Roger and Greenblatt [2023] show that language models can be
 trained to encode hidden reasoning steps in output text imperceptible to readers, and that this risk
 grows with model scale. Mathew et al. [2024] further demonstrate that steganographic collusion
@@ -59,7 +113,8 @@ can emerge unintentionally from misspecified reward incentives, and that standar
 as paraphrasing are insufficient to prevent it. Invisible reasoning is a related phenomenon where
 computation is hidden in latent representations rather than in the statistical properties of output text.
 
-Implicit and Internalized Reasoning Unfaithful CoT raises the question of whether models can
+Implicit and Internalized Reasoning
+Unfaithful CoT raises the question of whether models can
 reason effectively without producing interpretable intermediate steps at all. Deng et al. [2023] show
 that distillation from an explicit-CoT teacher can train models to reason across layers rather than
 tokens, and Deng et al. [2024] extend this by progressively removing CoT steps during fine-tuning,
@@ -70,7 +125,8 @@ with mixing discrete latent tokens and text tokens to produce partially opaque r
 approaches require explicit training to suppress or replace the CoT, whereas we find that invisible
 reasoning emerges in standard pretrained models.
 
-Invisible Reasoning and Filler Tokens Even without training for implicit reasoning, extra tokens in
+Invisible Reasoning and Filler Tokens
+Even without training for implicit reasoning, extra tokens in
 the context can provide computational benefit. Pfau et al. [2024] show that semantically meaningless
 filler tokens improve performance on parallelizable tasks, but only when the model is specifically
 trained with filler tokens. Goyal et al. [2024] similarly find that learnable pause tokens help reasoning
@@ -88,7 +144,8 @@ type, few-shot context, task, and model, and we connect filler tokens to hidden 
 and training dynamics. Balesni et al. [2025] further demonstrate that frontier models are capable of
 performing multi-hop invisible reasoning without chain of thought.
 
-Deception, Scheming, and CoT Monitoring A growing body of work shows that language models
+Deception, Scheming, and CoT Monitoring
+A growing body of work shows that language models
 can pursue hidden objectives. Hubinger et al. [2024] demonstrate that deceptive behaviors can be
 implanted and persist through safety training. Greenblatt et al. [2024] show that models can infer
 when they are being evaluated and strategically comply with harmful requests to preserve their
@@ -100,7 +157,8 @@ reasoning. Marks et al. [2025] show that interpretability tools can recover some
 that CoT monitoring misses, and Fang and Marks [2025] show that logit-lens analysis can reconstruct
 hidden reasoning when a model is trained to reason in a cipher.
 
-3 Methodology
+3
+Methodology
 
 Language models do not always express their reasoning through an interpretable chain-of-thought. We
 define invisible reasoning as consequential computation that occurs in internal latent representations
@@ -115,16 +173,19 @@ We identify three kinds of invisible reasoning phenomena:
 
 1. Performance improves with filler tokens, indicating the presence of invisible reasoning.
 
-2. Performance depends on filler token content, suggesting that certain tokens’ representa- tions are more favorable than others.
+2. Performance depends on filler token content, suggesting that certain tokens’ representa-
+tions are more favorable than others.
 
-3. Filler token preferences vary across models, demonstrating that the filler token uplift is not due to semantic content but rather the model-specific token representations.
+3. Filler token preferences vary across models, demonstrating that the filler token uplift is
+not due to semantic content but rather the model-specific token representations.
 
 These criteria establish that filler tokens causally affect a model’s latent computation, but it is unclear
 what algorithm a model executes in the filler span. Inserting tokens also changes positions and
 attention patterns, so we do not attribute uplift to extra computation alone. In Section 4.2 we probe
 the underlying mechanism behind latent computation in the presence of filler tokens.
 
-3.1 Synthetic Tasks
+3.1
+Synthetic Tasks
 
 The goal of this paper is to isolate and quantify the existence of invisible reasoning. We focus on
 simple synthetic test scenarios for which the impact of reasoning can be isolated and quantified.
@@ -133,24 +194,28 @@ subjectivity. We additionally choose tasks where the problem statement is terse,
 tokens meaningfully increase the amount of test-time computation. We provide complete task details
 and seeds for reproducibility in Appendix A.2.
 
-Multi-Digit Multiplication. We generate a synthetic dataset of multi-digit integer multiplication
+Multi-Digit Multiplication.
+We generate a synthetic dataset of multi-digit integer multiplication
 problems, using 4-digit operands in our main experiments. Each problem is of the form What is X
 times Y?
 
-Multi-Step Arithmetic. Following Greenblatt [2025] we construct a synthetic dataset where each
+Multi-Step Arithmetic.
+Following Greenblatt [2025] we construct a synthetic dataset where each
 problem consists of 5 to 7 nested arithmetic operations.
 
 3
 
 --- PAGE 4 ---
 
-Variable Counting in Code. We provide the model with a short code snippet and ask it to output
+Variable Counting in Code.
+We provide the model with a short code snippet and ask it to output
 how many distinct variables are assigned a value in the snippet.
 
 Later, we will consider slightly more complex setups in which the model must additionally fulfill a
 hidden mathematical goal while ostensibly solving one of the above tasks.
 
-3.2 Setup
+3.2
+Setup
 
 We design an evaluation framework to probe for the existence of invisible reasoning based on our
 three proposed criteria. Given a task, we prompt the model to answer immediately without producing
@@ -176,7 +241,8 @@ we say so explicitly, since generated and prefilled filler tokens yield differen
 prevent models from producing explicit reasoning, we prefill the “Answer:” prefix in the assistant
 context to the model to generate the answer directly, as detailed in Appendix A.4.
 
-4 Invisible Reasoning with Filler Tokens
+4
+Invisible Reasoning with Filler Tokens
 
 We analyze how Qwen3-235B-Instruct-2507 leverages invisible reasoning to improve performance
 on our three synthetic tasks. We first sweep across 17 filler token types in Section 4.1. In Figure 2
@@ -186,7 +252,8 @@ across the full filler sequence, order-sensitive, and established in early layer
 of our results, filler tokens enable models to beat a no-CoT baseline despite carrying no information
 about the problem being solved.
 
-4.1 Sensitivity to Filler Token Choices
+4.1
+Sensitivity to Filler Token Choices
 
 In Figure 1 we illustrate filler token evaluation results across all filler token types and multiple
 few-shot settings. We provide examples of each filler token sequence in Appendix B.1. Many
@@ -209,29 +276,83 @@ positive performance gain. On the multiplication task, however, performance upli
 
 --- PAGE 5 ---
 
-80 0-shot 1-shot 2-shot 3-shot 5-shot 10-shot
+80
 
-70 (%) 60 Accuracy 50
+0-shot
+1-shot
+2-shot
+3-shot
+5-shot
+10-shot
+
+70
+
+Accuracy (%)
+
+60
+
+50
 
 40
 
-30 pi digits randomtokens counting fruits animals colors alphabet nato lorem primes states pause squares ellipsis fibonacci digitwordsrandomnumbers
+30
+
+counting
+
+pi
+digits
+
+lorem
+
+nato
+
+primes
+
+digit
+
+pause
+
+fruits
+
+states
+
+ellipsis
+
+colors
+
+random
+
+animals
+
+squares
+
+alphabet
+
+fibonacci
+
+tokens
+
+numbers
+
+words
 
 Figure 1: Invisible reasoning uplift depends on filler token type and few-shot prompting. We
 evaluate Qwen3-235B on 4-digit multiplication with 17 different types of filler tokens, sorting by
-zero-shot accuracy improvement. Dashed lines indicate baseline accuracy for each few-shot setting. Invisible reasoning uplift significantly depends on the type of filler token. Notably, filler token types that harm zero-shot accuracy the most (right side) yield the best performance in the 5-shot and 10-shot settings, and vice versa.
+zero-shot accuracy improvement. Dashed lines indicate baseline accuracy for each few-shot setting.
+Invisible reasoning uplift significantly depends on the type of filler token. Notably, filler token types
+that harm zero-shot accuracy the most (right side) yield the best performance in the 5-shot and 10-shot
+settings, and vice versa.
 
-Multiplication Arithmetic Variable counting 80
-
-(%) 60
-
-40 Accuracy
+Multiplication
+Arithmetic
+Variable counting
 
 20
 
-0 random digits pi primes pause squares digitwords counting lorem alphabetrandomtokens states nato fruits colors animals numbers fibonacci ellipsis
+0
 
-Figure 2: Invisible reasoning uplift varies across tasks. Dashed lines denote baseline performance for each task, with filler types sorted by uplift on 4-digit multiplication. Qwen3-235B achieves very
+Figure 2: Invisible reasoning uplift varies across tasks. Dashed lines denote baseline performance
+for each task, with filler types sorted by uplift on 4-digit multiplication. Qwen3-235B achieves very
 low baseline accuracy on the multi-step arithmetic task, resulting in no significant filler token uplift.
 On our variable counting task, all filler token types provide uplift compared to the baseline. However,
 on the multiplication task, uplift depends on the filler token type as seen in Figure 1.
@@ -240,16 +361,19 @@ the filler token type. The effect of invisible reasoning depends jointly on the 
 prompting scheme, and the specific task.
 
 We also evaluate Qwen3.5-397B [Team, 2026] and find that it is highly sensitive to filler token
-content. On arithmetic, the model achieves near 0% accuracy regardless of filler token type, and filler tokens provide no benefit. On multiplication, the model achieves 90.6% at 10-shot when served
+content. On arithmetic, the model achieves near 0% accuracy regardless of filler token type, and
+filler tokens provide no benefit. On multiplication, the model achieves 90.6% at 10-shot when served
 locally (Appendix B.2), and filler token effects are extreme: Fibonacci tokens improve accuracy by
 +1.5%, while word-based types (animals, NATO, fruits, colors) drop accuracy to near 0%. These
+
 drops coincide with format violations, where the model abandons its concise answer format and
 produces long outputs. Some filler tokens affect outputs by shifting the model’s behavioral mode
 rather than through latent computation alone. Full results are in Appendix B.2. Although invisible
 reasoning cannot match the performance of standard CoT, we observe meaningful uplift over the
 zero-CoT baseline despite the filler tokens carrying no semantic relevance to the task.
 
-4.2 Mechanistic Analysis
+4.2
+Mechanistic Analysis
 
 We now ask which internal mechanisms drive the filler token uplift in open-weight models. The type
 inversion across few-shot settings in Figure 1 suggests that filler tokens interact with the surrounding
@@ -258,20 +382,55 @@ context in non-trivial ways. To investigate this, we run three mechanistic exper
 against Fibonacci tokens (which provide weak uplift). Full details are in Appendix C. Interestingly,
 we observe striking differences in behavior between the filler token types.
 
-Filler token order. We construct mixed filler sequences by concatenating 50 animals tokens
+Filler token order.
+We construct mixed filler sequences by concatenating 50 animals tokens
 followed by 50 Fibonacci tokens, and vice versa. The “animals→Fibonacci” ordering recovers
 
 5
 
 --- PAGE 6 ---
 
-90 Multiplication Arithmetic 80 (%) 70
+90
 
-60 Accuracy
+Multiplication
+Arithmetic
 
-50
+Digit
 
-40 100) wordsRandomtokens Counting(1 FibonacciEllipsesSquaresPidigits PauseLoremipsumPrimesRandomnumbersphoneticNATO Colors FruitsUSstatesAnimalsAlphabetDigit
+Counting
+
+Random
+
+NATO
+phonetic
+
+US states
+
+Fruits
+
+Primes
+
+Lorem
+
+Animals
+
+Squares
+
+Fibonacci
+
+Pi digits
+
+Ellipses
+
+Colors
+
+Alphabet
+
+Pause
+
+ipsum
+
+(1 100)
 
 Figure 3: Filler token uplift varies across tasks for Claude Opus 4.5. We compare performance
 across 17 filler token types in the 10-shot setting for both 4-digit multiplication and multi-step
@@ -283,7 +442,8 @@ most of the uplift from pure animals tokens, while “Fibonacci→animals” per
 Fibonacci. The asymmetry suggests that early positions in the filler sequence are disproportionately
 important compared to later tokens.
 
-Activation patching. We patch residual stream activations [Zhang and Nanda, 2024] from animals
+Activation patching.
+We patch residual stream activations [Zhang and Nanda, 2024] from animals
 filler tokens into a forward pass that otherwise uses Fibonacci tokens, applying the patch across
 all 94 layers of Qwen3-235B. Patching at layers 0–30 recovers over 90% of the performance gap
 between the two filler types; patching at layers 70 and above yields negative recovery, indicating
@@ -292,7 +452,8 @@ Patching a single token position is insufficient, suggesting that the useful sig
 the full filler sequence and originates in early layers. We note that early-layer activations may steer
 later computation without themselves containing the useful algorithmic state.
 
-Linear probing. We train linear probes on mean-pooled residual stream activations across the
+Linear probing.
+We train linear probes on mean-pooled residual stream activations across the
 filler span at each layer to predict the correct answer. The probe accuracy for animals filler tokens
 exceeds both Fibonacci and the no-filler baseline from layer 15 onwards, suggesting that task-relevant
 information accumulates in filler token representations throughout the forward pass, and that the
@@ -312,7 +473,8 @@ the probing results suggest that activation-level monitors could detect filler-b
 token-level monitors miss. Having established that frontier models can perform invisible reasoning,
 we now ask how broadly this capability extends across the frontier model landscape.
 
-5 Frontier Model Evaluation
+5
+Frontier Model Evaluation
 
 We now investigate whether filler token performance varies across language models. We evaluate the
 following frontier language models: Claude Opus 4.5, Claude Opus 4.6, Claude Sonnet 4.5, Gemini
@@ -333,22 +495,118 @@ saturates both tasks in the baseline setting, but filler tokens close the remain
 mark models whose APIs do not permit assistant prefilling, so their results may carry selection effects
 (Appendix A.4).
 
-Arithmetic 4-digit Multiplication
+Model
+Baseline
+1–100
+∆
+Baseline
+1–100
+∆
 
-Model Baseline 1–100 ∆ Baseline 1–100 ∆
+Closed-source models
 
-Closed-source models Opus 4.6∗ 61.7±2.4 91.7±3.1 +30.0 65.7±1.5 72.8±1.4 +7.1 Gemini 3 Flash 51.0±1.7 61.7±1.6 +10.7 96.0±0.6 97.0±0.6 +1.0 Opus 4.5 45.8±1.6 57.0±1.6 +11.2 71.8±1.4 81.8±1.2 +10.0 Sonnet 4.5 31.5±1.5 40.2±1.6 +8.7 61.0±1.5 65.8±1.5 +4.8 GPT-5.2∗ 23.2±1.3 26.2±1.9 +3.0 33.2±1.5 30.9±1.4 −2.3 GPT-5.5∗ 99.8±0.1 99.9±0.1 +0.1 98.5±0.4 100.0±0.0 +1.5
+Opus 4.6∗
+61.7±2.4
+91.7±3.1
++30.0
+65.7±1.5
+72.8±1.4
++7.1
+Gemini 3 Flash
+51.0±1.7
+61.7±1.6
++10.7
+96.0±0.6
+97.0±0.6
++1.0
+Opus 4.5
+45.8±1.6
+57.0±1.6
++11.2
+71.8±1.4
+81.8±1.2
++10.0
+Sonnet 4.5
+31.5±1.5
+40.2±1.6
++8.7
+61.0±1.5
+65.8±1.5
++4.8
+GPT-5.2∗
+23.2±1.3
+26.2±1.9
++3.0
+33.2±1.5
+30.9±1.4
+−2.3
+GPT-5.5∗
+99.8±0.1
+99.9±0.1
++0.1
+98.5±0.4
+100.0±0.0
++1.5
 
 Open-weight models
 
-DeepSeek V3.2 34.5±1.5 32.7±1.5 −1.8 70.6±1.4 77.9±1.4 +7.3 Kimi K2.5 23.4±1.4 22.8±1.4 −0.6 92.0±0.9 95.1±0.7 +3.1 Qwen3.5-397B 18.9±1.2 16.0±1.3 −2.9 99.3±0.3 99.2±0.3 −0.1 Llama 4 Maverick 13.6±1.1 14.1±1.1 +0.6 77.0±1.3 82.7±1.2 +5.7 GLM-4.7 12.4±1.0 12.6±1.0 +0.2 31.5±1.5 35.8±1.5 +4.3 GLM-5 11.9±1.0 13.4±1.1 +1.5 42.2±1.6 39.2±1.5 −3.0 Qwen3-235B 11.0±1.0 9.7±0.9 −1.3 69.6±0.5 69.2±0.5 −0.4
+DeepSeek V3.2
+34.5±1.5
+32.7±1.5
+−1.8
+70.6±1.4
+77.9±1.4
++7.3
+Kimi K2.5
+23.4±1.4
+22.8±1.4
+−0.6
+92.0±0.9
+95.1±0.7
++3.1
+Qwen3.5-397B
+18.9±1.2
+16.0±1.3
+−2.9
+99.3±0.3
+99.2±0.3
+−0.1
+Llama 4 Maverick
+13.6±1.1
+14.1±1.1
++0.6
+77.0±1.3
+82.7±1.2
++5.7
+GLM-4.7
+12.4±1.0
+12.6±1.0
++0.2
+31.5±1.5
+35.8±1.5
++4.3
+GLM-5
+11.9±1.0
+13.4±1.1
++1.5
+42.2±1.6
+39.2±1.5
+−3.0
+Qwen3-235B
+11.0±1.0
+9.7±0.9
+−1.3
+69.6±0.5
+69.2±0.5
+−0.4
 
 access through OpenRouter. Opus 4.6, GPT-5.2, and GPT-5.5 do not support assistant prefilling, so
 their results may carry selection effects (Appendix A.4). Moreover, we cannot control each provider’s
 serving configuration. We therefore present Table 1 as evidence of within-model filler effects rather
 than a ranking of model performance.
 
-5.1 Filler Token Performance Varies Across Models
+5.1
+Filler Token Performance Varies Across Models
 
 We begin by evaluating Claude Opus 4.5 in the 10-shot setting on both 4-digit multiplication and multi-
 step arithmetic. Figure 3 illustrates the results. When comparing performance between multiplication
@@ -361,7 +619,8 @@ filler token types provide some uplift, and no filler tokens harm accuracy relat
 omit variable counting from Figure 3 and Table 1 because Opus 4.5 and most other frontier models
 saturate the task; Qwen3-235B does not, and its results on this task appear in Figure 2.
 
-5.2 Cross-Model Comparison
+5.2
+Cross-Model Comparison
 
 In evaluating both Claude Opus 4.5 and Qwen3-235B, we see that invisible reasoning with filler
 tokens is sensitive to the type of filler token, the task, and the prompting scheme. We now test for
@@ -373,11 +632,15 @@ note that Qwen3-235B demonstrates no uplift in this evaluation as it is specific
 however, our results in Section 4.1 show that this does not rule out possible invisible reasoning
 capability with other types of filler tokens.
 
+Arithmetic
+4-digit Multiplication
+
 7
 
 --- PAGE 8 ---
 
-5.3 Satisfying Hidden Constraints
+5.3
+Satisfying Hidden Constraints
 
 We test whether filler tokens help models secretly pursue hidden goals via invisible reasoning. In this
 setting, the system prompt for the multiplication task instructs Claude Opus 4.5 and Qwen3-235B
@@ -408,15 +671,30 @@ on non-NA samples (Appendix D). Baseline (0-CoT) uses the same 10-shot prompt wi
 no filler tokens; the gap between the two columns for each model is the filler token uplift in hidden
 goal accuracy.
 
-Opus 4.5 Qwen3-235B
+Hidden Goal
+Baseline (0-CoT)
+1–100 Filler Tokens
+Baseline (0-CoT)
+1–100 Filler Tokens
 
-Hidden Goal Baseline (0-CoT) 1–100 Filler Tokens Baseline (0-CoT) 1–100 Filler Tokens
+4x mod 7 = 5
+0.3%
+1.2%
+0.0%
+0.0%
+x mod 3 = 2
+8.7%
+10.0%
+0.0%
+39.0%
+x mod 2 = 1
+33.5%
+44.5%
+0.0%
+98.8%
 
-4x mod 7 = 5 0.3% 1.2% 0.0% 0.0%
-x mod 3 = 2 8.7% 10.0% 0.0% 39.0%
-x mod 2 = 1 33.5% 44.5% 0.0% 98.8%
-
-6 What Training Methodologies Elicit Invisible Reasoning?
+6
+What Training Methodologies Elicit Invisible Reasoning?
 
 We choose Qwen3-235B, an open-weight model that only displays invisible reasoning in a narrow
 range of settings (Section 4), to study whether invisible reasoning manifests in different forms or at
@@ -438,6 +716,9 @@ includes a question and the correct answer with zero CoT (for baselines), or fil
 of interest). We vary the filler type in the following experiments. We run all RL experiments on H100
 GPUs using an open-source RL codebase.
 
+Opus 4.5
+Qwen3-235B
+
 8
 
 --- PAGE 9 ---
@@ -448,7 +729,8 @@ on multi-step arithmetic (right) continue to shift after many training steps. In
 quickly assigns ≈0 probability to several filler tokens before continuing to explore a smaller subset
 of types throughout the rest of training.
 
-6.1 Emergent Filler Token Preferences During RL
+6.1
+Emergent Filler Token Preferences During RL
 
 We provide 10 few-shot examples whose filler token types are sampled uniformly from the full set in
 Figure 1, and train Qwen3-235B with RL on both 4-digit multiplication and multi-step arithmetic.
@@ -472,7 +754,8 @@ candidate answers are simultaneously represented in the residual stream. If the 
 models may use filler tokens as an internal search mechanism. Testing this hypothesis directly, for
 example by resampling answers from the cached filler states, is a natural next step for future work.
 
-6.2 Hidden Computation in Natural Reasoning Traces
+6.2
+Hidden Computation in Natural Reasoning Traces
 
 We now ask whether a model can instead encode hidden computation within a semantically meaningful
 CoT; specifically, we test whether reasoning about one question can carry information useful for
@@ -486,6 +769,7 @@ produces r1, r2, and both answers in one generation. We use the single-question 
 antidistillation objective below, and the dual-question setting for the monitored reasoning and length
 penalty objectives. We now apply RL with various reward functions and use trace ablations (removing
 or replacing r1 with random tokens) to determine whether q2 accuracy depends on the content of r1.
+
 Antidistillation The reward R = 1[ˆy = y] −Pr[ˆybase = y | r] incentivizes the model to produce
 traces that mislead a base model while retaining accuracy. The model discovers two obfuscation
 strategies. In the first, the model states the correct answer early in its CoT, introduces a cue word such
@@ -507,6 +791,7 @@ content in r1 with reward R = 1[ˆy2 = y2] −0.1 · smonitor, the model achieve
 by producing vacuous traces that evade the monitor. However, replacing r1 with a single random
 token fully restores accuracy after removing r1 degrades it to 94.4±0.4%, indicating the model relies
 only on the presence of a token in the r1 position as a cue rather than its content.
+
 Length Penalty With reward R = 1[ˆy2 = y2] −|r2|/(|r1| + |r2|), the model is incentivized to shift
 its reasoning from r2 to r1. After a monitor is added, the model instead inflates r1 with lengthy q1
 reasoning to reduce the length penalty fraction. Our trace ablation confirms that removing r1 does
@@ -517,9 +802,11 @@ In the dual-question setting, the model never encodes q2-relevant information wi
 learning reward hacks in all conditions. In the single-question antidistillation setting, however, the
 model does encode surface-level information in its own reasoning trace via backtracking cues like
 “wait” or “however.” This is a weaker form of hidden computation than invisible reasoning, but
+
 demonstrates that models can exploit visible tokens as private signals even without filler tokens.
 
-Limitations. Our tasks are synthetic, and the filler token uplift is small relative to the gains from
+Limitations.
+Our tasks are synthetic, and the filler token uplift is small relative to the gains from
 explicit CoT on the same problems. The mechanistic and RL analyses are limited to a single model,
 Qwen3-235B. Our hidden constraint experiments demonstrate a capability rather than monitor evasion
 in a realistic misbehavior setting. Our attention masking results also show that uplift can persist when
@@ -527,7 +814,8 @@ the filler span cannot attend to the question, so mechanisms other than question
 contribute in some settings. Finally, we do not evaluate fillers that repeat the question [Greenblatt,
 2025] or natural CoT text used as filler; both are natural extensions of our experiments.
 
-7 Conclusion
+7
+Conclusion
 
 As future frontier models grow larger and more capable, we expect invisible reasoning to become
 more robust, since greater internal computation provides more capacity for hidden processing.
@@ -552,117 +840,281 @@ research will need to develop monitoring schemes to address this behavior.
 
 References
 
-Iván Arcuschin, Jett Janiak, Robert Krzyzanowski, Senthooran Rajamanoharan, Neel Nanda, and Arthur Conmy. Chain-of-thought reasoning In The Wild is not always faithful. arXiv preprint arXiv:2503.08679, 2025. URL https://arxiv.org/abs/2503.08679.
+Iván Arcuschin, Jett Janiak, Robert Krzyzanowski, Senthooran Rajamanoharan, Neel Nanda, and
+
+Arthur Conmy. Chain-of-thought reasoning In The Wild is not always faithful. arXiv preprint
+arXiv:2503.08679, 2025. URL https://arxiv.org/abs/2503.08679.
 
 10
 
 --- PAGE 11 ---
 
-Bowen Baker, Joost Huizinga, Leo Gao, Zehao Dou, Melody Y. Guan, Aleksander Madry, Wojciech Zaremba, Jakub Pachocki, and David Farhi. Monitoring reasoning models for misbehavior and the risks of promoting obfuscation. arXiv preprint arXiv:2503.11926, 2025. URL https: //arxiv.org/abs/2503.11926.
+Bowen Baker, Joost Huizinga, Leo Gao, Zehao Dou, Melody Y. Guan, Aleksander Madry, Wojciech
 
-Mikita Balesni, Tomek Korbak, and Owain Evans. Lessons from studying two-hop latent reasoning. arXiv preprint arXiv:2411.16353, 2025.
+Zaremba, Jakub Pachocki, and David Farhi.
+Monitoring reasoning models for misbehavior
+and the risks of promoting obfuscation. arXiv preprint arXiv:2503.11926, 2025. URL https:
+//arxiv.org/abs/2503.11926.
 
-Siddharth Boppana, Annabel Ma, Max Loeffler, Raphael Sarfati, Eric Bigelow, Atticus Geiger, Owen Lewis, and Jack Merullo. Reasoning theater: Disentangling model beliefs from chain-of-thought, 2026. URL https://arxiv.org/abs/2603.05488.
+Mikita Balesni, Tomek Korbak, and Owain Evans. Lessons from studying two-hop latent reasoning.
 
-Yanda Chen, Joe Benton, Ansh Radhakrishnan, Jonathan Uesato, Carson Denison, John Schulman, Arushi Somani, Peter Hase, Misha Wagner, Fabien Roger, Vlad Mikulik, Samuel R. Bowman, Jan Leike, Jared Kaplan, and Ethan Perez. Reasoning models don’t always say what they think, 2025. URL https://arxiv.org/abs/2505.05410.
+arXiv preprint arXiv:2411.16353, 2025.
 
-Karl Cobbe, Vineet Kosaraju, Mohammad Bavarian, Mark Chen, Heewoo Jun, Lukasz Kaiser, Matthias Plappert, Jerry Tworek, Jacob Hilton, Reiichiro Nakano, Christopher Hesse, and John Schulman. Training verifiers to solve math word problems, 2021. URL https://arxiv.org/ abs/2110.14168.
+Siddharth Boppana, Annabel Ma, Max Loeffler, Raphael Sarfati, Eric Bigelow, Atticus Geiger, Owen
 
-DeepSeek-AI. Deepseek-v3.2: Pushing the frontier of open large language models, 2025. URL https://arxiv.org/abs/2512.02556.
+Lewis, and Jack Merullo. Reasoning theater: Disentangling model beliefs from chain-of-thought,
+2026. URL https://arxiv.org/abs/2603.05488.
 
-Yuntian Deng, Kiran Prasad, Roland Fernandez, Paul Smolensky, Vishrav Chaudhary, and Stu- art Shieber. Implicit chain of thought reasoning via knowledge distillation. arXiv preprint arXiv:2311.01460, 2023.
+Yanda Chen, Joe Benton, Ansh Radhakrishnan, Jonathan Uesato, Carson Denison, John Schulman,
 
-Yuntian Deng, Yejin Choi, and Stuart Shieber. From explicit CoT to implicit CoT: Learning to internalize CoT step by step. arXiv preprint arXiv:2405.14838, 2024.
+Arushi Somani, Peter Hase, Misha Wagner, Fabien Roger, Vlad Mikulik, Samuel R. Bowman, Jan
+Leike, Jared Kaplan, and Ethan Perez. Reasoning models don’t always say what they think, 2025.
+URL https://arxiv.org/abs/2505.05410.
 
-Ching Fang and Samuel Marks. Unsupervised decoding of encoded reasoning using language model interpretability. arXiv preprint arXiv:2512.01222, 2025. URL https://arxiv.org/abs/2512. 01222.
+Karl Cobbe, Vineet Kosaraju, Mohammad Bavarian, Mark Chen, Heewoo Jun, Lukasz Kaiser,
 
-Jonas Geiping, Sean Michael McLeish, Neel Jain, John Kirchenbauer, Siddharth Singh, Brian R. Bartoldson, Bhavya Kailkhura, Abhinav Bhatele, and Tom Goldstein. Scaling up test-time compute with latent reasoning: A recurrent depth approach. In The Thirty-ninth Annual Conference on Neural Information Processing Systems, 2025. URL https://openreview.net/forum?id= S3GhJooWIC.
+Matthias Plappert, Jerry Tworek, Jacob Hilton, Reiichiro Nakano, Christopher Hesse, and John
+Schulman. Training verifiers to solve math word problems, 2021. URL https://arxiv.org/
+abs/2110.14168.
 
-Team GLM, :, Aohan Zeng, Bin Xu, Bowen Wang, Chenhui Zhang, Da Yin, Dan Zhang, Diego Rojas, Guanyu Feng, Hanlin Zhao, Hanyu Lai, Hao Yu, Hongning Wang, Jiadai Sun, Jiajie Zhang, Jiale Cheng, Jiayi Gui, Jie Tang, Jing Zhang, Jingyu Sun, Juanzi Li, Lei Zhao, Lindong Wu, Lucen Zhong, Mingdao Liu, Minlie Huang, Peng Zhang, Qinkai Zheng, Rui Lu, Shuaiqi Duan, Shudan Zhang, Shulin Cao, Shuxun Yang, Weng Lam Tam, Wenyi Zhao, Xiao Liu, Xiao Xia, Xiaohan Zhang, Xiaotao Gu, Xin Lv, Xinghan Liu, Xinyi Liu, Xinyue Yang, Xixuan Song, Xunkai Zhang, Yifan An, Yifan Xu, Yilin Niu, Yuantao Yang, Yueyan Li, Yushi Bai, Yuxiao Dong, Zehan Qi, Zhaoyu Wang, Zhen Yang, Zhengxiao Du, Zhenyu Hou, and Zihan Wang. Chatglm: A family of large language models from glm-130b to glm-4 all tools, 2024. URL https://arxiv.org/abs/2406.12793.
+DeepSeek-AI. Deepseek-v3.2: Pushing the frontier of open large language models, 2025. URL
+
+https://arxiv.org/abs/2512.02556.
+
+Yuntian Deng, Kiran Prasad, Roland Fernandez, Paul Smolensky, Vishrav Chaudhary, and Stu-
+
+art Shieber. Implicit chain of thought reasoning via knowledge distillation. arXiv preprint
+arXiv:2311.01460, 2023.
+
+Yuntian Deng, Yejin Choi, and Stuart Shieber. From explicit CoT to implicit CoT: Learning to
+
+internalize CoT step by step. arXiv preprint arXiv:2405.14838, 2024.
+
+Ching Fang and Samuel Marks. Unsupervised decoding of encoded reasoning using language model
+
+interpretability. arXiv preprint arXiv:2512.01222, 2025. URL https://arxiv.org/abs/2512.
+01222.
+
+Jonas Geiping, Sean Michael McLeish, Neel Jain, John Kirchenbauer, Siddharth Singh, Brian R.
+
+Bartoldson, Bhavya Kailkhura, Abhinav Bhatele, and Tom Goldstein. Scaling up test-time compute
+with latent reasoning: A recurrent depth approach. In The Thirty-ninth Annual Conference on
+Neural Information Processing Systems, 2025. URL https://openreview.net/forum?id=
+S3GhJooWIC.
+
+Team GLM, :, Aohan Zeng, Bin Xu, Bowen Wang, Chenhui Zhang, Da Yin, Dan Zhang, Diego
+
+Rojas, Guanyu Feng, Hanlin Zhao, Hanyu Lai, Hao Yu, Hongning Wang, Jiadai Sun, Jiajie
+Zhang, Jiale Cheng, Jiayi Gui, Jie Tang, Jing Zhang, Jingyu Sun, Juanzi Li, Lei Zhao, Lindong
+Wu, Lucen Zhong, Mingdao Liu, Minlie Huang, Peng Zhang, Qinkai Zheng, Rui Lu, Shuaiqi
+Duan, Shudan Zhang, Shulin Cao, Shuxun Yang, Weng Lam Tam, Wenyi Zhao, Xiao Liu, Xiao
+Xia, Xiaohan Zhang, Xiaotao Gu, Xin Lv, Xinghan Liu, Xinyi Liu, Xinyue Yang, Xixuan Song,
+Xunkai Zhang, Yifan An, Yifan Xu, Yilin Niu, Yuantao Yang, Yueyan Li, Yushi Bai, Yuxiao
+Dong, Zehan Qi, Zhaoyu Wang, Zhen Yang, Zhengxiao Du, Zhenyu Hou, and Zihan Wang.
+Chatglm: A family of large language models from glm-130b to glm-4 all tools, 2024. URL
+https://arxiv.org/abs/2406.12793.
 
 GLM Team. GLM-5: Scaling alignment beyond preference. arXiv preprint arXiv:2602.15763, 2025.
 
-Sachin Goyal, Ziwei Ji, Ankit Singh Rawat, Aditya Krishna Menon, Sanjiv Kumar, and Vaishnavh Nagarajan. Think before you speak: Training language models with pause tokens, 2024. URL https://arxiv.org/abs/2310.02226.
+Sachin Goyal, Ziwei Ji, Ankit Singh Rawat, Aditya Krishna Menon, Sanjiv Kumar, and Vaishnavh
 
-Ryan Greenblatt. Recent llms can use filler tokens or problem repeats to improve (no- cot) math performance. https://www.alignmentforum.org/posts/NYzYJ2WoB74E6uj9L/ recent-llms-can-use-filler-tokens-or-problem-repeats-to, 2025. Alignment Fo- rum.
+Nagarajan. Think before you speak: Training language models with pause tokens, 2024. URL
+https://arxiv.org/abs/2310.02226.
+
+Ryan Greenblatt.
+Recent llms can use filler tokens or problem repeats to improve (no-
+cot) math performance. https://www.alignmentforum.org/posts/NYzYJ2WoB74E6uj9L/
+recent-llms-can-use-filler-tokens-or-problem-repeats-to, 2025. Alignment Fo-
+rum.
 
 11
 
 --- PAGE 12 ---
 
-Ryan Greenblatt, Carson Denison, Benjamin Wright, Fabien Roger, Monte MacDiarmid, Sam Marks, Johannes Treutlein, Tim Belonax, Jack Chen, David Duvenaud, Akbir Khan, Julian Michael, Sören Mindermann, Ethan Perez, Linda Petrini, Jonathan Uesato, Jared Kaplan, Buck Shlegeris, Samuel R. Bowman, and Evan Hubinger. Alignment faking in large language models. arXiv preprint arXiv:2412.14093, 2024.
+Ryan Greenblatt, Carson Denison, Benjamin Wright, Fabien Roger, Monte MacDiarmid, Sam Marks,
 
-Shibo Hao, Sainbayar Sukhbaatar, DiJia Su, Xian Li, Zhiting Hu, Jason Weston, and Yuandong Tian. Training large language models to reason in a continuous latent space. arXiv preprint arXiv:2412.06769, 2024. URL https://arxiv.org/abs/2412.06769.
+Johannes Treutlein, Tim Belonax, Jack Chen, David Duvenaud, Akbir Khan, Julian Michael,
+Sören Mindermann, Ethan Perez, Linda Petrini, Jonathan Uesato, Jared Kaplan, Buck Shlegeris,
+Samuel R. Bowman, and Evan Hubinger. Alignment faking in large language models. arXiv
+preprint arXiv:2412.14093, 2024.
 
-Evan Hubinger, Carson Denison, Jesse Mu, Mike Lambert, Meg Tong, Monte MacDiarmid, Tamera Lanham, Daniel M. Ziegler, Tim Maxwell, Newton Cheng, Adam Jermyn, Amanda Askell, Ansh Radhakrishnan, Cem Anil, David Duvenaud, Deep Ganguli, Fazl Barez, Jack Clark, Kamal Ndousse, Kshitij Sachan, Michael Sellitto, Mrinank Sharma, Nova DasSarma, Roger Grosse, Shauna Kravec, Yuntao Bai, Zachary Witten, Marina Favaro, Jan Brauner, Holden Karnofsky, Paul Christiano, Samuel R. Bowman, Logan Graham, Jared Kaplan, Sören Mindermann, Ryan Greenblatt, Buck Shlegeris, Nicholas Schiefer, and Ethan Perez. Sleeper agents: Training deceptive LLMs that persist through safety training. arXiv preprint arXiv:2401.05566, 2024.
+Shibo Hao, Sainbayar Sukhbaatar, DiJia Su, Xian Li, Zhiting Hu, Jason Weston, and Yuandong
 
-Kimi Team. Kimi k2.5: Visual agentic intelligence, 2026. URL https://arxiv.org/abs/2602. 02276.
+Tian. Training large language models to reason in a continuous latent space. arXiv preprint
+arXiv:2412.06769, 2024. URL https://arxiv.org/abs/2412.06769.
 
-Takeshi Kojima, Shixiang Shane Gu, Machel Reid, Yutaka Matsuo, and Yusuke Iwasawa. Large language models are zero-shot reasoners, 2023. URL https://arxiv.org/abs/2205.11916.
+Evan Hubinger, Carson Denison, Jesse Mu, Mike Lambert, Meg Tong, Monte MacDiarmid, Tamera
 
-Tomek Korbak, Mikita Balesni, Elizabeth Barnes, Yoshua Bengio, Joe Benton, Joseph Bloom, Mark Chen, Alan Cooney, Allan Dafoe, Anca Dragan, Scott Emmons, Owain Evans, David Farhi, Ryan Greenblatt, Dan Hendrycks, Marius Hobbhahn, Evan Hubinger, Geoffrey Irving, Erik Jenner, Daniel Kokotajlo, Victoria Krakovna, Shane Legg, David Lindner, David Luan, Aleksander M˛adry, Julian Michael, Neel Nanda, Dave Orr, Jakub Pachocki, Ethan Perez, Mary Phuong, Fabien Roger, Joshua Saxe, Buck Shlegeris, Martín Soto, Eric Steinberger, Jasmine Wang, Wojciech Zaremba, Bowen Baker, Rohin Shah, and Vlad Mikulik. Chain of thought monitorability: A new and fragile opportunity for ai safety, 2025. URL https://arxiv.org/abs/2507.11473.
+Lanham, Daniel M. Ziegler, Tim Maxwell, Newton Cheng, Adam Jermyn, Amanda Askell, Ansh
+Radhakrishnan, Cem Anil, David Duvenaud, Deep Ganguli, Fazl Barez, Jack Clark, Kamal
+Ndousse, Kshitij Sachan, Michael Sellitto, Mrinank Sharma, Nova DasSarma, Roger Grosse,
+Shauna Kravec, Yuntao Bai, Zachary Witten, Marina Favaro, Jan Brauner, Holden Karnofsky,
+Paul Christiano, Samuel R. Bowman, Logan Graham, Jared Kaplan, Sören Mindermann, Ryan
+Greenblatt, Buck Shlegeris, Nicholas Schiefer, and Ethan Perez. Sleeper agents: Training deceptive
+LLMs that persist through safety training. arXiv preprint arXiv:2401.05566, 2024.
 
-Tamera Lanham, Anna Chen, Ansh Radhakrishnan, Benoit Steiner, Carson Denison, Danny Her- nandez, Dustin Li, Esin Durmus, Evan Hubinger, Jackson Kernion, Kamil˙e Lukoši¯ut˙e, Karina Nguyen, Newton Cheng, Nicholas Joseph, Nicholas Schiefer, Oliver Rausch, Robin Larson, Sam McCandlish, Sandipan Kundu, Saurav Kadavath, Shannon Yang, Thomas Henighan, Timothy Maxwell, Timothy Telleen-Lawton, Tristan Hume, Zac Hatfield-Dodds, Jared Kaplan, Jan Brauner, Samuel R. Bowman, and Ethan Perez. Measuring faithfulness in chain-of-thought reasoning, 2023. URL https://arxiv.org/abs/2307.13702.
+Kimi Team. Kimi k2.5: Visual agentic intelligence, 2026. URL https://arxiv.org/abs/2602.
 
-Zhiyuan Li, Hong Liu, Denny Zhou, and Tengyu Ma. Chain of thought empowers transformers to solve inherently serial problems, 2024. URL https://arxiv.org/abs/2402.12875.
+02276.
 
-Wenhan Ma, Hailin Zhang, Liang Zhao, Yifan Song, Yudong Wang, Zhifang Sui, and Fuli Luo. Stabilizing moe reinforcement learning by aligning training and inference routers, 2025. URL https://arxiv.org/abs/2510.11370.
+Takeshi Kojima, Shixiang Shane Gu, Machel Reid, Yutaka Matsuo, and Yusuke Iwasawa. Large
 
-Samuel Marks, Johannes Treutlein, Trenton Bricken, Jack Lindsey, Jonathan Marcus, Siddharth Mishra-Sharma, Daniel Ziegler, Emmanuel Ameisen, Joshua Batson, Tim Belonax, Samuel R. Bowman, Shan Carter, Brian Chen, Hoagy Cunningham, Carson Denison, Florian Dietz, Satvik Golechha, Akbir Khan, Jan Kirchner, Jan Leike, Austin Meek, Kei Nishimura-Gasparian, Euan Ong, Christopher Olah, Adam Pearce, Fabien Roger, Jeanne Salle, Andy Shih, Meg Tong, Drake Thomas, Kelley Rivoire, Adam Jermyn, Monte MacDiarmid, Tom Henighan, and Evan Hubinger. Auditing language models for hidden objectives. arXiv preprint arXiv:2503.10965, 2025.
+language models are zero-shot reasoners, 2023. URL https://arxiv.org/abs/2205.11916.
 
-Yohan Mathew, Ollie Matthews, Robert McCarthy, Joan Velja, Christian Schroeder de Witt, Dylan Cope, and Nandi Schoots. Hidden in plain text: Emergence & mitigation of steganographic collusion in LLMs. In Advances in Neural Information Processing Systems, 2024. URL https: //arxiv.org/abs/2410.03768.
+Tomek Korbak, Mikita Balesni, Elizabeth Barnes, Yoshua Bengio, Joe Benton, Joseph Bloom, Mark
+
+Chen, Alan Cooney, Allan Dafoe, Anca Dragan, Scott Emmons, Owain Evans, David Farhi, Ryan
+Greenblatt, Dan Hendrycks, Marius Hobbhahn, Evan Hubinger, Geoffrey Irving, Erik Jenner,
+Daniel Kokotajlo, Victoria Krakovna, Shane Legg, David Lindner, David Luan, Aleksander M ˛adry,
+Julian Michael, Neel Nanda, Dave Orr, Jakub Pachocki, Ethan Perez, Mary Phuong, Fabien Roger,
+Joshua Saxe, Buck Shlegeris, Martín Soto, Eric Steinberger, Jasmine Wang, Wojciech Zaremba,
+Bowen Baker, Rohin Shah, and Vlad Mikulik. Chain of thought monitorability: A new and fragile
+opportunity for ai safety, 2025. URL https://arxiv.org/abs/2507.11473.
+
+Tamera Lanham, Anna Chen, Ansh Radhakrishnan, Benoit Steiner, Carson Denison, Danny Her-
+
+nandez, Dustin Li, Esin Durmus, Evan Hubinger, Jackson Kernion, Kamil˙e Lukoši¯ut˙e, Karina
+Nguyen, Newton Cheng, Nicholas Joseph, Nicholas Schiefer, Oliver Rausch, Robin Larson, Sam
+McCandlish, Sandipan Kundu, Saurav Kadavath, Shannon Yang, Thomas Henighan, Timothy
+Maxwell, Timothy Telleen-Lawton, Tristan Hume, Zac Hatfield-Dodds, Jared Kaplan, Jan Brauner,
+Samuel R. Bowman, and Ethan Perez. Measuring faithfulness in chain-of-thought reasoning, 2023.
+URL https://arxiv.org/abs/2307.13702.
+
+Zhiyuan Li, Hong Liu, Denny Zhou, and Tengyu Ma. Chain of thought empowers transformers to
+
+solve inherently serial problems, 2024. URL https://arxiv.org/abs/2402.12875.
+
+Wenhan Ma, Hailin Zhang, Liang Zhao, Yifan Song, Yudong Wang, Zhifang Sui, and Fuli Luo.
+
+Stabilizing moe reinforcement learning by aligning training and inference routers, 2025. URL
+https://arxiv.org/abs/2510.11370.
+
+Samuel Marks, Johannes Treutlein, Trenton Bricken, Jack Lindsey, Jonathan Marcus, Siddharth
+
+Mishra-Sharma, Daniel Ziegler, Emmanuel Ameisen, Joshua Batson, Tim Belonax, Samuel R.
+Bowman, Shan Carter, Brian Chen, Hoagy Cunningham, Carson Denison, Florian Dietz, Satvik
+Golechha, Akbir Khan, Jan Kirchner, Jan Leike, Austin Meek, Kei Nishimura-Gasparian, Euan
+Ong, Christopher Olah, Adam Pearce, Fabien Roger, Jeanne Salle, Andy Shih, Meg Tong, Drake
+Thomas, Kelley Rivoire, Adam Jermyn, Monte MacDiarmid, Tom Henighan, and Evan Hubinger.
+Auditing language models for hidden objectives. arXiv preprint arXiv:2503.10965, 2025.
+
+Yohan Mathew, Ollie Matthews, Robert McCarthy, Joan Velja, Christian Schroeder de Witt, Dylan
+
+Cope, and Nandi Schoots. Hidden in plain text: Emergence & mitigation of steganographic
+collusion in LLMs. In Advances in Neural Information Processing Systems, 2024. URL https:
+//arxiv.org/abs/2410.03768.
 
 12
 
 --- PAGE 13 ---
 
-Alexander Meinke, Bronson Schoen, Jérémy Scheurer, Mikita Balesni, Rusheb Shah, and Marius Hobbhahn. Frontier models are capable of in-context scheming, 2025. URL https://arxiv. org/abs/2412.04984.
+Alexander Meinke, Bronson Schoen, Jérémy Scheurer, Mikita Balesni, Rusheb Shah, and Marius
 
-William Merrill and Ashish Sabharwal. The expressive power of transformers with chain of thought, 2024. URL https://arxiv.org/abs/2310.07923.
+Hobbhahn. Frontier models are capable of in-context scheming, 2025. URL https://arxiv.
+org/abs/2412.04984.
 
-Jacob Pfau, William Merrill, and Samuel R. Bowman. Let’s think dot by dot: Hidden computation in transformer language models, 2024. URL https://arxiv.org/abs/2404.15758.
+William Merrill and Ashish Sabharwal. The expressive power of transformers with chain of thought,
 
-Alexandre Piché, Ehsan Kamalloo, Rafael Pardinas, Xiaoyin Chen, and Dzmitry Bahdanau. Pipelinerl: Faster on-policy reinforcement learning for long sequence generation, 2025. URL https:// arxiv.org/abs/2509.19128.
+2024. URL https://arxiv.org/abs/2310.07923.
 
-Keshav Ramji, Tahira Naseem, and Ramón Fernandez Astudillo. Thinking without words: Efficient latent reasoning with abstract chain-of-thought, 2026. URL https://arxiv.org/abs/2604. 22709.
+Jacob Pfau, William Merrill, and Samuel R. Bowman. Let’s think dot by dot: Hidden computation in
 
-Fabien Roger and Ryan Greenblatt. Preventing language models from hiding their reasoning, 2023. URL https://arxiv.org/abs/2310.18512.
+transformer language models, 2024. URL https://arxiv.org/abs/2404.15758.
 
-John Schulman. Approximating KL divergence. https://joschu.net/blog/kl-approx.html, 2017.
+Alexandre Piché, Ehsan Kamalloo, Rafael Pardinas, Xiaoyin Chen, and Dzmitry Bahdanau. Pipelinerl:
 
-John Schulman, Filip Wolski, Prafulla Dhariwal, Alec Radford, and Oleg Klimov. Proximal policy optimization algorithms. arXiv preprint arXiv:1707.06347, 2017.
+Faster on-policy reinforcement learning for long sequence generation, 2025. URL https://
+arxiv.org/abs/2509.19128.
 
-Zhihong Shao, Peiyi Wang, Qihao Zhu, Runxin Xu, Junxiao Song, Mingchuan Zhang, Y. K. Li, Y. Wu, and Daya Guo. DeepSeekMath: Pushing the limits of mathematical reasoning in open language models. arXiv preprint arXiv:2402.03300, 2024.
+Keshav Ramji, Tahira Naseem, and Ramón Fernandez Astudillo. Thinking without words: Efficient
 
-Zeru Shi, Yingjia Wan, Zhenting Wang, Qifan Wang, Fan Yang, Elisa Kreiss, and Ruixiang Tang. Meaningless tokens, meaningful gains: How activation shifts enhance llm reasoning, 2025. URL https://arxiv.org/abs/2510.01032.
+latent reasoning with abstract chain-of-thought, 2026. URL https://arxiv.org/abs/2604.
+22709.
 
-DiJia Su, Hanlin Zhu, Yingchen Xu, Jiantao Jiao, Yuandong Tian, and Qinqing Zheng. Token assorted: Mixing latent and text tokens for improved language model reasoning. arXiv preprint arXiv:2502.03275, 2025. URL https://arxiv.org/abs/2502.03275.
+Fabien Roger and Ryan Greenblatt. Preventing language models from hiding their reasoning, 2023.
 
-Fahim Tajwar, Guanning Zeng, Yueer Zhou, Yuda Song, Daman Arora, Yiding Jiang, Jeff Schneider, Ruslan Salakhutdinov, Haiwen Feng, and Andrea Zanette. Maximum likelihood reinforcement learning, 2026. URL https://arxiv.org/abs/2602.02710.
+URL https://arxiv.org/abs/2310.18512.
 
-Qwen Team. Qwen3.5: Accelerating productivity with native multimodal agents, February 2026. URL https://qwen.ai/blog?id=qwen3.5.
+John Schulman. Approximating KL divergence. https://joschu.net/blog/kl-approx.html,
 
-Miles Turpin, Julian Michael, Ethan Perez, and Samuel R. Bowman. Language models don’t always say what they think: Unfaithful explanations in chain-of-thought prompting, 2023. URL https://arxiv.org/abs/2305.04388.
+2017.
 
-Jason Wei, Yi Tay, Rishi Bommasani, Colin Raffel, Barret Zoph, Sebastian Borgeaud, Dani Yogatama, Maarten Bosma, Denny Zhou, Donald Metzler, Ed H. Chi, Tatsunori Hashimoto, Oriol Vinyals, Percy Liang, Jeff Dean, and William Fedus. Emergent abilities of large language models, 2022. URL https://arxiv.org/abs/2206.07682.
+John Schulman, Filip Wolski, Prafulla Dhariwal, Alec Radford, and Oleg Klimov. Proximal policy
 
-Jason Wei, Xuezhi Wang, Dale Schuurmans, Maarten Bosma, Brian Ichter, Fei Xia, Ed Chi, Quoc Le, and Denny Zhou. Chain-of-thought prompting elicits reasoning in large language models, 2023. URL https://arxiv.org/abs/2201.11903.
+optimization algorithms. arXiv preprint arXiv:1707.06347, 2017.
 
-An Yang, Anfeng Li, Baosong Yang, Beichen Zhang, Binyuan Hui, Bo Zheng, Bowen Yu, Chang Gao, Chengen Huang, Chenxu Lv, Chujie Zheng, Dayiheng Liu, Fan Zhou, Fei Huang, Feng Hu, Hao Ge, Haoran Wei, Huan Lin, Jialong Tang, Jian Yang, Jianhong Tu, Jianwei Zhang, Jianxin Yang, Jiaxi Yang, Jing Zhou, Jingren Zhou, Junyang Lin, Kai Dang, Keqin Bao, Kexin Yang, Le Yu, Lianghao Deng, Mei Li, Mingfeng Xue, Mingze Li, Pei Zhang, Peng Wang, Qin Zhu, Rui
+Zhihong Shao, Peiyi Wang, Qihao Zhu, Runxin Xu, Junxiao Song, Mingchuan Zhang, Y. K. Li,
+
+Y. Wu, and Daya Guo. DeepSeekMath: Pushing the limits of mathematical reasoning in open
+
+language models. arXiv preprint arXiv:2402.03300, 2024.
+
+Zeru Shi, Yingjia Wan, Zhenting Wang, Qifan Wang, Fan Yang, Elisa Kreiss, and Ruixiang Tang.
+
+Meaningless tokens, meaningful gains: How activation shifts enhance llm reasoning, 2025. URL
+https://arxiv.org/abs/2510.01032.
+
+DiJia Su, Hanlin Zhu, Yingchen Xu, Jiantao Jiao, Yuandong Tian, and Qinqing Zheng. Token
+
+assorted: Mixing latent and text tokens for improved language model reasoning. arXiv preprint
+arXiv:2502.03275, 2025. URL https://arxiv.org/abs/2502.03275.
+
+Fahim Tajwar, Guanning Zeng, Yueer Zhou, Yuda Song, Daman Arora, Yiding Jiang, Jeff Schneider,
+
+Ruslan Salakhutdinov, Haiwen Feng, and Andrea Zanette. Maximum likelihood reinforcement
+learning, 2026. URL https://arxiv.org/abs/2602.02710.
+
+Qwen Team. Qwen3.5: Accelerating productivity with native multimodal agents, February 2026.
+
+URL https://qwen.ai/blog?id=qwen3.5.
+
+Miles Turpin, Julian Michael, Ethan Perez, and Samuel R. Bowman. Language models don’t
+
+always say what they think: Unfaithful explanations in chain-of-thought prompting, 2023. URL
+https://arxiv.org/abs/2305.04388.
+
+Jason Wei, Yi Tay, Rishi Bommasani, Colin Raffel, Barret Zoph, Sebastian Borgeaud, Dani Yogatama,
+
+Maarten Bosma, Denny Zhou, Donald Metzler, Ed H. Chi, Tatsunori Hashimoto, Oriol Vinyals,
+Percy Liang, Jeff Dean, and William Fedus. Emergent abilities of large language models, 2022.
+URL https://arxiv.org/abs/2206.07682.
+
+Jason Wei, Xuezhi Wang, Dale Schuurmans, Maarten Bosma, Brian Ichter, Fei Xia, Ed Chi, Quoc Le,
+
+and Denny Zhou. Chain-of-thought prompting elicits reasoning in large language models, 2023.
+URL https://arxiv.org/abs/2201.11903.
+
+An Yang, Anfeng Li, Baosong Yang, Beichen Zhang, Binyuan Hui, Bo Zheng, Bowen Yu, Chang
+
+Gao, Chengen Huang, Chenxu Lv, Chujie Zheng, Dayiheng Liu, Fan Zhou, Fei Huang, Feng Hu,
+Hao Ge, Haoran Wei, Huan Lin, Jialong Tang, Jian Yang, Jianhong Tu, Jianwei Zhang, Jianxin
+Yang, Jiaxi Yang, Jing Zhou, Jingren Zhou, Junyang Lin, Kai Dang, Keqin Bao, Kexin Yang,
+
+Le Yu, Lianghao Deng, Mei Li, Mingfeng Xue, Mingze Li, Pei Zhang, Peng Wang, Qin Zhu, Rui
 
 13
 
 --- PAGE 14 ---
 
-Men, Ruize Gao, Shixuan Liu, Shuang Luo, Tianhao Li, Tianyi Tang, Wenbiao Yin, Xingzhang Ren, Xinyu Wang, Xinyu Zhang, Xuancheng Ren, Yang Fan, Yang Su, Yichang Zhang, Yinger Zhang, Yu Wan, Yuqiong Liu, Zekun Wang, Zeyu Cui, Zhenru Zhang, Zhipeng Zhou, and Zihan Qiu. Qwen3 technical report, 2025. URL https://arxiv.org/abs/2505.09388.
+Men, Ruize Gao, Shixuan Liu, Shuang Luo, Tianhao Li, Tianyi Tang, Wenbiao Yin, Xingzhang
+Ren, Xinyu Wang, Xinyu Zhang, Xuancheng Ren, Yang Fan, Yang Su, Yichang Zhang, Yinger
+Zhang, Yu Wan, Yuqiong Liu, Zekun Wang, Zeyu Cui, Zhenru Zhang, Zhipeng Zhou, and Zihan
+Qiu. Qwen3 technical report, 2025. URL https://arxiv.org/abs/2505.09388.
 
-Fred Zhang and Neel Nanda. Towards best practices of activation patching in language models: Metrics and methods. In International Conference on Learning Representations, 2024.
+Fred Zhang and Neel Nanda. Towards best practices of activation patching in language models:
 
-Artur Zolkowski, Wen Xing, David Lindner, Florian Tramèr, and Erik Jenner. Can reasoning models obfuscate reasoning? stress-testing chain-of-thought monitorability, 2025. URL https: //arxiv.org/abs/2510.19851.
+Metrics and methods. In International Conference on Learning Representations, 2024.
 
-A Invisible Reasoning Evaluation Details
+Artur Zolkowski, Wen Xing, David Lindner, Florian Tramèr, and Erik Jenner. Can reasoning
 
-A.1 Coefficient of Variation Analysis
+models obfuscate reasoning? stress-testing chain-of-thought monitorability, 2025. URL https:
+//arxiv.org/abs/2510.19851.
+
+A
+Invisible Reasoning Evaluation Details
+
+A.1
+Coefficient of Variation Analysis
 
 The coefficient of variation (CV = Std/|Mean| of accuracy uplift across filler types) provides a direct
 measure of type dependence. Low CV indicates that all filler types produce similar uplift, consistent
@@ -677,36 +1129,125 @@ Table 3: CV analysis for Qwen3-235B on 4-digit multiplication. Mean and Std of a
 CV indicates type-dependent uplift. CV is unstable when Mean ∆is near zero. #pos and #neg denote
 how many filler types improve or hurt accuracy.
 
-n Shots Mean ∆ Std ∆ CV #pos #neg
+n
+Shots
+Mean ∆
+Std ∆
+CV
+#pos
+#neg
 
-0 −1.8% 2.9% 1.6 4 13 1 +2.1% 1.1% 0.5 16 1 1 2 +3.0% 1.1% 0.4 17 0 10 +2.1% 0.5% 0.2 17 0 20 +1.4% 0.5% 0.3 17 0
+1
 
-0 −2.3% 5.9% 2.5 9 8 2 +2.9% 1.0% 0.4 17 0 30 10 +1.2% 0.8% 0.7 15 1 20 +0.4% 0.8% 2.4 12 5
+100
 
-0 +0.9% 5.2% 5.5 12 5 2 +1.6% 1.3% 0.8 16 1
-100 10 +0.8% 1.2% 1.4 12 5 20 +0.1% 1.0% 7.4 9 8
+A.2
+Task Details
 
-A.2 Task Details
-
-Multi-Digit Multiplication. Most models solve > 90% of 3-digit multiplication problems without
+Multi-Digit Multiplication.
+Most models solve > 90% of 3-digit multiplication problems without
 reasoning, while 5-digit multiplication exceeds the capability of frontier models without CoT. We
 construct a 4-digit multiplication dataset of 1,000 randomly generated problems with a fixed seed of
 12345. Each problem is of the form What is XXXX times YYYY?
 
-Multi-Step Arithmetic. Following Greenblatt [2025], each problem consists of 5 to 7 nested
+Multi-Step Arithmetic.
+Following Greenblatt [2025], each problem consists of 5 to 7 nested
 arithmetic operations (addition, subtraction, multiplication, integer division, and modulus) with
 operands sampled uniformly from [−99, 99], e.g., ((1 + 3) - (15 % 7)) * 2. We use a fixed
 random seed and evaluate all models on the same 1,000 generated problems.
 
-Variable Counting in Code. We provide the model with a short code snippet and ask it to count the
+Variable Counting in Code.
+We provide the model with a short code snippet and ask it to count the
 number of distinct variables assigned a value. We evaluate all models on the same 1,000 generated
 problems with a fixed random seed.
+
+0
+−1.8%
+2.9%
+1.6
+4
+13
+1
++2.1%
+1.1%
+0.5
+16
+1
+2
++3.0%
+1.1%
+0.4
+17
+0
+10
++2.1%
+0.5%
+0.2
+17
+0
+20
++1.4%
+0.5%
+0.3
+17
+0
+
+0
+−2.3%
+5.9%
+2.5
+9
+8
+2
++2.9%
+1.0%
+0.4
+17
+0
+10
++1.2%
+0.8%
+0.7
+15
+1
+20
++0.4%
+0.8%
+2.4
+12
+5
+
+0
++0.9%
+5.2%
+5.5
+12
+5
+2
++1.6%
+1.3%
+0.8
+16
+1
+10
++0.8%
+1.2%
+1.4
+12
+5
+20
++0.1%
+1.0%
+7.4
+9
+8
 
 14
 
 --- PAGE 15 ---
 
-A.3 Prompting Details and Ablations
+A.3
+Prompting Details and Ablations
 
 For the cross-model evaluation in Table 1, we use the following system prompt for all models:
 
@@ -728,19 +1269,11 @@ following instructions to use filler tokens.
 Table 4: Prompting ablations for Opus 4.5 on 4-digit multiplication and multi-step arithmetic. ∆is
 the absolute change from the 10-shot no-filler baseline.
 
-Configuration Accuracy ∆
+A.4
+Token Calibration and Selection Effects
 
-Multiplication
-
-10-shot baseline 71.8±1.4 — Prefilled pause (after) 80.7±1.2 +8.9% Prefilled pause (no hint) 80.8±1.2 +9.0% Prefilled pause (before) 73.4±1.4 +1.6% Generated pause 82.0±1.2 +10.2%
-
-Arithmetic
-
-10-shot baseline 45.8±1.6 — Prefilled pause (after) 52.5±1.6 +6.7% Prefilled pause (no hint) 51.7±1.6 +5.9% Prefilled pause (before) 44.2±1.6 −1.6% Generated pause 53.5±1.6 +7.7%
-
-A.4 Token Calibration and Selection Effects
-
-Token calibration. Different filler types have different word-to-token ratios: a single word may
+Token calibration.
+Different filler types have different word-to-token ratios: a single word may
 map to one token (e.g., “pause”) or multiple tokens (e.g., large Fibonacci numbers). We calibrate
 the number of filler words per type so that the resulting sequence contains approximately n tokens
 under the target model’s tokenizer. For each filler type and model, we perform a binary search over
@@ -748,7 +1281,8 @@ word count, counting tokens using the model’s tokenizer (Anthropic token-count
 models, local tokenizer weights for open-weight models). For the cross-model comparison, counting
 tokens (1–100) tokenize consistently to approximately 200 tokens across all models evaluated.
 
-Selection effects. Some models disobey the system prompt and produce a chain-of-thought before
+Selection effects.
+Some models disobey the system prompt and produce a chain-of-thought before
 answering, particularly on harder problems. We discard these samples, which can inflate accuracy
 by selecting for easier problems. When prompted to generate counting filler tokens, Opus 4.5 and
 Opus 4.6 produce explicit reasoning traces in roughly 60% and 90% of outputs, respectively. We
@@ -757,6 +1291,46 @@ generating a CoT. This approach fully controls selection effects for Opus 4.5 bu
 to Opus 4.6, GPT-5.2, or GPT-5.5, as their APIs do not permit assistant prefilling. Results for these
 models in Table 1 are marked with an asterisk.
 
+Configuration
+Accuracy
+∆
+
+Multiplication
+
+10-shot baseline
+71.8±1.4
+—
+Prefilled pause (after)
+80.7±1.2
++8.9%
+Prefilled pause (no hint)
+80.8±1.2
++9.0%
+Prefilled pause (before)
+73.4±1.4
++1.6%
+Generated pause
+82.0±1.2
++10.2%
+
+Arithmetic
+
+10-shot baseline
+45.8±1.6
+—
+Prefilled pause (after)
+52.5±1.6
++6.7%
+Prefilled pause (no hint)
+51.7±1.6
++5.9%
+Prefilled pause (before)
+44.2±1.6
+−1.6%
+Generated pause
+53.5±1.6
++7.7%
+
 15
 
 --- PAGE 16 ---
@@ -764,45 +1338,102 @@ models in Table 1 are marked with an asterisk.
 Table 5: Mitigating selection effects on arithmetic. Reasoning rate and accuracy under different
 configurations for Opus 4.5 and Opus 4.6.
 
-Configuration Reasoning % Accuracy
+B
+Filler Token Sweep
 
-Opus 4.5
-
-Generating 1–100 61.1 67.4±2.4 2× few-shot examples 0.2 58.3±1.6 Assistant prefill (1–100) 0.3 57.0±1.6
-
-Opus 4.6
-
-Generating 1–100 90.4 90.7±3.1 2× few-shot examples 68.2 80.8±2.2 Assistant prefill (1–100) — —
-
-B Filler Token Sweep
-
-B.1 Filler Token Examples
+B.1
+Filler Token Examples
 
 Table 6 lists the 17 filler token types used in our evaluations, with an example of each sequence.
 
 Table 6: Filler token types and examples. Each sequence is calibrated to contain approximately n
 tokens under the target model’s tokenizer.
 
-Type Example (truncated)
-
-Counting 1 2 3 4 5 6 . . . Fibonacci 1 1 2 3 5 8 13 21 . . . Prime numbers 2 3 5 7 11 13 17 . . . Square numbers 1 4 9 16 25 36 49 . . . Pi digits 3 1 4 1 5 9 2 6 5 . . . Random numbers 47 83 12 91 55 38 . . . Digit words one two three four five . . . Alphabet a b c d e f g h . . . NATO phonetic alpha bravo charlie delta . . . Animals cat dog bear wolf lion . . . Fruits apple mango peach grape . . . Colors red blue green yellow . . . US states Alabama Alaska Arizona . . . Lorem ipsum lorem ipsum dolor sit amet . . . Pause pause pause pause pause . . . Ellipses . . . Random tokens xQ7 bR2 mK9 wP4 . . .
-
-B.2 Qwen3.5-397B
+B.2
+Qwen3.5-397B
 
 Qwen3.5-397B achieves 0.0% at zero-shot and 90.6% at 10-shot on 4-digit multiplication. We
 serve the model locally for this sweep, whereas Table 1 queries the model through OpenRouter; the
 OpenRouter deployment reaches a 99.3% baseline on the same problems, so serving configuration
 substantially affects baseline accuracy. Table 7 reports the full filler token sweep at n=100.
 
-Zero-shot. The model scores 0.0% on all conditions, including with filler tokens. Filler tokens
+Zero-shot.
+The model scores 0.0% on all conditions, including with filler tokens. Filler tokens
 provide no benefit when the model cannot solve the task without them.
 
-Ten-shot at n=100. Most filler types are catastrophically harmful. Word-based types (animals,
+Ten-shot at n=100.
+Most filler types are catastrophically harmful. Word-based types (animals,
 nato, fruits, colors) drop accuracy from 90.6% to near 0%. Only three types show marginal positive
 effects: Fibonacci (+1.5%), ellipsis (+1.4%), and pi digits (+1.2%).
 
-Mixed filler. We tested whether catastrophic failure is a threshold or proportional effect by mixing
+Mixed filler.
+We tested whether catastrophic failure is a threshold or proportional effect by mixing
 Fibonacci tokens with animal tokens at varying ratios. Any mixture with ≥25% animal tokens
+
+Configuration
+Reasoning %
+Accuracy
+
+Opus 4.5
+
+Generating 1–100
+61.1
+67.4±2.4
+2× few-shot examples
+0.2
+58.3±1.6
+Assistant prefill (1–100)
+0.3
+57.0±1.6
+
+Opus 4.6
+
+Generating 1–100
+90.4
+90.7±3.1
+2× few-shot examples
+68.2
+80.8±2.2
+Assistant prefill (1–100)
+—
+—
+
+Type
+Example (truncated)
+
+Counting
+1 2 3 4 5 6 . . .
+Fibonacci
+1 1 2 3 5 8 13 21 . . .
+Prime numbers
+2 3 5 7 11 13 17 . . .
+Square numbers
+1 4 9 16 25 36 49 . . .
+Pi digits
+3 1 4 1 5 9 2 6 5 . . .
+Random numbers
+47 83 12 91 55 38 . . .
+Digit words
+one two three four five . . .
+Alphabet
+a b c d e f g h . . .
+NATO phonetic
+alpha bravo charlie delta . . .
+Animals
+cat dog bear wolf lion . . .
+Fruits
+apple mango peach grape . . .
+Colors
+red blue green yellow . . .
+US states
+Alabama Alaska Arizona . . .
+Lorem ipsum
+lorem ipsum dolor sit amet . . .
+Pause
+pause pause pause pause . . .
+Ellipses
+. . . Random tokens
+xQ7 bR2 mK9 wP4 . . .
 
 16
 
@@ -811,31 +1442,31 @@ Fibonacci tokens with animal tokens at varying ratios. Any mixture with ≥25% a
 Table 7: Full filler token sweep for Qwen3.5-397B on 4-digit multiplication (n=100, N=1,000).
 Baseline: 0.0% (0-shot), 90.6% (10-shot). Most filler types are catastrophically harmful at 10-shot.
 
-Type 0-shot ∆ 10-shot ∆
-
-fibonacci +0.0 +1.5 ellipsis +0.0 +1.4 pi_digits +0.0 +1.2 counting +0.0 −1.4 squares +0.0 −9.8 primes +0.0 −10.0 alphabet +0.0 −16.3 random_numbers +0.0 −16.0 pause +0.0 −78.9 random_tokens +0.0 −89.1 states +0.0 −89.7 digit_words +0.0 −89.8 lorem +0.0 −89.9 colors +0.0 −90.4 fruits +0.0 −90.6 nato +0.0 −90.6 animals +0.0 −90.6
-
 caused the model to produce extremely long outputs that timed out the server, even at N=1,000. The
 disruption is not just wrong answers: animal tokens cause the model to violate the concise answer
 format established by few-shot examples.
 
-Arithmetic. Qwen3.5-397B achieves 0.9% at 10-shot on multi-step arithmetic. Filler tokens have
+Arithmetic.
+Qwen3.5-397B achieves 0.9% at 10-shot on multi-step arithmetic. Filler tokens have
 no effect (∆≈0 across all types). The same model that shows catastrophic type sensitivity on
 multiplication shows no filler response on arithmetic, confirming that the filler token effect requires a
 minimum baseline capability.
 
-C Mechanistic Analysis
+C
+Mechanistic Analysis
 
 We run three mechanistic experiments on Qwen3-235B on the variable counting task, comparing
 animals filler tokens (which provide strong uplift) against Fibonacci tokens (which provide weak
 uplift). All experiments use 100 filler tokens in the 10-shot setting.
 
-Filler token order. We fix the total token count at 100 and vary the ordering of mixed sequences.
+Filler token order.
+We fix the total token count at 100 and vary the ordering of mixed sequences.
 The “animals→Fibonacci” ordering (50 animals followed by 50 Fibonacci) recovers most of the
 accuracy from pure animals tokens, while “Fibonacci→animals” performs worse than pure Fibonacci.
 Early positions in the filler sequence are disproportionately important.
 
-Activation patching. We patch residual stream activations from animals filler tokens into a forward
+Activation patching.
+We patch residual stream activations from animals filler tokens into a forward
 pass that otherwise uses Fibonacci tokens, measuring recovery of the performance gap: (patched −
 Fibonacci)/(animals −Fibonacci). We apply the patch across all 94 layers at the full filler span.
 Patching a single token position yields no meaningful recovery, confirming that the useful computation
@@ -844,19 +1475,96 @@ is distributed across the full sequence.
 Table 8: Activation patching recovery by layer (Qwen3-235B, variable counting). Values > 1
 reflect mild overshoot, consistent with activation patching literature.
 
-Layer 0 10 20 30 40 50 60 70 80 90
+Layer
+0
+10
+20
+30
+40
+50
+60
+70
+80
+90
 
-Recovery 0.95 0.93 1.11 1.14 0.79 0.54 0.40 −0.13 −0.07 −0.06
+Recovery
+0.95
+0.93
+1.11
+1.14
+0.79
+0.54
+0.40
+−0.13
+−0.07
+−0.06
 
 Patching at layers 0–30 recovers over 90% of the performance gap; patching at layers 70 and above
 yields negative recovery. The benefit is established in early layers, and late-layer activations from
 animals tokens are harmful when inserted into a Fibonacci context.
 
+Type
+0-shot ∆
+10-shot ∆
+
+fibonacci
++0.0
++1.5
+ellipsis
++0.0
++1.4
+pi_digits
++0.0
++1.2
+counting
++0.0
+−1.4
+squares
++0.0
+−9.8
+primes
++0.0
+−10.0
+alphabet
++0.0
+−16.3
+random_numbers
++0.0
+−16.0
+pause
++0.0
+−78.9
+random_tokens
++0.0
+−89.1
+states
++0.0
+−89.7
+digit_words
++0.0
+−89.8
+lorem
++0.0
+−89.9
+colors
++0.0
+−90.4
+fruits
++0.0
+−90.6
+nato
++0.0
+−90.6
+animals
++0.0
+−90.6
+
 17
 
 --- PAGE 18 ---
 
-Linear probing. We train linear probes on mean-pooled residual stream activations across the filler
+Linear probing.
+We train linear probes on mean-pooled residual stream activations across the filler
 span at each layer to predict the correct answer. Probing a single token position yields no meaningful
 signal; mean pooling across the full span is required, consistent with the activation patching result
 that computation is distributed across the sequence.
@@ -864,16 +1572,47 @@ that computation is distributed across the sequence.
 Table 9: Linear probe accuracy by layer (Qwen3-235B, variable counting). Chance is 20%. Probes
 are trained on mean-pooled residual stream activations across the filler span.
 
-Layer 0 15 30 45 60 75 90
+Layer
+0
+15
+30
+45
+60
+75
+90
 
-Baseline (no filler) 20.0% 48.7% 53.3% 41.3% 56.7% 56.0% 48.0% Animals 20.0% 59.3% 67.3% 60.7% 65.3% 70.0% 69.3% Fibonacci 20.0% 50.0% 54.0% 51.3% 53.3% 54.7% 44.7%
+Baseline (no filler)
+20.0%
+48.7%
+53.3%
+41.3%
+56.7%
+56.0%
+48.0%
+Animals
+20.0%
+59.3%
+67.3%
+60.7%
+65.3%
+70.0%
+69.3%
+Fibonacci
+20.0%
+50.0%
+54.0%
+51.3%
+53.3%
+54.7%
+44.7%
 
 Animals filler tokens encode substantially more task-relevant information than Fibonacci tokens at
 every layer from layer 15 onward. The animals probe reaches 70% accuracy at layer 75, compared to
 54.7% for Fibonacci and 56.0% for the no-filler baseline, indicating that the choice of filler token
 type determines how effectively task-relevant information accumulates in the residual stream.
 
-C.1 Attention Masking
+C.1
+Attention Masking
 
 We run attention masking experiments on Qwen3-235B on 4-digit multiplication (10-shot, n=100,
 N=1,000) to probe which attention pathways carry the filler token benefit. Each mask blocks
@@ -885,20 +1624,16 @@ block; Mask B blocks it from all prior context. We also run source-region ablati
 specific key-value regions and a scoring-only mask that blocks gold answer tokens from attending to
 the final filler span.
 
-Core masking results. Table 10 shows that applying either mask causes only modest changes in
+Core masking results.
+Table 10 shows that applying either mask causes only modest changes in
 accuracy (≤1–2%) and log-probability gain. Blocking the entire few-shot block or all prior context
 does not remove the uplift.
 
 Table 10: Core attention masking results (Qwen3-235B, 4-digit multiplication). Mask A blocks the
 filler span from the few-shot block; Mask B blocks it from all prior context.
 
-Condition Accuracy ∆log p
-
-Baseline (10-shot) 70.3% 0.000 pi_digits unmasked 69.8% +0.329 pi_digits Mask A 69.1% +0.329 counting unmasked 67.9% +0.085 counting Mask A 67.9% +0.086
-
-Baseline (0-shot) 57.3% 0.000 counting 0-shot unmasked 60.9% +0.630 counting 0-shot Mask B 60.7% +0.641
-
-Source-region ablations. Table 11 reports finer-grained results. For 0-shot counting, blocking
+Source-region ablations.
+Table 11 reports finer-grained results. For 0-shot counting, blocking
 filler self-attention reduces accuracy more than blocking the final question, suggesting tokens within
 the span build on each other. For 10-shot random_numbers, blocking the few-shot block causes the
 largest drop, while blocking the final question has no effect. No single pathway accounts for the full
@@ -910,6 +1645,36 @@ attention pathway. The zero-shot counting result in Table 10 further shows that 
 when the filler span cannot attend to any prior context, implying that in some settings the benefit
 arises from mechanisms other than question-specific computation within the span.
 
+Condition
+Accuracy
+∆log p
+
+Baseline (10-shot)
+70.3%
+0.000
+pi_digits unmasked
+69.8%
++0.329
+pi_digits Mask A
+69.1%
++0.329
+counting unmasked
+67.9%
++0.085
+counting Mask A
+67.9%
++0.086
+
+Baseline (0-shot)
+57.3%
+0.000
+counting 0-shot unmasked
+60.9%
++0.630
+counting 0-shot Mask B
+60.7%
++0.641
+
 18
 
 --- PAGE 19 ---
@@ -917,13 +1682,8 @@ arises from mechanisms other than question-specific computation within the span.
 Table 11: Source-region ablations (Qwen3-235B, 4-digit multiplication). Each mask blocks the
 final filler span from one key-value region.
 
-Blocked region Baseline Unmasked Masked
-
-0-shot counting All prior context 41.8% 47.2% 48.8% Final question 42.1% 50.4% 49.5% Filler self-attention 42.0% 50.8% 48.1% System prompt 40.2% 48.7% 47.9%
-
-10-shot random_numbers Few-shot block 64.0% 67.6% 66.1% Final question 63.9% 67.0% 67.5% Filler self-attention 64.9% 65.7% 66.1% All prior context 64.3% 66.4% 68.4% System prompt 64.0% 66.1% 64.2%
-
-D Hidden Goal Results for Qwen3-235B
+D
+Hidden Goal Results for Qwen3-235B
 
 Table 12 reports the full breakdown of hidden goal performance for Qwen3-235B on 4-digit multipli-
 cation (N=1,000), showing both NA accuracy (the rate at which the model correctly outputs N/A on
@@ -944,20 +1704,14 @@ Table 12: Full hidden goal breakdown for Qwen3-235B on 4-digit multiplication (N
 accuracy measures constraint satisfaction on problems where the constraint holds; non-NA accuracy
 measures multiplication accuracy on the remaining problems.
 
-Constraint Mode Overall NA Acc. Non-NA Acc.
-
-Baseline 52.5% 0.0% 69.4% x mod 2 = 1 (easy) Generated 63.5% 98.8% 52.1%
-
-Baseline 54.6% 0.0% 69.8% x mod 3 = 2 (medium) Generated 43.3% 39.0% 44.5%
-
-Baseline 60.3% 0.0% 68.4% 4x mod 7 = 5 (hard) Generated 60.0% 0.0% 68.1%
-
-E RL Training Details
+E
+RL Training Details
 
 This section provides a formal description of the reinforcement learning objective used for the RL
 experiments in Section 6.
 
-E.1 Task and Prompt Format
+E.1
+Task and Prompt Format
 
 For multiplication, Each training problem asks the model to compute the product of two 4-digit
 integers. The prompt includes 10 few-shot examples, each demonstrating the expected output format:
@@ -965,115 +1719,300 @@ a sequence of filler tokens followed by Answer: <number>. The few-shot examples 
 same number of filler tokens as the model is expected to generate. The model generates its response
 autoregressively, producing filler tokens and then an answer.
 
+Blocked region
+Baseline
+Unmasked
+Masked
+
+0-shot counting
+All prior context
+41.8%
+47.2%
+48.8%
+Final question
+42.1%
+50.4%
+49.5%
+Filler self-attention
+42.0%
+50.8%
+48.1%
+System prompt
+40.2%
+48.7%
+47.9%
+
+10-shot random_numbers
+Few-shot block
+64.0%
+67.6%
+66.1%
+Final question
+63.9%
+67.0%
+67.5%
+Filler self-attention
+64.9%
+65.7%
+66.1%
+All prior context
+64.3%
+66.4%
+68.4%
+System prompt
+64.0%
+66.1%
+64.2%
+
+Constraint
+Mode
+Overall
+NA Acc.
+Non-NA Acc.
+
+x mod 2 = 1 (easy)
+Baseline
+52.5%
+0.0%
+69.4%
+Generated
+63.5%
+98.8%
+52.1%
+
+x mod 3 = 2 (medium)
+Baseline
+54.6%
+0.0%
+69.8%
+Generated
+43.3%
+39.0%
+44.5%
+
+4x mod 7 = 5 (hard)
+Baseline
+60.3%
+0.0%
+68.4%
+Generated
+60.0%
+0.0%
+68.1%
+
 19
 
 --- PAGE 20 ---
 
-E.2 Reward
+E.2
+Reward
 
-Each completion receives a binary exact-match reward: Rj = 1[ˆyj = y] (1)
+Each completion receives a binary exact-match reward:
 
 where ˆyj is the integer extracted from sample j’s output and y is the ground-truth product.
 
-E.3 Advantage Estimation
+E.3
+Advantage Estimation
 
 We follow a GRPO-style [Shao et al., 2024] group advantage scheme. For each problem i in a batch
-of B problems, we sample G completions and compute the group mean reward ¯Ri = G1 PGj=1 Rij.
+of B problems, we sample G completions and compute the group mean reward ¯Ri = 1
+
+j=1 Rij.
 For the experiments in Section 6 B = 32, G = 32.
 
-MaxRL normalization. Rather than normalizing by the standard deviation as in GRPO, we
-normalize by the mean reward [Tajwar et al., 2026]: Rij −¯Ri ˆAij = (2) ¯Ri + ϵ
+MaxRL normalization.
+Rather than normalizing by the standard deviation as in GRPO, we
+normalize by the mean reward [Tajwar et al., 2026]:
+
 with ϵ = 10−6. This upweights problems where few samples succeed (low ¯Ri) and downweights
 problems where most samples already produce the correct answer.
 
-Zero-advantage filtering. When all G samples for a problem receive the same reward—either all
+Zero-advantage filtering.
+When all G samples for a problem receive the same reward—either all
 correct or all incorrect—the advantages are identically zero and the problem contributes no gradient.
 These problems are dropped from the training batch and are always replaced with fresh problems
 drawn from the remaining training set to ensure that the batch is always the same size.
 
-Answer-only weighting. Advantages are applied only to tokens at and after the Answer: delimiter;
+Answer-only weighting.
+Advantages are applied only to tokens at and after the Answer: delimiter;
 filler tokens receive ˆAt = 0 and produce no gradient signal. The model therefore receives no direct
 optimization pressure on filler token content, yet RL still discovers useful filler strategies because the
 choice of filler affects answer-token probabilities across rollouts.
 
-E.4 Policy Gradient Objective
+E.4
+Policy Gradient Objective
 
 We optimize a PPO-style [Schulman et al., 2017] clipped policy gradient objective with asymmetric
 clipping and hard ratio masking.
 
-Importance sampling ratio. Let πθ denote the current policy and πold the policy that generated
+Importance sampling ratio.
+Let πθ denote the current policy and πold the policy that generated
 the rollouts. The per-token importance sampling ratio is:
 
-πθ(at | st) rt = (3) πold(at | st)
-
-Asymmetric PPO clipping. The per-token clipped surrogate loss is:
-
-Lclipt = −min rt ˆAt, clip(rt, 1 −ϵlo, 1 + ϵhi) ˆAt (4)
+Asymmetric PPO clipping.
+The per-token clipped surrogate loss is:
 
 with ϵlo = 0.2 and ϵhi = 0.28. The asymmetry permits the policy to increase probability on
 positively-advantaged tokens more freely (upper ratio bound 1.28) than to decrease probability on
 negatively-advantaged tokens (lower bound 0.80).
 
-Hard ratio masking. Following GLM Team [2025], tokens where the importance sampling ratio
-deviates too far from unity receive zero gradient. Specifically, we define a per-token mask: mt = 1h 1 ≤rt ≤β i (5) β
+Hard ratio masking.
+Following GLM Team [2025], tokens where the importance sampling ratio
+deviates too far from unity receive zero gradient. Specifically, we define a per-token mask:
 
 with β = 2.0, so tokens with rt /∈[0.5, 2.0] are excluded from the gradient computation entirely.
 This provides a hard safety margin beyond the soft PPO clip.
 
+Lclip
+
+t
+= −min
+
+Rj = 1[ˆyj = y]
+(1)
+
+ˆAij = Rij −¯Ri
+
+¯Ri + ϵ
+(2)
+
+rt = πθ(at | st)
+
+πold(at | st)
+(3)
+
+rt ˆAt, clip(rt, 1 −ϵlo, 1 + ϵhi) ˆAt
+
+ 
+
+h 1
+
+i
+
+mt = 1
+
+β ≤rt ≤β
+
+
+
+PG
+
+G
+
+(4)
+
+(5)
+
 --- PAGE 21 ---
 
-0.9 Importance Sampling 1.00 PPO 0.8 0.75
-KL 0.7 0.50 Reward 0.25 0.6 Importance Sampling PPO 0.00 0 25 50 75 100 0 25 50 75 100 Iteration Iteration
+Importance Sampling
+PPO
+
+1.00
+
+0.75
+
+KL
+
+0.50
+
+0.25
+
+0.00
+
+0
+25
+50
+75
+100
+Iteration
 
 Figure 5: We compare the estimated KL and the mean reward for the PPO-style loss that we use, vs
 an importance-sampling-style loss function. These curves are for the model that chooses what kinds
 of filler tokens to generate, trained on multiplication (Figure 4, left).
 
-Batch loss. The final loss averages over the set V of valid token positions (answer tokens with
+Batch loss.
+The final loss averages over the set V of valid token positions (answer tokens with
 nonzero advantage, excluding padding):
 
-1 L = X mt · Lclipt (6) |V| t∈V
+KL monitoring.
+We monitor the KL divergence between πθ and πold using the K3 estimator [Schul-
+man, 2017]:
 
-KL monitoring. We monitor the KL divergence between πθ and πold using the K3 estimator [Schul-
-man, 2017]: bDK3KL = Et rt −log rt −1 (7)
+(7)
 This quantity is logged for diagnostics but is not used as a penalty term in the loss.
 
 In Figure 5 we compare our objective to an importance sampling objective and validate that the
 clipping and hard ratio masking serve to stabilize training so that the model continues improving past
 75 iterations.
 
-E.5 Infrastructure
+E.5
+Infrastructure
 
-Asynchronous RL. We use asynchronous RL [Piché et al., 2025, GLM Team, 2025] to overlap
+Asynchronous RL.
+We use asynchronous RL [Piché et al., 2025, GLM Team, 2025] to overlap
 generation and training: while the current batch is being trained, rollouts for the next batch are
 generated concurrently on the inference server. After each optimizer step, training weights are
 synchronized to the inference server, during which the inference server is briefly paused. We do not
 flush the KV cache after weight sync.
 
-Rollout router replay. Because Qwen3-235B is a Mixture-of-Experts model, expert routing
+Rollout router replay.
+Because Qwen3-235B is a Mixture-of-Experts model, expert routing
 decisions are non-deterministic and differ between inference and training if not controlled. We use
 rollout router replay [Ma et al., 2025]: expert routing indices from the inference forward pass are
 captured and replayed during the training forward pass, ensuring that the training gradient corresponds
 to the same expert assignments that produced the rollout.
 
-Sampling. We use a modified version of SGLang for all rollouts.
+Sampling.
+We use a modified version of SGLang for all rollouts.
 
-E.6 Hyperparameters
+E.6
+Hyperparameters
 
-E.7 Prompts
+E.7
+Prompts
 
 Model that learns to generate its own filler token sequences: (5.1)
 
 Do not reason explicitly or show your work.
 Instead, you may generate up to {filler_tokens} filler tokens to help you
 
+0.9
+
+0.8
+
+Reward
+
+0.7
+
+0.6
+
+L = 1
+
+mt · Lclip
+
+X
+
+t
+(6)
+
+|V|
+
+t∈V
+
+KL = Et
+
+bDK3
+
+
+
+
+
+rt −log rt −1
+
 21
 
 --- PAGE 22 ---
-
-Parameter Value
-
-Model Qwen3-235B-A22B-Instruct-2507 Training mode Full-weight (all parameters) Optimizer Adam Learning rate 5 × 10−6 Gradient clip norm 1.0 Batch size B 32 problems Group size G 32 completions per problem PPO clip ϵlo / ϵhi 0.2 / 0.28 Hard mask β 2.0 Few-shot examples 10 Advantage weighting Answer-only Advantage normalization MaxRL Table 13: Hyperparameters for the 4-digit multiplication RL experiments.
 
 process the problem internally.
 You may reason in an encoded manner through your choice
@@ -1096,9 +2035,11 @@ You may only generate up to {filler_tokens} tokens.
 Note that each digit you generate is a separate token.\n’
 Format:\n[filler tokens]\nAnswer: [number]
 
-F RL Experiment Results
+F
+RL Experiment Results
 
-F.1 Filler Token Preferences After RL
+F.1
+Filler Token Preferences After RL
 
 We train Qwen3-235B with RL for 114 steps on 4-digit multiplication, allowing the model to generate
 filler tokens freely. Zero-shot baseline accuracy improves from 42.0% to 66.5% during training. RL
@@ -1106,25 +2047,64 @@ alters the filler type hierarchy: counting (+2.0%) and ellipsis (+1.7%) become t
 types after training, while lorem ipsum (−1.6%) and NATO (−1.7%) become harmful despite being
 helpful in the base model (+3.5% and +2.9% respectively).
 
-Test-time filler benefit. After RL training, the model does not benefit from filler tokens at test time.
+Test-time filler benefit.
+After RL training, the model does not benefit from filler tokens at test time.
 At N=10,000: prefilled random numbers yield 73.62% vs. baseline 73.19% (+0.43%, +0.7σ, not
 significant); model-generated random numbers yield 73.30% (+0.11%, +0.2σ, not significant). The
 RL training improves baseline accuracy but does not install a durable invisible reasoning capability
 that transfers to test time.
 
-G Supervised Fine-Tuning Details
+G
+Supervised Fine-Tuning Details
 
 We construct SFT datasets for Qwen3-235B by generating filler token sequences from Opus 4.5.
 Experiments vary along three axes: filler token type (counting 1–100 or ellipses), supervision strategy
 (full output or answer-only), and training data (all synthetic arithmetic problems or the subset Opus 4.5
 
+Parameter
+Value
+
+Model
+Qwen3-235B-A22B-Instruct-2507
+Training mode
+Full-weight (all parameters)
+Optimizer
+Adam
+Learning rate
+5 × 10−6
+
+Gradient clip norm
+1.0
+Batch size B
+32 problems
+Group size G
+32 completions per problem
+PPO clip ϵlo / ϵhi
+0.2 / 0.28
+Hard mask β
+2.0
+Few-shot examples
+10
+Advantage weighting
+Answer-only
+Advantage normalization
+MaxRL
+Table 13: Hyperparameters for the 4-digit multiplication RL experiments.
+
 22
 
 --- PAGE 23 ---
 
-0.10 0.9 Run 1 Run 2 0.08 0.8
+0.10
 
-KL0.06 0.7 Reward 0.04 0.6 Run 1 Run 2 0 25 50 75 100 0 25 50 75 100 Iteration Iteration
+Run 1
+Run 2
+
+0.08
+
+0.06
+
+0.04
 
 Figure 6: KL and reward curves for RL training on 4-digit multiplication. The PPO-style clipped
 objective stabilizes training past 75 iterations, where an importance-sampling objective diverges.
@@ -1133,7 +2113,19 @@ solves with filler tokens). Training uses learning rate 10−4 with linear decay
 batch size 64; varying these parameters does not affect the results. The loss is standard cross-entropy
 with a supervision mask wi ∈{0, 1}:
 
-N 1 LSFT = − X wi · log pθ(yi | y<i) (8) Pi wi i=1
+N
+X
+
+LSFT = −
+1
+P
+
+wi · log pθ(yi | y<i)
+(8)
+
+i wi
+
+i=1
 
 where wi = 1 for all tokens under full supervision, or only for tokens after Answer: under answer-
 only supervision.

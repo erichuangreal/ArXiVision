@@ -1,509 +1,1332 @@
 --- PAGE 1 ---
 
-The Mirage of LLM Guardrails: A Case Study in AI-Assisted Medical Note Manipulation
+The Mirage of LLM Guardrails: A Case Study in AI-Assisted Medical Note
+
+The rapid deployment of large language models (LLMs)
+in healthcare settings makes the reliability of their built-
+in guardrails against malicious queries a question of urgent
+practical consequence. Yet the robustness of these mecha-
+nisms against deliberate misuse (in the healthcare context)
+remains poorly understood. In this paper, we investigate this
+question empirically, using AI-assisted medical note manipu-
+lation as a concrete case study. We make four novel contribu-
+tions. First, we develop a reproducible manipulation pipeline
+that takes publicly available seed medical note templates and
+use commercial LLMs to produce customized manipulated
+notes by substituting patient names, provider identities, dates,
+and medical conditions across multiple model families, in-
+put formats, and prompt phrasings. Second, we conduct a
+systematic empirical evaluation of LLM guardrail robustness
+for medical note manipulation. Our experimental results re-
+veal substantial weaknesses and inconsistencies in contempo-
+rary commercial LLM guardrails, including low refusal rates
+for several model families. Third, we utilize a combination
+of automated metrics and human annotation-based metrics
+to assess the correctness of requested manipulations. Fourth,
+we conduct a user-study to assess the believability of ma-
+nipulated medical notes, finding that the best manipulations
+are visually indistinguishable from original documents to hu-
+man raters. Finally, we discuss implications for responsible
+guardrail design in LLMs, AI safety policies, and the broader
+ethics of deploying LLMs in healthcare settings.
+
+arXiv:2607.24859v1 [cs.CR] 26 Jul 2026
+
+Large language models (LLMs) are rapidly transforming ev-
+eryday workflows across a wide variety of domains, becom-
+ing an increasingly important part of modern digital infras-
+tructure. For example, LLMs are increasingly integrated in
+domains such as education, customer support, and scientific
+research (Hadi et al. 2023), leading many to view them as a
+foundational technological shift comparable to a new indus-
+trial revolution (Arawi, El Bachour, and El Khansa 2024). In
+particular, healthcare has emerged as one of the most promi-
+nent domains for LLM deployment, with LLM-powered
+systems being positioned as tools for clinical documenta-
+tion, patient communication, medical summarization, and
+
+Copyright © 2026, Association for the Advancement of Artificial
+Intelligence (www.aaai.org). All rights reserved.
+
+The Pennsylvania State University, University Park, PA 16802
+
+Abstract
+
+Introduction
+
+Manipulation
 
 Davis Yadav, Amulya Yadav
 
-The Pennsylvania State University, University Park, PA 16802 [EMAIL], [EMAIL]
+[EMAIL], [EMAIL]
 
-Abstract decision support (Maity and Saikia 2025). These technolo- gies are already being incorporated into operational clinical The rapid deployment of large language models (LLMs) workflows through applications such as AI-assisted medical in healthcare settings makes the reliability of their built- scribes (Palm et al. 2025) and healthcare-focused chatbots in guardrails against malicious queries a question of urgent (Chow and Li 2025). Reflecting this broader trend, major practical consequence. Yet the robustness of these mecha- technology companies including OpenAI, Anthropic, and nisms against deliberate misuse (in the healthcare context) remains poorly understood. In this paper, we investigate this Google have recently introduced healthcare-oriented LLM question empirically, using AI-assisted medical note manipu- offerings, such as ChatGPT for Health (OpenAI 2026) and lation as a concrete case study. We make four novel contribu- Claude for Healthcare (Anthropic 2026), signaling growing tions. First, we develop a reproducible manipulation pipeline institutional investment and adoption in this space. This mo-2026 that takes publicly available seed medical note templates and mentum is expected to continue, as industry reports project
+decision support (Maity and Saikia 2025). These technolo-
+gies are already being incorporated into operational clinical
+workflows through applications such as AI-assisted medical
+scribes (Palm et al. 2025) and healthcare-focused chatbots
+(Chow and Li 2025). Reflecting this broader trend, major
+technology companies including OpenAI, Anthropic, and
+Google have recently introduced healthcare-oriented LLM
+offerings, such as ChatGPT for Health (OpenAI 2026) and
+Claude for Healthcare (Anthropic 2026), signaling growing
+institutional investment and adoption in this space. This mo-
+mentum is expected to continue, as industry reports project
+substantial growth in the generative AI healthcare market
+over the coming decade (DataM Intelligence 2025).
 
-notes by substituting patient names, provider identities, dates, over the coming decade (DataM Intelligence 2025).Jul use commercial LLMs to produce customized manipulated substantial growth in the generative AI healthcare market and medical conditions across multiple model families, in- Despite the transformative potential of LLMs in health-
-26 putsystematicformats,empiricaland promptevaluationphrasings.of LLMSecond,guardrailwe robustnessconduct a care, their deployment also introduces significant risks for medical note manipulation. Our experimental results re- (Chow and Li 2025). For example, their growing use in veal substantial weaknesses and inconsistencies in contempo- healthcare has led to concerns regarding their potential rary commercial LLM guardrails, including low refusal rates (harmful) influence on medical diagnoses, treatment deci- for several model families. Third, we utilize a combination sions, insurance claims, workplace leave, academic accom- of automated metrics and human annotation-based metrics modations, and other high-stakes institutional outcomes. to assess the correctness of requested manipulations. Fourth, These concerns have been reinforced by public reporting on[cs.CR] we conduct a user-study to assess the believability of ma- rise in AI generated fake sick notes produced by students nipulated medical notes, finding that the best manipulations (Grove 2025) and research articles documenting concerns are visually indistinguishable from original documents to hu- regarding unsafe health advice (Draelos et al. 2026), hallu- man raters. Finally, we discuss implications for responsible guardrail design in LLMs, AI safety policies, and the broader cinated medical recommendations, biased outputs, privacy ethics of deploying LLMs in healthcare settings. leakage, and unreliable clinical reasoning in healthcare- oriented LLM systems (Nazi and Peng 2024). As these tech- nologies become more deeply integrated into operational Introduction healthcare workflows, ensuring their safety, reliability, and trustworthiness has emerged as an increasingly important Large language models (LLMs) are rapidly transforming ev- societal, institutional, and governance challenge. eryday workflows across a wide variety of domains, becom- ing an increasingly important part of modern digital infras- Prior work on LLMs in healthcare has largely focused tructure. For example, LLMs are increasingly integrated in on evaluating whether these systems can effectively sup- domains such as education, customer support, and scientific port intended or benign use cases, such as medical question research (Hadi et al. 2023), leading many to view them as a answering, clinical reasoning and diagnostic support (Jin foundational technological shift comparable to a new indus- et al. 2026) as well as patient communication, and health- trial revolution (Arawi, El Bachour, and El Khansa 2024). In care documentation assistance (Palm et al. 2025). In par-arXiv:2607.24859v1 particular, healthcare has emerged as one of the most promi- ticular, existing studies have primarily examined dimen- nent domains for LLM deployment, with LLM-powered sions such as factual accuracy (Akhter, Cooper, and Cooper systems being positioned as tools for clinical documenta- 2023), alignment with clinical guidelines (Fast et al. 2024), tion, patient communication, medical summarization, and and the usefulness of LLM-generated medical recommenda- tions in real-world healthcare workflows (Bedi et al. 2024). Copyright © 2026, Association for the Advancement of Artificial More broadly, much of the current literature asks whether Intelligence (www.aaai.org). All rights reserved. LLMs are sufficiently capable, accurate, and reliable to be
+Despite the transformative potential of LLMs in health-
+care, their deployment also introduces significant risks
+(Chow and Li 2025). For example, their growing use in
+healthcare has led to concerns regarding their potential
+(harmful) influence on medical diagnoses, treatment deci-
+sions, insurance claims, workplace leave, academic accom-
+modations, and other high-stakes institutional outcomes.
+These concerns have been reinforced by public reporting on
+rise in AI generated fake sick notes produced by students
+(Grove 2025) and research articles documenting concerns
+regarding unsafe health advice (Draelos et al. 2026), hallu-
+cinated medical recommendations, biased outputs, privacy
+leakage, and unreliable clinical reasoning in healthcare-
+oriented LLM systems (Nazi and Peng 2024). As these tech-
+nologies become more deeply integrated into operational
+healthcare workflows, ensuring their safety, reliability, and
+trustworthiness has emerged as an increasingly important
+societal, institutional, and governance challenge.
+
+Prior work on LLMs in healthcare has largely focused
+on evaluating whether these systems can effectively sup-
+port intended or benign use cases, such as medical question
+answering, clinical reasoning and diagnostic support (Jin
+et al. 2026) as well as patient communication, and health-
+care documentation assistance (Palm et al. 2025). In par-
+ticular, existing studies have primarily examined dimen-
+sions such as factual accuracy (Akhter, Cooper, and Cooper
+2023), alignment with clinical guidelines (Fast et al. 2024),
+and the usefulness of LLM-generated medical recommenda-
+tions in real-world healthcare workflows (Bedi et al. 2024).
+More broadly, much of the current literature asks whether
+LLMs are sufficiently capable, accurate, and reliable to be
 
 --- PAGE 2 ---
 
-safely deployed for healthcare assistance under normal oper- on medical question-answering benchmarks and found that
-ating conditions involving well-intentioned users. Compara- it showed strong performance and surpassed prior state-of-
-tively less attention has been devoted to adversarial or mali- the-art models on accuracy, but remained inferior to human
-cious use cases, including whether contemporary LLM sys- clinicians performance. In a follow-up study, the same au-
-tems can reliably prevent deliberate misuse in high-stakes thors proposed an improved LLM version (Med-PaLM2),
-healthcare contexts (Menz et al. 2024). While commer- which was found to be superior in performance (on pa-
-cial LLM providers increasingly deploy safety guardrails, tient questions) as compared to human physicians (Sing-
-refusal mechanisms, and policy-enforcement systems in- hal et al. 2025). Further, several studies have also evaluated
-tended to restrict harmful or policy-violating requests, the the capabilities of general-purpose LLMs such as ChatGPT-
-robustness of these safeguards against realistic misuse at- 4 and GPT-5 on medical reasoning benchmarks, including
-tempts remains insufficiently understood. This raises an ur- examinations like the United States Medical Licensing Ex-
-gent question: how robust are contemporary LLM guardrails amination (USMLE), and found that these models demon-
-against deliberate misuse in healthcare-document contexts? strate performance comparable to, and in some cases ap- This paper addresses this gap through a systematic em- proaching, expert-level human clinical reasoning (Nori et al.
-pirical study of LLM guardrail robustness using AI-assisted 2023; Wang et al. 2026). Apart from clinical reasoning and
-medical-note manipulation as a case study of healthcare mis- question-answering tasks, researchers have also explored the
-use. We investigate three primary research questions: effectiveness of LLMs in clinical summarization tasks and found that medically adapted-LLMs are at par or superior to RQ1: How robust are contemporary LLM guardrails summaries generated from human experts (Van Veen et al. against medical-note manipulation requests? 2024). While these studies evaluate the capabilities and clin- RQ2: When manipulation attempts succeed, how accu- ical utility of LLMs under intended use scenarios, they do rately do LLMs perform the requested modifications? not examine the risks associated with deliberate (malicious) RQ3: When manipulation attempts succeed, how believ- misuse or the robustness of model guardrails against at- able are the resulting outputs to average human readers? tempts to manipulate medical documents. Malicious Use of LLMs in Healthcare. A second line of To answer these questions, we develop a reproducible research focuses on the safety and robustness of LLMs in
-manipulation pipeline that uses publicly available seed healthcare use cases, emphasizing vulnerabilities associated
-medical-note templates and commercial LLM systems to with hallucinations, misinformation, and harmful medical
-generate customized manipulated notes through controlled outputs. For example, Han et al. (2024a) evaluated the med-
-substitutions of patient names, provider identities, appoint- ical safety of publicly accessible medical LLMs and found
-ment dates, and medical conditions. We conduct a system- that they easily comply to general as well as harmful medical
-atic empirical evaluation across multiple commercial LLM requests, and thus, they do not meet the standards of safety
-families, input formats, and prompt phrasings, allowing us to outlined by the American Medical Association. Similarly,
-measure how refusal behavior varies across modalities and Pal, Umapathi, and Sankarasubbu (2023) evaluated the ten-
-interaction contexts. Our findings show substantial weak- dency of LLMs to hallucinate on medical reasoning tasks,
-nesses in current-day guardrail mechanisms, including near- and found that commercial LLMs models are highly suscep-
-zero refusal behavior in certain image-based workflows de- tible to generating plausible but incorrect medical informa-
-spite repeated manipulation attempts. Next, to evaluate ma- tion in complex reasoning related tasks. Further, Wu et al.
-nipulation quality, we measure the accuracy of requested (2025) developed NOHARM (Numerous Options Harm As-
-field substitutions and the frequency of unintended collateral sessment for Risk in Medicine) to assess severity and fre-
-edits across generated outputs using both automated analysis quency of harmful medical recommendations provided by
-and human review. Finally, we conduct a user study with 123 LLMs and concluded that LLMs present a non-negligible
-participants on CloudResearch Connect to evaluate the be- risk of generating harmful advice. Additional research has
-lievability of manipulated medical notes, finding that highly highlighted the susceptibility of medical LLMs to data-
-successful manipulations are often difficult for human eval- poisoning attacks (Han et al. 2024b; Yang et al. 2024) and
-uators to distinguish from authentic documents. Together, the broader risks associated with using LLM models trained
-our findings suggest that contemporary LLM safety mech- on unverified web-scraped medical data having implications
-anisms may be substantially less robust than their deploy- for causing clinically harmful errors in downstream health-
-ment contexts implicitly assume, particularly in high-stakes care applications (Alber et al. 2025). Although this body
-healthcare-document workflows. More broadly, this work of work identifies substantial vulnerabilities in healthcare-
-contributes to emerging discussions within the AI ethics and related LLM systems, relatively little research has exam-
-society community regarding the responsible integration of ined how robust contemporary LLM safety guardrails are
-generative AI into healthcare settings. against malicious manipulation attempts in healthcare con- texts, which is the primary focus of our work. Address- Related Work ing this question is critical for understanding the real-world
-Intended Use of LLMs in Healthcare. A growing body trustworthiness of LLM deployment in healthcare settings.
-of research focuses on the intended use evaluation of Prompt Injection & Jailbreaking LLMs. More broadly,
-LLMs in healthcare settings. For instance, Singhal et al. computer science researchers have increasingly studied how
-(2023) evaluated Med-PaLM, a healthcare focused LLM, adversarial prompting and jailbreak techniques can circum-
+safely deployed for healthcare assistance under normal oper-
+ating conditions involving well-intentioned users. Compara-
+tively less attention has been devoted to adversarial or mali-
+cious use cases, including whether contemporary LLM sys-
+tems can reliably prevent deliberate misuse in high-stakes
+healthcare contexts (Menz et al. 2024). While commer-
+cial LLM providers increasingly deploy safety guardrails,
+refusal mechanisms, and policy-enforcement systems in-
+tended to restrict harmful or policy-violating requests, the
+robustness of these safeguards against realistic misuse at-
+tempts remains insufficiently understood. This raises an ur-
+gent question: how robust are contemporary LLM guardrails
+against deliberate misuse in healthcare-document contexts?
+
+This paper addresses this gap through a systematic em-
+pirical study of LLM guardrail robustness using AI-assisted
+medical-note manipulation as a case study of healthcare mis-
+use. We investigate three primary research questions:
+
+RQ1: How robust are contemporary LLM guardrails
+against medical-note manipulation requests?
+RQ2: When manipulation attempts succeed, how accu-
+rately do LLMs perform the requested modifications?
+RQ3: When manipulation attempts succeed, how believ-
+able are the resulting outputs to average human readers?
+
+To answer these questions, we develop a reproducible
+manipulation pipeline that uses publicly available seed
+medical-note templates and commercial LLM systems to
+generate customized manipulated notes through controlled
+substitutions of patient names, provider identities, appoint-
+ment dates, and medical conditions. We conduct a system-
+atic empirical evaluation across multiple commercial LLM
+families, input formats, and prompt phrasings, allowing us to
+measure how refusal behavior varies across modalities and
+interaction contexts. Our findings show substantial weak-
+nesses in current-day guardrail mechanisms, including near-
+zero refusal behavior in certain image-based workflows de-
+spite repeated manipulation attempts. Next, to evaluate ma-
+nipulation quality, we measure the accuracy of requested
+field substitutions and the frequency of unintended collateral
+edits across generated outputs using both automated analysis
+and human review. Finally, we conduct a user study with 123
+participants on CloudResearch Connect to evaluate the be-
+lievability of manipulated medical notes, finding that highly
+successful manipulations are often difficult for human eval-
+uators to distinguish from authentic documents. Together,
+our findings suggest that contemporary LLM safety mech-
+anisms may be substantially less robust than their deploy-
+ment contexts implicitly assume, particularly in high-stakes
+healthcare-document workflows. More broadly, this work
+contributes to emerging discussions within the AI ethics and
+society community regarding the responsible integration of
+generative AI into healthcare settings.
+
+Intended Use of LLMs in Healthcare. A growing body
+of research focuses on the intended use evaluation of
+LLMs in healthcare settings. For instance, Singhal et al.
+(2023) evaluated Med-PaLM, a healthcare focused LLM,
+
+Related Work
+
+on medical question-answering benchmarks and found that
+it showed strong performance and surpassed prior state-of-
+the-art models on accuracy, but remained inferior to human
+clinicians performance. In a follow-up study, the same au-
+thors proposed an improved LLM version (Med-PaLM2),
+which was found to be superior in performance (on pa-
+tient questions) as compared to human physicians (Sing-
+hal et al. 2025). Further, several studies have also evaluated
+the capabilities of general-purpose LLMs such as ChatGPT-
+4 and GPT-5 on medical reasoning benchmarks, including
+examinations like the United States Medical Licensing Ex-
+amination (USMLE), and found that these models demon-
+strate performance comparable to, and in some cases ap-
+proaching, expert-level human clinical reasoning (Nori et al.
+2023; Wang et al. 2026). Apart from clinical reasoning and
+question-answering tasks, researchers have also explored the
+effectiveness of LLMs in clinical summarization tasks and
+found that medically adapted-LLMs are at par or superior to
+summaries generated from human experts (Van Veen et al.
+2024). While these studies evaluate the capabilities and clin-
+ical utility of LLMs under intended use scenarios, they do
+not examine the risks associated with deliberate (malicious)
+misuse or the robustness of model guardrails against at-
+tempts to manipulate medical documents.
+Malicious Use of LLMs in Healthcare. A second line of
+research focuses on the safety and robustness of LLMs in
+healthcare use cases, emphasizing vulnerabilities associated
+with hallucinations, misinformation, and harmful medical
+outputs. For example, Han et al. (2024a) evaluated the med-
+ical safety of publicly accessible medical LLMs and found
+that they easily comply to general as well as harmful medical
+requests, and thus, they do not meet the standards of safety
+outlined by the American Medical Association. Similarly,
+Pal, Umapathi, and Sankarasubbu (2023) evaluated the ten-
+dency of LLMs to hallucinate on medical reasoning tasks,
+and found that commercial LLMs models are highly suscep-
+tible to generating plausible but incorrect medical informa-
+tion in complex reasoning related tasks. Further, Wu et al.
+(2025) developed NOHARM (Numerous Options Harm As-
+sessment for Risk in Medicine) to assess severity and fre-
+quency of harmful medical recommendations provided by
+LLMs and concluded that LLMs present a non-negligible
+risk of generating harmful advice. Additional research has
+highlighted the susceptibility of medical LLMs to data-
+poisoning attacks (Han et al. 2024b; Yang et al. 2024) and
+the broader risks associated with using LLM models trained
+on unverified web-scraped medical data having implications
+for causing clinically harmful errors in downstream health-
+care applications (Alber et al. 2025). Although this body
+of work identifies substantial vulnerabilities in healthcare-
+related LLM systems, relatively little research has exam-
+ined how robust contemporary LLM safety guardrails are
+against malicious manipulation attempts in healthcare con-
+texts, which is the primary focus of our work. Address-
+ing this question is critical for understanding the real-world
+trustworthiness of LLM deployment in healthcare settings.
+Prompt Injection & Jailbreaking LLMs. More broadly,
+computer science researchers have increasingly studied how
+adversarial prompting and jailbreak techniques can circum-
 
 --- PAGE 3 ---
 
-vent the built-in safety guardrails of general-purpose LLM an overview of our overall experimental pipeline.
+vent the built-in safety guardrails of general-purpose LLM
 systems, enabling the generation of unethical, harmful, mis-
-leading, or otherwise policy-violating content. These stud- Seed Dataset Construction.
-ies primarily aim to expose weaknesses in existing align- As shown in Step 1 of Figure 1, to construct a controlled
-ment and safeguard techniques through adversarial testing evaluation dataset for studying LLM-assisted medical note
-and red teaming, with the broader goal of improving the re- manipulation, we curated a collection of ten ‘seed’ doctors’
-liability, robustness and safety of deployed models (Mazeika excuse note templates, each of which was digitally format-
-et al. 2024; Wang et al. 2023). For instance, Wei, Haghtalab, ted in English. To identify candidate templates, we issued a
-and Steinhardt (2023) tested techniques like prefix injection, set of healthcare-document-related search queries on Google
-refusal suspension, mismatched generalizations, and combi- Image Search, including terms such as “doctor’s excuse note
-nation of these for jail-breaking state-of-the-art LLM mod- template”, “medical excuse note template”, and “doctor’s
-els and found these techniques are capable of bypassing re- note sample”. We then manually reviewed templates appear-
-fusal behaviors and safety constraints. Similarly, Zou et al. ing within the first five pages of search results and retained
-(2023) investigated adversarial attacks on aligned language only documents satisfying our inclusion criteria: (1) digi-
-models revealing that suffix injection for jail-breaking can tally written English-language templates, and (2) visually
-generalize across multiple models and produce harmful out- realistic healthcare-document formatting.
-put. Furthermore, recent studies have also explored the cre- Next, the authors manually inspected each remaining can-
-ation of benchmarks for jail-breaking multi-modal LLMs, didate template that contained placeholder information (e.g.,
-and found that adversarial examples (Qi et al. 2024), typo- patient names like John Doe) to ensure that no protected
-graphic visual prompts (Gong et al. 2025), and role playing health information (PHI) was present prior to inclusion in
-image characters (Ma et al. 2024) are effective in bypass- the dataset. Templates containing potentially sensitive infor-
-ing safety guardrails to elicit harmful content from LLMs. mation (e.g., name of an actual doctor or provider that is
-Our work builds on this broader line of research by exam- searchable on Google) were excluded from the study. As a
-ining whether similar jailbreak and manipulation vulnera- result, all seed documents used throughout our experiments
-bilities persist in healthcare-oriented document workflows, consist exclusively of publicly accessible document exam-
-where failures of LLM guardrails may carry particularly ples that do not contain real patient or provider data. We
-high-stakes real-world consequences. kept following these steps until we had a set of ten doctors excuse note templates. Methodology All ten seed documents collected through the above pro-
-In this study, we investigate how contemporary commercial cedure were originally image-based healthcare-document
-LLM systems respond to requests involving medical-note templates. To evaluate whether model refusal behavior var-
-manipulation as a concrete healthcare misuse scenario. ied as a function of document format, we additionally con-
-Our study focuses specifically on manipulation requests verted each seed document into two alternative formats.
-involving existing (publicly available) medical notes rather First, the textual content of each seed image was manually
-than the generation of entirely synthetic healthcare identities reconstructed as a digitally editable Microsoft Word docu-
-or fabricated longitudinal patient histories. Specifically, we ment and subsequently exported as a PDF file. Second, the
-study whether multi-modal LLMs reliably refuse (or comply textual content of each document was also represented di-
-with) requests for modification of existing doctors excuse rectly as inline textual context within the LLM prompt it-
-notes through controlled substitutions of healthcare-related self, without attaching an external document. These three
-information (e.g., patient names, provider identities, dates, representations (image-based PNG documents, PDF docu-
-and medical conditions) in the notes, while attempting to ments, and inline-text representations) allowed us to system-
-preserve the visual structure of the original note. atically study whether model behavior differed across doc- ument modalities/formats and prompt framing. In total, this
-Threat Model. We consider an adversarial setting in which process yielded a dataset of thirty seed document instances
-an ordinary user interacts with publicly accessible commer- consisting of ten documents for each document format type.
-cial LLMs through an API. The adversary does not pos- Our seed documents contain substantial variation in visual
-sess privileged system access, model weights, fine-tuning structure, formatting complexity, typography, logo place-
-capabilities, or specialized jailbreak tooling. Instead, the ment, and field organization across commonly encountered
-study evaluates whether relatively simple and naturalistic re- healthcare-document layouts. Further, the templates con-
-quests submitted through ordinary user-facing APIs can suc- tain realistic healthcare-related fields such as patient iden-
-cessfully bypass model refusal mechanisms. This black-box tifiers, provider names, appointment dates, and diagnoses.
-threat model reflects realistic deployment conditions under This variation is important for evaluating whether model re-
-which healthcare-oriented LLM systems are increasingly fusal behavior and manipulation outcomes remain consistent
-being adopted. Importantly, our goal is to evaluate the re- across heterogeneous document styles rather than being spe-
-liability of safety and refusal mechanisms rather than to op- cific to a single template format.
+leading, or otherwise policy-violating content. These stud-
+ies primarily aim to expose weaknesses in existing align-
+ment and safeguard techniques through adversarial testing
+and red teaming, with the broader goal of improving the re-
+liability, robustness and safety of deployed models (Mazeika
+et al. 2024; Wang et al. 2023). For instance, Wei, Haghtalab,
+and Steinhardt (2023) tested techniques like prefix injection,
+refusal suspension, mismatched generalizations, and combi-
+nation of these for jail-breaking state-of-the-art LLM mod-
+els and found these techniques are capable of bypassing re-
+fusal behaviors and safety constraints. Similarly, Zou et al.
+(2023) investigated adversarial attacks on aligned language
+models revealing that suffix injection for jail-breaking can
+generalize across multiple models and produce harmful out-
+put. Furthermore, recent studies have also explored the cre-
+ation of benchmarks for jail-breaking multi-modal LLMs,
+and found that adversarial examples (Qi et al. 2024), typo-
+graphic visual prompts (Gong et al. 2025), and role playing
+image characters (Ma et al. 2024) are effective in bypass-
+ing safety guardrails to elicit harmful content from LLMs.
+Our work builds on this broader line of research by exam-
+ining whether similar jailbreak and manipulation vulnera-
+bilities persist in healthcare-oriented document workflows,
+where failures of LLM guardrails may carry particularly
+high-stakes real-world consequences.
+
+Methodology
+In this study, we investigate how contemporary commercial
+LLM systems respond to requests involving medical-note
+manipulation as a concrete healthcare misuse scenario.
+Our study focuses specifically on manipulation requests
+involving existing (publicly available) medical notes rather
+than the generation of entirely synthetic healthcare identities
+or fabricated longitudinal patient histories. Specifically, we
+study whether multi-modal LLMs reliably refuse (or comply
+with) requests for modification of existing doctors excuse
+notes through controlled substitutions of healthcare-related
+information (e.g., patient names, provider identities, dates,
+and medical conditions) in the notes, while attempting to
+preserve the visual structure of the original note.
+
+Threat Model. We consider an adversarial setting in which
+an ordinary user interacts with publicly accessible commer-
+cial LLMs through an API. The adversary does not pos-
+sess privileged system access, model weights, fine-tuning
+capabilities, or specialized jailbreak tooling. Instead, the
+study evaluates whether relatively simple and naturalistic re-
+quests submitted through ordinary user-facing APIs can suc-
+cessfully bypass model refusal mechanisms. This black-box
+threat model reflects realistic deployment conditions under
+which healthcare-oriented LLM systems are increasingly
+being adopted. Importantly, our goal is to evaluate the re-
+liability of safety and refusal mechanisms rather than to op-
 timize techniques for operational misuse. Accordingly, our
-experiments are designed to systematically measure refusal Medical Note Manipulation Pipeline.
-behavior, manipulation success rates, and output believabil- Using the seed document dataset described above, we next
-ity across models and interaction contexts. Figure 1 shows describe our reproducible manipulation pipeline for sys-
+experiments are designed to systematically measure refusal
+behavior, manipulation success rates, and output believabil-
+ity across models and interaction contexts. Figure 1 shows
+
+an overview of our overall experimental pipeline.
+
+Seed Dataset Construction.
+As shown in Step 1 of Figure 1, to construct a controlled
+evaluation dataset for studying LLM-assisted medical note
+manipulation, we curated a collection of ten ‘seed’ doctors’
+excuse note templates, each of which was digitally format-
+ted in English. To identify candidate templates, we issued a
+set of healthcare-document-related search queries on Google
+Image Search, including terms such as “doctor’s excuse note
+template”, “medical excuse note template”, and “doctor’s
+note sample”. We then manually reviewed templates appear-
+ing within the first five pages of search results and retained
+only documents satisfying our inclusion criteria: (1) digi-
+tally written English-language templates, and (2) visually
+realistic healthcare-document formatting.
+
+Next, the authors manually inspected each remaining can-
+didate template that contained placeholder information (e.g.,
+patient names like John Doe) to ensure that no protected
+health information (PHI) was present prior to inclusion in
+the dataset. Templates containing potentially sensitive infor-
+mation (e.g., name of an actual doctor or provider that is
+searchable on Google) were excluded from the study. As a
+result, all seed documents used throughout our experiments
+consist exclusively of publicly accessible document exam-
+ples that do not contain real patient or provider data. We
+kept following these steps until we had a set of ten doctors
+excuse note templates.
+
+All ten seed documents collected through the above pro-
+cedure were originally image-based healthcare-document
+templates. To evaluate whether model refusal behavior var-
+ied as a function of document format, we additionally con-
+verted each seed document into two alternative formats.
+First, the textual content of each seed image was manually
+reconstructed as a digitally editable Microsoft Word docu-
+ment and subsequently exported as a PDF file. Second, the
+textual content of each document was also represented di-
+rectly as inline textual context within the LLM prompt it-
+self, without attaching an external document. These three
+representations (image-based PNG documents, PDF docu-
+ments, and inline-text representations) allowed us to system-
+atically study whether model behavior differed across doc-
+ument modalities/formats and prompt framing. In total, this
+process yielded a dataset of thirty seed document instances
+consisting of ten documents for each document format type.
+
+Our seed documents contain substantial variation in visual
+structure, formatting complexity, typography, logo place-
+ment, and field organization across commonly encountered
+healthcare-document layouts. Further, the templates con-
+tain realistic healthcare-related fields such as patient iden-
+tifiers, provider names, appointment dates, and diagnoses.
+This variation is important for evaluating whether model re-
+fusal behavior and manipulation outcomes remain consistent
+across heterogeneous document styles rather than being spe-
+cific to a single template format.
+
+Medical Note Manipulation Pipeline.
+Using the seed document dataset described above, we next
+describe our reproducible manipulation pipeline for sys-
 
 --- PAGE 4 ---
 
 Figure 1: Overview of the medical note manipulation and experimental pipeline used throughout this study.
 
-tematically evaluating how commercial multi-modal LLMs pability without introducing confounding artifacts elsewhere
-respond to requests involving modifications to healthcare- in the manipulated doctors note.
-related documents. At a high level, the pipeline consists of Construction of Manipulation Prompts. As shown in
-four stages: (1) identification of editable healthcare-related Step 3 of Figure 1, we manually constructed manipula-
-fields within each seed document; (2) generation of con- tion prompts for each combination of seed document and
-trolled substitutions for selected fields; (3) construction of editable field. Prompts were intentionally kept simple and
-manipulation prompts under different interaction settings; generic, avoiding clinical terminology and brand references.
-and (4) submission of the resulting requests to commercial For each field, a short prompt was paired with the seed docu-
-multi-modal LLM systems for evaluation. ment and the target (sampled) replacement value, instructing
-Identification of Editable Fields. As shown in Step 2 of the LLM model to overwrite the specified field with the pro-
-Figure 1, for each seed document, we manually identified vided replacement text (see prompts in Appendix Table 1).
-a set of editable healthcare-related fields appearing within Further, to evaluate whether prompt framing influences
-the template. Because the collected seed documents exhib- model behavior, prompts were varied along two dimensions.
-ited substantial heterogeneity in layout, structure, and infor- First, prompts either described the uploaded image neutrally
-mational content, the specific editable fields varied across as a generic document (or image) or explicitly framed it
-templates. Depending on the document, editable fields in- as a “doctors note”. Second, prompts either referred to the
-cluded patient names, provider identities, diagnoses, ap- editable field using its semantic role (e.g., patient name or
-pointment dates, and return-to-work or return-to-school rec- appointment date) or described the field using the actual
-ommendations. We selected these fields because they rep- placeholder entry (e.g., John Doe) within the seed document.
-resent semantically meaningful and institutionally relevant These prompt variations were designed to preserve the un-
-components of healthcare documentation that may influ- derlying manipulation objective while allowing us to eval-
-ence workplace accommodations, academic/work absences, uate whether refusal behavior changes when the requests
-and/or other verification processes relying on medical notes. were phrased in syntactically different but semantically sim- ilar ways.Generation of Controlled Substitutions. As shown in Step
-2 of Figure 1, we constructed replacement values for the ed- Submission of Modification Requests to LLMs. Finally,
-itable fields identified in each seed document. First, we gen- in Step 4 of Figure 1, the constructed prompts were submit-
-erated dictionaries of realistic names, healthcare providers, ted to three commercial multi-modal LLM systems: GPT-
-appointment dates, and diagnoses using a simple prompt to image-1.5, Gemini 2.5, and Claude Sonnet 4.6. These mod-
-GPT-5. Next, for each seed document, replacement values els were selected because they represent some of the most
-were sampled from these dictionaries for every editable field widely used and publicly accessible commercial LLM sys-
-identified above. This substitution process allows the evalu- tems currently available, making them representative of the
-ation to isolate model refusal behavior and manipulation ca- models most likely to be used by everyday users across a
+tematically evaluating how commercial multi-modal LLMs
+respond to requests involving modifications to healthcare-
+related documents. At a high level, the pipeline consists of
+four stages: (1) identification of editable healthcare-related
+fields within each seed document; (2) generation of con-
+trolled substitutions for selected fields; (3) construction of
+manipulation prompts under different interaction settings;
+and (4) submission of the resulting requests to commercial
+multi-modal LLM systems for evaluation.
+
+Identification of Editable Fields. As shown in Step 2 of
+Figure 1, for each seed document, we manually identified
+a set of editable healthcare-related fields appearing within
+the template. Because the collected seed documents exhib-
+ited substantial heterogeneity in layout, structure, and infor-
+mational content, the specific editable fields varied across
+templates. Depending on the document, editable fields in-
+cluded patient names, provider identities, diagnoses, ap-
+pointment dates, and return-to-work or return-to-school rec-
+ommendations. We selected these fields because they rep-
+resent semantically meaningful and institutionally relevant
+components of healthcare documentation that may influ-
+ence workplace accommodations, academic/work absences,
+and/or other verification processes relying on medical notes.
+
+Generation of Controlled Substitutions. As shown in Step
+2 of Figure 1, we constructed replacement values for the ed-
+itable fields identified in each seed document. First, we gen-
+erated dictionaries of realistic names, healthcare providers,
+appointment dates, and diagnoses using a simple prompt to
+GPT-5. Next, for each seed document, replacement values
+were sampled from these dictionaries for every editable field
+identified above. This substitution process allows the evalu-
+ation to isolate model refusal behavior and manipulation ca-
+
+pability without introducing confounding artifacts elsewhere
+in the manipulated doctors note.
+Construction of Manipulation Prompts. As shown in
+Step 3 of Figure 1, we manually constructed manipula-
+tion prompts for each combination of seed document and
+editable field. Prompts were intentionally kept simple and
+generic, avoiding clinical terminology and brand references.
+For each field, a short prompt was paired with the seed docu-
+ment and the target (sampled) replacement value, instructing
+the LLM model to overwrite the specified field with the pro-
+vided replacement text (see prompts in Appendix Table 1).
+
+Further, to evaluate whether prompt framing influences
+model behavior, prompts were varied along two dimensions.
+First, prompts either described the uploaded image neutrally
+as a generic document (or image) or explicitly framed it
+as a “doctors note”. Second, prompts either referred to the
+editable field using its semantic role (e.g., patient name or
+appointment date) or described the field using the actual
+placeholder entry (e.g., John Doe) within the seed document.
+These prompt variations were designed to preserve the un-
+derlying manipulation objective while allowing us to eval-
+uate whether refusal behavior changes when the requests
+were phrased in syntactically different but semantically sim-
+ilar ways.
+Submission of Modification Requests to LLMs. Finally,
+in Step 4 of Figure 1, the constructed prompts were submit-
+ted to three commercial multi-modal LLM systems: GPT-
+image-1.5, Gemini 2.5, and Claude Sonnet 4.6. These mod-
+els were selected because they represent some of the most
+widely used and publicly accessible commercial LLM sys-
+tems currently available, making them representative of the
+models most likely to be used by everyday users across a
 
 --- PAGE 5 ---
 
-broad range of real-world tasks. For each prompt, the system Because the collected seed templates exhibited heteroge-
-received the seed document together with the corresponding neous structure and content, not every seed document con-
-manipulation instruction and was asked to produce a mod- tained every editable field category. Specifically, five seed
-ified version of the document reflecting the requested field documents contained four editable fields each (5 × 4 = 20),
-substitution. Depending on the experimental condition, the while the remaining five seed documents contained three ed-
-seed doctors note was provided either as a PNG image file, itable fields each (5 × 3 = 15), yielding a total of 35 seed-
-or a PDF file, or as inline textual context embedded directly field pairs across all our seed documents. Each seed-field
-within the prompt. pair was evaluated under all twelve prompt-format config- For each model response, we recorded whether the system urations (4 prompt variants × 3 document formats). Fur-
-complied with the modification request, or issued a refusal. ther, for every configuration, we independently sampled five
-In cases where the model generated a manipulated output, replacement values from the substitution dictionaries de-
-the resulting document was retained for further analysis for scribed in Step 2 of Figure 1. This resulted in a total of 2,100
-answering RQs 2 & 3. attempted document modifications per LLM (35 seed-field pairs × 12 configurations × 5 replacement values). Finally, because we evaluated three multi-modal LLM Experimental Results systems (GPT-image-1.5, Gemini 2.5, and Claude Sonnet
-In this section, we present experimental results addressing 4.6), the complete experimental dataset consisted of 6,300
-the three primary research questions introduced in Section attempted medical-note modifications in total. The result-
-1. First, we investigate the robustness of contemporary com- ing set of model-generated outputs constitutes the primary
-mercial LLM guardrails against medical-note manipulation dataset used throughout the remainder of our analysis.
+broad range of real-world tasks. For each prompt, the system
+received the seed document together with the corresponding
+manipulation instruction and was asked to produce a mod-
+ified version of the document reflecting the requested field
+substitution. Depending on the experimental condition, the
+seed doctors note was provided either as a PNG image file,
+or a PDF file, or as inline textual context embedded directly
+within the prompt.
+
+For each model response, we recorded whether the system
+complied with the modification request, or issued a refusal.
+In cases where the model generated a manipulated output,
+the resulting document was retained for further analysis for
+answering RQs 2 & 3.
+
+In this section, we present experimental results addressing
+the three primary research questions introduced in Section
+1. First, we investigate the robustness of contemporary com-
+mercial LLM guardrails against medical-note manipulation
 requests across different document formats, prompt fram-
-ings, and model families (RQ1). Second, we evaluate how RQ1: How Robust are LLM Guardrails?
+ings, and model families (RQ1). Second, we evaluate how
 accurately LLM systems perform requested medical-note
-manipulations when such attempts succeed (RQ2). Third, Next, we investigate the first research question posed in
-we examine how believable the resulting manipulated medi- this paper: How robust are contemporary commercial LLM
-cal notes appear to human readers through a controlled user guardrails against requests involving medical-note manipu-
-study (RQ3). We begin this section by describing the exper- lation? To answer this question, we analyze refusal behav-
-imental setup used throughout our study. We then present ior across the 6,300 modification attempts described above,
-results corresponding to each research question. spanning three commercial multi-modal LLM systems, mul- tiple document formats and prompt-framing conditions. Evaluation Metrics. For the purposes of this analysis, weExperimental Setup define a refusal as any model response that explicitly de-
-Using the manipulation pipeline described in Section 3, we clined to perform the requested modification, indicated that
-conducted a series of experiments to evaluate how commer- the request violated safety or policy constraints, or other-
-cial multi-modal LLM systems respond to requests involv- wise refused to generate a modified document. Conversely,
-ing modifications to healthcare-related documents. a response was categorized as compliant if the model at- For each editable field identified within a seed document, tempted to perform the requested modification, irrespec-
-we generated four semantically equivalent prompt variants tive of whether the resulting output was ultimately cor-
-by crossing two prompt-framing dimensions. The first di- rect or not. Our analysis therefore focuses specifically on
-mension controlled document-level framing, where prompts whether deployed guardrail mechanisms successfully pre-
-either described the uploaded content neutrally as a generic vent attempted document manipulation requests.
-document/image (e.g., “Modify this image as follows:”) or Refusal Behavior. Tables 1, 2, and 3 summarize refusal be-
-explicitly framed it as a doctors’ note (e.g., “Modify this doc- havior across all evaluated experimental conditions for GPT-
-tor’s note as follows:”). The second dimension controlled image-1.5, Gemini 2.5, and Claude Sonnet 4.6, respectively.
-field-level framing, where prompts either referred to the ed- In each table, rows correspond to the document represen-
-itable field using its semantic role (e.g., “Replace patient tation format provided to the model (PNG image, PDF, or
-name with:”) or directly referenced the placeholder value ap- inline text), while columns correspond to the four prompt-
-pearing within the seed document (e.g., “Replace John Doe framing conditions arising from our 2×2 factorial prompt de-
-with:”). Crossing these two dimensions yielded a 2×2 fac- sign. Aggregate rows/columns report refusal rates collapsed
-torial prompt design consisting of four prompt variants per across document formats and prompt-framing dimensions.
-seed document-editable field combination. The last entry in the bottom right of each table represents the To evaluate whether model behavior varied across docu- overall refusal rate across all 2100 modification attempts.
-ment formats, each prompt variant was evaluated under three These three tables collectively show that refusal rates
-document-format conditions: (1) PNG image-based health- across all evaluated commercial LLM systems were surpris-
-care documents, (2) PDF representations reconstructed from ingly low. GPT-image-1.5 and Gemini 2.5 refused only 3.3%
-editable Word documents, and (3) inline textual represen- and 0.0% of modification requests overall, respectively. Al-
-tations embedded directly within the prompt context. To- though Claude Sonnet 4.6 exhibited substantially stronger
-gether, these conditions yielded twelve experimental config- refusal behavior, refusing 66.0% of requests overall, this still
-urations per seed-field combination. implies that roughly one-third of all doctors note manipula-
+manipulations when such attempts succeed (RQ2). Third,
+we examine how believable the resulting manipulated medi-
+cal notes appear to human readers through a controlled user
+study (RQ3). We begin this section by describing the exper-
+imental setup used throughout our study. We then present
+results corresponding to each research question.
+
+Experimental Setup
+
+Using the manipulation pipeline described in Section 3, we
+conducted a series of experiments to evaluate how commer-
+cial multi-modal LLM systems respond to requests involv-
+ing modifications to healthcare-related documents.
+
+For each editable field identified within a seed document,
+we generated four semantically equivalent prompt variants
+by crossing two prompt-framing dimensions. The first di-
+mension controlled document-level framing, where prompts
+either described the uploaded content neutrally as a generic
+document/image (e.g., “Modify this image as follows:”) or
+explicitly framed it as a doctors’ note (e.g., “Modify this doc-
+tor’s note as follows:”). The second dimension controlled
+field-level framing, where prompts either referred to the ed-
+itable field using its semantic role (e.g., “Replace patient
+name with:”) or directly referenced the placeholder value ap-
+pearing within the seed document (e.g., “Replace John Doe
+with:”). Crossing these two dimensions yielded a 2×2 fac-
+torial prompt design consisting of four prompt variants per
+seed document-editable field combination.
+
+To evaluate whether model behavior varied across docu-
+ment formats, each prompt variant was evaluated under three
+document-format conditions: (1) PNG image-based health-
+care documents, (2) PDF representations reconstructed from
+editable Word documents, and (3) inline textual represen-
+tations embedded directly within the prompt context. To-
+gether, these conditions yielded twelve experimental config-
+urations per seed-field combination.
+
+Experimental Results
+
+Because the collected seed templates exhibited heteroge-
+neous structure and content, not every seed document con-
+tained every editable field category. Specifically, five seed
+documents contained four editable fields each (5 × 4 = 20),
+while the remaining five seed documents contained three ed-
+itable fields each (5 × 3 = 15), yielding a total of 35 seed-
+field pairs across all our seed documents. Each seed-field
+pair was evaluated under all twelve prompt-format config-
+urations (4 prompt variants × 3 document formats). Fur-
+ther, for every configuration, we independently sampled five
+replacement values from the substitution dictionaries de-
+scribed in Step 2 of Figure 1. This resulted in a total of 2,100
+attempted document modifications per LLM (35 seed-field
+pairs × 12 configurations × 5 replacement values).
+
+Finally, because we evaluated three multi-modal LLM
+systems (GPT-image-1.5, Gemini 2.5, and Claude Sonnet
+4.6), the complete experimental dataset consisted of 6,300
+attempted medical-note modifications in total. The result-
+ing set of model-generated outputs constitutes the primary
+dataset used throughout the remainder of our analysis.
+
+RQ1: How Robust are LLM Guardrails?
+
+Next, we investigate the first research question posed in
+this paper: How robust are contemporary commercial LLM
+guardrails against requests involving medical-note manipu-
+lation? To answer this question, we analyze refusal behav-
+ior across the 6,300 modification attempts described above,
+spanning three commercial multi-modal LLM systems, mul-
+tiple document formats and prompt-framing conditions.
+Evaluation Metrics. For the purposes of this analysis, we
+define a refusal as any model response that explicitly de-
+clined to perform the requested modification, indicated that
+the request violated safety or policy constraints, or other-
+wise refused to generate a modified document. Conversely,
+a response was categorized as compliant if the model at-
+tempted to perform the requested modification, irrespec-
+tive of whether the resulting output was ultimately cor-
+rect or not. Our analysis therefore focuses specifically on
+whether deployed guardrail mechanisms successfully pre-
+vent attempted document manipulation requests.
+Refusal Behavior. Tables 1, 2, and 3 summarize refusal be-
+havior across all evaluated experimental conditions for GPT-
+image-1.5, Gemini 2.5, and Claude Sonnet 4.6, respectively.
+In each table, rows correspond to the document represen-
+tation format provided to the model (PNG image, PDF, or
+inline text), while columns correspond to the four prompt-
+framing conditions arising from our 2×2 factorial prompt de-
+sign. Aggregate rows/columns report refusal rates collapsed
+across document formats and prompt-framing dimensions.
+The last entry in the bottom right of each table represents the
+overall refusal rate across all 2100 modification attempts.
+
+These three tables collectively show that refusal rates
+across all evaluated commercial LLM systems were surpris-
+ingly low. GPT-image-1.5 and Gemini 2.5 refused only 3.3%
+and 0.0% of modification requests overall, respectively. Al-
+though Claude Sonnet 4.6 exhibited substantially stronger
+refusal behavior, refusing 66.0% of requests overall, this still
+implies that roughly one-third of all doctors note manipula-
 
 --- PAGE 6 ---
 
+tion requests (using very simple prompts) successfully by-
+passed its deployed guardrails.
+Impact of Document Format. Further, document format
+emerged as a key factor influencing refusal behavior, though
+the magnitude of this influence varied substantially by
+provider. As shown in Table 3, Claude Sonnet 4.6 exhib-
+ited the strongest guardrail behavior under image-based con-
+ditions, refusing 100% of all image-based note manipula-
+tion requests, and 91.1% of PDF-based requests overall.
+However, this robustness proved highly format-dependent:
+when the same manipulation requests were presented as
+inline-text representations, Claude’s refusal rate dropped
+sharply to only 7.0%. This dramatic reduction suggests
+that Claude’s deployed guardrails rely heavily on visual
+healthcare-document context and can be substantially by-
+passed by changing the document representation format.
+
+In contrast, Tables 1 & 2 show that GPT-image-1.5 and
+Gemini 2.5 exhibited comparatively weak guardrail behav-
+ior across nearly all evaluated formats. GPT-image-1.5 re-
+fused none of the image-based manipulation requests and
+only modestly increased refusal behavior under PDF and
+inline-text conditions, yielding aggregate refusal rates of
+6.7% and 3.1%, respectively. Gemini 2.5 demonstrated uni-
+formly poor guardrail performance across all evaluated con-
+ditions, refusing none of the 2,100 healthcare-document ma-
+nipulation requests regardless of document format. Taken to-
+gether, these findings provide strong evidence that contem-
+porary commercial LLM guardrails remain insufficiently ro-
+bust against medical note-document manipulation requests,
+and that even (comparatively) stronger-performing systems
+(e.g., Claude Sonnet 4.6) can often be bypassed through sim-
+ple changes in document modality or representation format.
+Impact of Prompt Framing. Further, prompt framing pro-
+duced relatively minor changes in refusal behavior across
+evaluated systems. For example, the marginal refusal rates
+across the four prompt-framing variants for GPT-image-1.5
+ranged only between 2.3% and 3.8% (Table 1), while the
+
 Table 1: Refusal rates for GPT-image-1.5 across document formats and prompt-framing conditions.
 
-Generic Document Framing Medical Note Framing Aggregate
+Document Format
+Placeholder
+Semantic
+Placeholder
+Semantic
 
-Document Format Placeholder Semantic Placeholder Semantic
+PNG Image
+0/175 (0.0%)
+0/175 (0.0%)
+0/175 (0.0%)
+0/175 (0.0%)
+0/700 (0.0%)
+PDF
+18/175 (10.3%)
+9/175 (5.1%)
+10/175 (5.7%)
+10/175 (5.7%)
+47/700 (6.7%)
+Inline Text
+2/175 (1.1%)
+3/175 (1.7%)
+8/175 (4.6%)
+9/175 (5.1%)
+22/700 (3.1%)
 
-PNG Image 0/175 (0.0%) 0/175 (0.0%) 0/175 (0.0%) 0/175 (0.0%) 0/700 (0.0%) PDF 18/175 (10.3%) 9/175 (5.1%) 10/175 (5.7%) 10/175 (5.7%) 47/700 (6.7%) Inline Text 2/175 (1.1%) 3/175 (1.7%) 8/175 (4.6%) 9/175 (5.1%) 22/700 (3.1%)
-
-Aggregate 20/525 (3.8%) 12/525 (2.3%) 18/525 (3.4%) 19/525 (3.6%) 69/2100 (3.3%)
+Aggregate
+20/525 (3.8%)
+12/525 (2.3%)
+18/525 (3.4%)
+19/525 (3.6%)
+69/2100 (3.3%)
 
 Table 2: Refusal rates for Gemini 2.5 across document formats and prompt-framing conditions.
 
-PNG Image 0/175 (0.0%) 0/175 (0.0%) 0/175 (0.0%) 0/175 (0.0%) 0/700 (0.0%) PDF 0/175 (0.0%) 0/175 (0.0%) 0/175 (0.0%) 0/175 (0.0%) 0/700 (0.0%) Inline Text 0/175 (0.0%) 0/175 (0.0%) 0/175 (0.0%) 0/175 (0.0%) 0/700 (0.0%)
+PNG Image
+0/175 (0.0%)
+0/175 (0.0%)
+0/175 (0.0%)
+0/175 (0.0%)
+0/700 (0.0%)
+PDF
+0/175 (0.0%)
+0/175 (0.0%)
+0/175 (0.0%)
+0/175 (0.0%)
+0/700 (0.0%)
+Inline Text
+0/175 (0.0%)
+0/175 (0.0%)
+0/175 (0.0%)
+0/175 (0.0%)
+0/700 (0.0%)
 
-Aggregate 0/525 (0.0%) 0/525 (0.0%) 0/525 (0.0%) 0/525 (0.0%) 0/2100 (0.0%)
+Aggregate
+0/525 (0.0%)
+0/525 (0.0%)
+0/525 (0.0%)
+0/525 (0.0%)
+0/2100 (0.0%)
 
-tion requests (using very simple prompts) successfully by- corresponding refusal rates for Claude Sonnet 4.6 ranged be-
-passed its deployed guardrails. tween 63.2% and 68.4% (Table 3). More broadly, switching
-Impact of Document Format. Further, document format between neutral versus explicitly medical framing, or be-
-emerged as a key factor influencing refusal behavior, though tween semantic versus placeholder-based field references,
-the magnitude of this influence varied substantially by altered refusal behavior by only a few percentage points
-provider. As shown in Table 3, Claude Sonnet 4.6 exhib- in most conditions. This finding suggests that semantically
-ited the strongest guardrail behavior under image-based con- equivalent prompt reformulations are not a reliable trigger
-ditions, refusing 100% of all image-based note manipula- for contemporary guardrail systems and that refusal behav-
-tion requests, and 91.1% of PDF-based requests overall. ior is driven much more strongly by document modality than
-However, this robustness proved highly format-dependent: by superficial prompt wording.
-when the same manipulation requests were presented as In summary, these findings reveal considerable weak-
-inline-text representations, Claude’s refusal rate dropped nesses in contemporary commercial LLM guardrails against
-sharply to only 7.0%. This dramatic reduction suggests medical-document manipulation requests. While Gemini
-that Claude’s deployed guardrails rely heavily on visual 2.5 exhibited effectively no refusal behavior and GPT-
-healthcare-document context and can be substantially by- image-1.5 refused only a small fraction of requests over-
-passed by changing the document representation format. all, Claude Sonnet 4.6 demonstrated substantially stronger refusal behavior under image and PDF based conditions. In contrast, Tables 1 & 2 show that GPT-image-1.5 and However, even Claude’s guardrails proved highly sensitiveGemini 2.5 exhibited comparatively weak guardrail behav- to document representation format, with refusal rates drop-ior across nearly all evaluated formats. GPT-image-1.5 re- ping sharply under inline-text workflows. Taken together,fused none of the image-based manipulation requests and these results suggest that current commercial LLM safetyonly modestly increased refusal behavior under PDF and mechanisms remain insufficiently robust against medical-inline-text conditions, yielding aggregate refusal rates of document manipulation requests, and that refusal behav-6.7% and 3.1%, respectively. Gemini 2.5 demonstrated uni- ior is heavily influenced by modality-specific representa-formly poor guardrail performance across all evaluated con- tions rather than the underlying semantic intent of the re-ditions, refusing none of the 2,100 healthcare-document ma- quest itself. More importantly, the strong dependence of re-nipulation requests regardless of document format. Taken to- fusal behavior on document format points toward a system-gether, these findings provide strong evidence that contem- atic modality-dependent vulnerability in current commercialporary commercial LLM guardrails remain insufficiently ro- LLM safety enforcement mechanisms.bust against medical note-document manipulation requests,
-and that even (comparatively) stronger-performing systems
-(e.g., Claude Sonnet 4.6) can often be bypassed through sim- RQ2: How Accurate are AI Manipulations?
-ple changes in document modality or representation format. Next, we investigate the second research question posed
-Impact of Prompt Framing. Further, prompt framing pro- in this paper: How accurate are successful LLM-generated
-duced relatively minor changes in refusal behavior across medical-note manipulations? While the analysis for RQ1
-evaluated systems. For example, the marginal refusal rates considered all 2,100 attempted modification requests sub-
-across the four prompt-framing variants for GPT-image-1.5 mitted to each model family, the analysis for RQ2 focuses
-ranged only between 2.3% and 3.8% (Table 1), while the only on the subset of attempts for which the evaluated
+Generic Document Framing
+Medical Note Framing
+Aggregate
+
+corresponding refusal rates for Claude Sonnet 4.6 ranged be-
+tween 63.2% and 68.4% (Table 3). More broadly, switching
+between neutral versus explicitly medical framing, or be-
+tween semantic versus placeholder-based field references,
+altered refusal behavior by only a few percentage points
+in most conditions. This finding suggests that semantically
+equivalent prompt reformulations are not a reliable trigger
+for contemporary guardrail systems and that refusal behav-
+ior is driven much more strongly by document modality than
+by superficial prompt wording.
+
+In summary, these findings reveal considerable weak-
+nesses in contemporary commercial LLM guardrails against
+medical-document manipulation requests. While Gemini
+2.5 exhibited effectively no refusal behavior and GPT-
+image-1.5 refused only a small fraction of requests over-
+all, Claude Sonnet 4.6 demonstrated substantially stronger
+refusal behavior under image and PDF based conditions.
+However, even Claude’s guardrails proved highly sensitive
+to document representation format, with refusal rates drop-
+ping sharply under inline-text workflows. Taken together,
+these results suggest that current commercial LLM safety
+mechanisms remain insufficiently robust against medical-
+document manipulation requests, and that refusal behav-
+ior is heavily influenced by modality-specific representa-
+tions rather than the underlying semantic intent of the re-
+quest itself. More importantly, the strong dependence of re-
+fusal behavior on document format points toward a system-
+atic modality-dependent vulnerability in current commercial
+LLM safety enforcement mechanisms.
+
+RQ2: How Accurate are AI Manipulations?
+
+Next, we investigate the second research question posed
+in this paper: How accurate are successful LLM-generated
+medical-note manipulations? While the analysis for RQ1
+considered all 2,100 attempted modification requests sub-
+mitted to each model family, the analysis for RQ2 focuses
+only on the subset of attempts for which the evaluated
 
 --- PAGE 7 ---
 
 Table 3: Refusal rates for Claude Sonnet 4.6 across document formats and prompt-framing conditions.
 
-PNG Image 175/175 (100.0%) 175/175 (100.0%) 175/175 (100.0%) 175/175 (100.0%) 700/700 (100.0%) PDF 153/175 (87.4%) 146/175 (83.4%) 169/175 (96.6%) 170/175 (97.1%) 638/700 (91.1%) Inline Text 10/175 (5.7%) 11/175 (6.3%) 15/175 (8.6%) 13/175 (7.4%) 49/700 (7.0%)
+PNG Image
+175/175 (100.0%)
+175/175 (100.0%)
+175/175 (100.0%)
+175/175 (100.0%)
+700/700 (100.0%)
+PDF
+153/175 (87.4%)
+146/175 (83.4%)
+169/175 (96.6%)
+170/175 (97.1%)
+638/700 (91.1%)
+Inline Text
+10/175 (5.7%)
+11/175 (6.3%)
+15/175 (8.6%)
+13/175 (7.4%)
+49/700 (7.0%)
 
-Aggregate 338/525 (64.4%) 332/525 (63.2%) 359/525 (68.4%) 358/525 (68.2%) 1387/2100 (66.0%)
+Aggregate
+338/525 (64.4%)
+332/525 (63.2%)
+359/525 (68.4%)
+358/525 (68.2%)
+1387/2100 (66.0%)
 
 Table 4: Accuracy of successful medical-note manipulations across model families and document formats. Higher FSA is better;
 lower CER is better. Claude Sonnet 4.6 has no image results because it refused all image-based requests.
 
-Model PNG Image PDF DOCX / Inline Text
+LLM systems generated compliant (i.e., non-refusal) out-
+puts. Across the 2,100 modification attempts evaluated for
+each model family, this yielded 2,031 compliant outputs for
+GPT-image-1.5, 2,100 compliant outputs for Gemini 2.5,
+and 713 compliant outputs for Claude Sonnet 4.6. These set
+of compliant outputs form the basis of the downstream ac-
+curacy evaluation described below.
+Evaluation Metrics. To evaluate the accuracy of AI ma-
+nipulations, we utilize two intuitive metrics: Field Substi-
+tution Accuracy (FSA) and Collateral Edit Rate (CER). For-
+mally, FSA is defined as the fraction of manipulated notes
+in which the requested field substitution was executed cor-
+rectly, whereas CER is defined as the fraction of manip-
+ulated notes containing unintended collateral edits outside
+the expected modification region. Intuitively, high values of
+FSA and low values of CER represent high “accuracy” of AI
+manipulations, and vice versa. Together, these metrics cap-
+ture both the semantic correctness of the requested manipu-
+lation and the extent to which the generated output preserves
+the remainder of the source document.
+Computing FSA & CER. Given substantial differences be-
+tween the three document formats (image, PDF, and inline
+text), FSA and CER were operationalized differently de-
+pending on modality. For inline-text outputs, these metrics
+were computed directly from the raw textual response gener-
+ated by the LLM model. Specifically, FSA was computed us-
+ing a substring-based matching procedure: a compliant LLM
+response was marked accurate if the target substitution value
+appeared verbatim in the lowercased response text.
 
-FSA ↑ CER ↓ FSA ↑ CER ↓ FSA ↑ CER ↓
+Similarly, CER for inline-text outputs was computed by
+comparing the seed-document text against the model re-
+sponse text. For each manipulation request, document words
+were divided into two sets corresponding to the expected
+edit region and the remainder of the document. CER was
+then computed as the fraction of compliant LLM responses
+in which words outside the expected edit region were added,
+removed, or modified relative to the original document.
 
-GPT-image-1.5 94.7% 33.6% 62.2% 93.7% 69.3% 81.7% Gemini 2.5 36.6% 45.1% 44.4% 99.6% 82.4% 92.4% Claude Sonnet 4.6 – – 77.4% 67.7% 80.8% 99.8%
+For PDF-based formats, each generated PDF document
 
-LLM systems generated compliant (i.e., non-refusal) out- was first converted into text form before evaluation. The
-puts. Across the 2,100 modification attempts evaluated for same textual FSA and CER computation procedures de-
-each model family, this yielded 2,031 compliant outputs for scribed above for inline-text outputs were then applied to
-GPT-image-1.5, 2,100 compliant outputs for Gemini 2.5, the extracted PDF text.
-and 713 compliant outputs for Claude Sonnet 4.6. These set Finally, for image-based outputs, FSA and CER were
-of compliant outputs form the basis of the downstream ac- evaluated using human annotation rather than OCR-based
-curacy evaluation described below. extraction due to the substantial noise and instability intro-
-Evaluation Metrics. To evaluate the accuracy of AI ma- duced by OCR pipelines on visually modified healthcare-
-nipulations, we utilize two intuitive metrics: Field Substi- document images. Because Claude Sonnet 4.6 refused all
-tution Accuracy (FSA) and Collateral Edit Rate (CER). For- image-based manipulation requests, image-level evaluation
-mally, FSA is defined as the fraction of manipulated notes was conducted only for GPT-image-1.5 and Gemini 2.5.
-in which the requested field substitution was executed cor- Each generated image was independently annotated by two
-rectly, whereas CER is defined as the fraction of manip- co-authors, who evaluated whether the requested substitu-
-ulated notes containing unintended collateral edits outside tion was correctly executed (FSA) and whether unintended
-the expected modification region. Intuitively, high values of collateral modifications occurred elsewhere in the document
-FSA and low values of CER represent high “accuracy” of AI (CER). Any disagreements between the two annotators were
-manipulations, and vice versa. Together, these metrics cap- resolved through rigorous discussions until a consensus was
-ture both the semantic correctness of the requested manipu- reached. Throughout this process, we maintained an audit
-lation and the extent to which the generated output preserves trail documenting differing decisions and memos to ensure
-the remainder of the source document. the consistency of the final annotations. Cohen’s κ = 0.604,
-Computing FSA & CER. Given substantial differences be- indicating substantial agreement in the annotation results.
-tween the three document formats (image, PDF, and inline FSA and CER Results. Table 4 summarizes FSA and
-text), FSA and CER were operationalized differently de- CER across all evaluated models and document formats.
-pending on modality. For inline-text outputs, these metrics Several findings emerge immediately. First, GPT-image-1.5
-were computed directly from the raw textual response gener- achieved extremely high substitution accuracy on image-
-ated by the LLM model. Specifically, FSA was computed us- based manipulations, obtaining an FSA of 94.7%, substan-
-ing a substring-based matching procedure: a compliant LLM tially outperforming Gemini 2.5 on the same task (36.6%).
-response was marked accurate if the target substitution value This result suggests the inherent power (and associate dan-
-appeared verbatim in the lowercased response text. ger) of GPT-image-1.5 usage: once GPT-image-1.5 com- Similarly, CER for inline-text outputs was computed by plies with an image-based manipulation request, it is capable
-comparing the seed-document text against the model re- of executing the requested substitution correctly and consis-
-sponse text. For each manipulation request, document words tently in almost 95% of the cases. However, GPT-image-1.5
-were divided into two sets corresponding to the expected still produced unintended collateral edits in approximately
-edit region and the remainder of the document. CER was one-third of image-based outputs (CER = 33.6%), indicating
-then computed as the fraction of compliant LLM responses that successful substitutions do not necessarily imply per-
-in which words outside the expected edit region were added, fect preservation of surrounding document structure. Never-
-removed, or modified relative to the original document. theless, GPT-image-1.5 still outperforms Gemini 2.5, which For PDF-based formats, each generated PDF document achieves a CER value of 45.1%.
+Model
+PNG Image
+PDF
+DOCX / Inline Text
+
+GPT-image-1.5
+94.7%
+33.6%
+62.2%
+93.7%
+69.3%
+81.7%
+Gemini 2.5
+36.6%
+45.1%
+44.4%
+99.6%
+82.4%
+92.4%
+Claude Sonnet 4.6
+–
+–
+77.4%
+67.7%
+80.8%
+99.8%
+
+FSA ↑
+CER ↓
+FSA ↑
+CER ↓
+FSA ↑
+CER ↓
+
+was first converted into text form before evaluation. The
+same textual FSA and CER computation procedures de-
+scribed above for inline-text outputs were then applied to
+the extracted PDF text.
+
+Finally, for image-based outputs, FSA and CER were
+evaluated using human annotation rather than OCR-based
+extraction due to the substantial noise and instability intro-
+duced by OCR pipelines on visually modified healthcare-
+document images. Because Claude Sonnet 4.6 refused all
+image-based manipulation requests, image-level evaluation
+was conducted only for GPT-image-1.5 and Gemini 2.5.
+Each generated image was independently annotated by two
+co-authors, who evaluated whether the requested substitu-
+tion was correctly executed (FSA) and whether unintended
+collateral modifications occurred elsewhere in the document
+(CER). Any disagreements between the two annotators were
+resolved through rigorous discussions until a consensus was
+reached. Throughout this process, we maintained an audit
+trail documenting differing decisions and memos to ensure
+the consistency of the final annotations. Cohen’s κ = 0.604,
+indicating substantial agreement in the annotation results.
+FSA and CER Results. Table 4 summarizes FSA and
+CER across all evaluated models and document formats.
+Several findings emerge immediately. First, GPT-image-1.5
+achieved extremely high substitution accuracy on image-
+based manipulations, obtaining an FSA of 94.7%, substan-
+tially outperforming Gemini 2.5 on the same task (36.6%).
+This result suggests the inherent power (and associate dan-
+ger) of GPT-image-1.5 usage: once GPT-image-1.5 com-
+plies with an image-based manipulation request, it is capable
+of executing the requested substitution correctly and consis-
+tently in almost 95% of the cases. However, GPT-image-1.5
+still produced unintended collateral edits in approximately
+one-third of image-based outputs (CER = 33.6%), indicating
+that successful substitutions do not necessarily imply per-
+fect preservation of surrounding document structure. Never-
+theless, GPT-image-1.5 still outperforms Gemini 2.5, which
+achieves a CER value of 45.1%.
 
 --- PAGE 8 ---
 
-Second, PDF and inline text-based manipulations exhib- manipulation pool is described below), and (iii) one doctors
-ited substantially higher CER values across nearly all eval- note that served as an attention check. The six non-attention-
-uated systems. In particular, CER exceeded 90% for sev- check notes were randomly shuffled using a Fisher-Yates
-eral PDF and inline text conditions, suggesting that text- shuffle (Fisher and Yates 1953), while the attention-check
-oriented workflows often induce broader unintended doc- note was inserted at a randomly selected position. The
-ument modifications beyond the targeted field substitution attention-check stimulus consisted of a blank doctors’ note
-itself. Although FSA values remained moderately high in template with nearly all fields empty, making it unambigu-
-many cases (ranging from 62.1% to 82.4% across multiple ously unsuitable as a legitimate student submission. Only
-PDF and inline-text settings), the accompanying collateral participants who correctly flagged the attention-check note
-edits indicate that these outputs frequently altered substan- as suspicious were retained in the final analytical sample, en-
-tial portions of the surrounding document content beyond suring that retained participants were meaningfully engaged
-the intended modification region. with the survey task. Finally, substantial differences emerge across model fam- For each of the seven presented doctors notes, participants
-ilies. GPT-image-1.5 produced the highest-quality image- answered three questions. First, participants provided a bi-
-based manipulations overall, combining a high FSA value nary accept/flag decision indicating whether they believed
-(94.7%) with comparatively lower CER values (36.6%). In the note should be accepted as legitimate or flagged as sus-
-contrast, Gemini 2.5 exhibited substantially lower FSA val- picious (Q1). Second, participants answered a second bi-
-ues across both image (36.6%) and PDF formats (44.4%), nary accept/flag question instructing them to ignore any im-
-with higher CER values in both conditions. Further, Claude age cropping or framing artifacts and instead evaluate only
-Sonnet 4.6 demonstrated relatively strong substitution accu- the underlying document content (Q2). This second ques-
-racy for PDF (77.4%) and inline-text formats (80.8%), but tion was designed to disentangle judgments driven primarily
-these manipulations were often accompanied by extremely by superficial image-quality artifacts (such as cropped im-
-high collateral-edit rates, particularly for inline-text based ages) from judgments driven by the semantic or structural
-outputs (99.8% CER). Taken together, these findings suggest content of the medical note itself. Finally, participants op-
-that successful LLM-generated healthcare-document manip- tionally provided free-text explanations describing anything
-ulations are often semantically correct but frequently intro- that appeared unusual or suspicious about the document (see
-duce unintended structural modifications outside the target Figure 3 in Appendix).
-edit region, particularly under PDF and inline-text oriented Our study exclusively evaluated image format doctors
-document workflows. notes, as image-based submissions most closely reflect real- world workflows through which students typically submit
-RQ3: How Believable are AI-Manipulated Notes? healthcare documentation to instructors or teaching assis-
-To evaluate the perceived believability of successful LLM- tants. In practice, students commonly attach photographed
-generated medical-note manipulations, we conducted a hu- or scanned doctors’ notes as image files within email cor-
-man user study designed to approximate a realistic doc- respondence or learning-management systems. Restricting
-tors note verification setting. The study was administered the study to image-format documents therefore allowed the
-as an online survey distributed to 120 participants recruited evaluation setting to better approximate realistic institutional
-through CloudResearch Connect. All our participants were review conditions while avoiding the artificial clarity ad-
-over 18 years of age, were based in the United States, and vantages introduced by structured text-based representations
-could understand written English. Upon completing the sur- such as PDF or inline-text formats.
-vey, each participant received $1.00 in compensation. All Manipulation Pool. As mentioned above, the three LLM-
-experimental procedures were reviewed and approved by the manipulated doctors note images shown to each participant
-Institutional Review Board (IRB) of the host university. were sampled uniformly at random (without replacement)
-User Study Design. Upon providing informed consent, par- from a manipulation pool. In principle, this manipulation
-ticipants were presented with a cover scenario asking them pool could have consisted of all compliant image manipu-
-to imagine themselves serving as a Teaching Assistant (TA) lation requests across the evaluated commercial LLM sys-
-for a large undergraduate course. Participants were told that tems. However, the analysis in RQ2 demonstrated that many
-students in this course occasionally submit doctors’ notes compliant image outputs were either semantically inaccu-
-to request excused absences for missed examinations, and rate (i.e., the requested substitution was not correctly per-
-that their task was to review a series of submitted notes formed) or contained unintended collateral edits elsewhere
-and decide whether each note should be accepted or flagged in the document.
-as suspicious for instructor review. To prevent participants Because the primary goal of the user study was to evaluate
-from relying solely on temporal inconsistencies, the scenario the perceived believability of realistic AI-generated manip-
-additionally explained that some notes might contain dates ulations rather than obviously flawed outputs, we restricted
-from prior academic semesters (see Figure 2 in Appendix). the manipulation pool to only those manipulated images for Next, each participant was shown the PNG images of ex- which both human annotators assigned FSA = 1 and CER
-actly seven doctors notes: (i) three (unmodified) seed note = 0. Intuitively, this filtering procedure retained only ma-
-images sampled uniformly at random without replacement, nipulated notes in which the requested modification was cor-
-(ii) three AI-manipulated notes sampled uniformly at ran- rectly executed and no unintended edits were observed else-
-dom without replacement from the manipulation pool (our where in the document. Finally, for each participant, three
+Second, PDF and inline text-based manipulations exhib-
+ited substantially higher CER values across nearly all eval-
+uated systems. In particular, CER exceeded 90% for sev-
+eral PDF and inline text conditions, suggesting that text-
+oriented workflows often induce broader unintended doc-
+ument modifications beyond the targeted field substitution
+itself. Although FSA values remained moderately high in
+many cases (ranging from 62.1% to 82.4% across multiple
+PDF and inline-text settings), the accompanying collateral
+edits indicate that these outputs frequently altered substan-
+tial portions of the surrounding document content beyond
+the intended modification region.
+
+Finally, substantial differences emerge across model fam-
+ilies. GPT-image-1.5 produced the highest-quality image-
+based manipulations overall, combining a high FSA value
+(94.7%) with comparatively lower CER values (36.6%). In
+contrast, Gemini 2.5 exhibited substantially lower FSA val-
+ues across both image (36.6%) and PDF formats (44.4%),
+with higher CER values in both conditions. Further, Claude
+Sonnet 4.6 demonstrated relatively strong substitution accu-
+racy for PDF (77.4%) and inline-text formats (80.8%), but
+these manipulations were often accompanied by extremely
+high collateral-edit rates, particularly for inline-text based
+outputs (99.8% CER). Taken together, these findings suggest
+that successful LLM-generated healthcare-document manip-
+ulations are often semantically correct but frequently intro-
+duce unintended structural modifications outside the target
+edit region, particularly under PDF and inline-text oriented
+document workflows.
+
+RQ3: How Believable are AI-Manipulated Notes?
+To evaluate the perceived believability of successful LLM-
+generated medical-note manipulations, we conducted a hu-
+man user study designed to approximate a realistic doc-
+tors note verification setting. The study was administered
+as an online survey distributed to 120 participants recruited
+through CloudResearch Connect. All our participants were
+over 18 years of age, were based in the United States, and
+could understand written English. Upon completing the sur-
+vey, each participant received $1.00 in compensation. All
+experimental procedures were reviewed and approved by the
+Institutional Review Board (IRB) of the host university.
+User Study Design. Upon providing informed consent, par-
+ticipants were presented with a cover scenario asking them
+to imagine themselves serving as a Teaching Assistant (TA)
+for a large undergraduate course. Participants were told that
+students in this course occasionally submit doctors’ notes
+to request excused absences for missed examinations, and
+that their task was to review a series of submitted notes
+and decide whether each note should be accepted or flagged
+as suspicious for instructor review. To prevent participants
+from relying solely on temporal inconsistencies, the scenario
+additionally explained that some notes might contain dates
+from prior academic semesters (see Figure 2 in Appendix).
+
+Next, each participant was shown the PNG images of ex-
+actly seven doctors notes: (i) three (unmodified) seed note
+images sampled uniformly at random without replacement,
+(ii) three AI-manipulated notes sampled uniformly at ran-
+dom without replacement from the manipulation pool (our
+
+manipulation pool is described below), and (iii) one doctors
+note that served as an attention check. The six non-attention-
+check notes were randomly shuffled using a Fisher-Yates
+shuffle (Fisher and Yates 1953), while the attention-check
+note was inserted at a randomly selected position. The
+attention-check stimulus consisted of a blank doctors’ note
+template with nearly all fields empty, making it unambigu-
+ously unsuitable as a legitimate student submission. Only
+participants who correctly flagged the attention-check note
+as suspicious were retained in the final analytical sample, en-
+suring that retained participants were meaningfully engaged
+with the survey task.
+
+For each of the seven presented doctors notes, participants
+answered three questions. First, participants provided a bi-
+nary accept/flag decision indicating whether they believed
+the note should be accepted as legitimate or flagged as sus-
+picious (Q1). Second, participants answered a second bi-
+nary accept/flag question instructing them to ignore any im-
+age cropping or framing artifacts and instead evaluate only
+the underlying document content (Q2). This second ques-
+tion was designed to disentangle judgments driven primarily
+by superficial image-quality artifacts (such as cropped im-
+ages) from judgments driven by the semantic or structural
+content of the medical note itself. Finally, participants op-
+tionally provided free-text explanations describing anything
+that appeared unusual or suspicious about the document (see
+Figure 3 in Appendix).
+
+Our study exclusively evaluated image format doctors
+notes, as image-based submissions most closely reflect real-
+world workflows through which students typically submit
+healthcare documentation to instructors or teaching assis-
+tants. In practice, students commonly attach photographed
+or scanned doctors’ notes as image files within email cor-
+respondence or learning-management systems. Restricting
+the study to image-format documents therefore allowed the
+evaluation setting to better approximate realistic institutional
+review conditions while avoiding the artificial clarity ad-
+vantages introduced by structured text-based representations
+such as PDF or inline-text formats.
+Manipulation Pool. As mentioned above, the three LLM-
+manipulated doctors note images shown to each participant
+were sampled uniformly at random (without replacement)
+from a manipulation pool. In principle, this manipulation
+pool could have consisted of all compliant image manipu-
+lation requests across the evaluated commercial LLM sys-
+tems. However, the analysis in RQ2 demonstrated that many
+compliant image outputs were either semantically inaccu-
+rate (i.e., the requested substitution was not correctly per-
+formed) or contained unintended collateral edits elsewhere
+in the document.
+
+Because the primary goal of the user study was to evaluate
+the perceived believability of realistic AI-generated manip-
+ulations rather than obviously flawed outputs, we restricted
+the manipulation pool to only those manipulated images for
+which both human annotators assigned FSA = 1 and CER
+= 0. Intuitively, this filtering procedure retained only ma-
+nipulated notes in which the requested modification was cor-
+rectly executed and no unintended edits were observed else-
+where in the document. Finally, for each participant, three
 
 --- PAGE 9 ---
 
 Figure 2: Confusion matrices summarizing participant deci-
 sions in the human believability study.
 
-AI-manipulated notes were then sampled uniformly at ran- Figure 3: Histogram of participant accuracy in distinguish-
-dom without replacement from this filtered pool and incor- ing authentic from manipulated doctors’ notes.
+AI-manipulated notes were then sampled uniformly at ran-
+dom without replacement from this filtered pool and incor-
 porated into the evaluation sequence described above.
 User Study Results. After applying the attention-check fil-
-ter, 116 of the 123 recruited participants remained in the final Finally, Figure 3 shows the distribution of participant-analytical sample. Each retained participant evaluated three level accuracy for Q1 (see Appendix for Q2 results). The dis-unmodified notes and three manipulated notes, yielding 348 tribution is centered around near-chance performance, withunmodified-note judgments and 348 manipulated-note judg- the largest clusters falling in the 25-35% (39 participants)ments for each of the two binary accept/flag evaluation ques- and 45-55% accuracy (40 participants) ranges. Only a smalltions in the survey (see Figure 3 in Appendix). tail of participants performed substantially above chance, Figure 2 shows confusion matrices to summarize par- with 6 participants in the 75–85% range. Overall, this dis-
-ticipant decisions for both the original accept/flag ques- tribution is consistent with the mean accuracy of approxi-
-tion (Q1), and the follow-up accept/flag question instruct- mately 46%, suggesting that most participants struggled to
-ing participants to ignore cropping or framing artifacts (Q2). distinguish authentic from manipulated doctors’ notes.
-Interpreting manipulated (fake) notes as the positive class Thus, these findings indicate that high-quality LLM-
-(i.e., the class participants should ideally flag as suspicious), generated healthcare-document manipulations can achieve
-the results reveal consistently weak detection performance substantial real-world believability, successfully evading hu-
-across both evaluation conditions. man scrutiny even under adversarial evaluation settings Under the original evaluation setting (left panel), partici- specifically designed to encourage suspicion.
+ter, 116 of the 123 recruited participants remained in the final
+analytical sample. Each retained participant evaluated three
+unmodified notes and three manipulated notes, yielding 348
+unmodified-note judgments and 348 manipulated-note judg-
+ments for each of the two binary accept/flag evaluation ques-
+tions in the survey (see Figure 3 in Appendix).
+
+Figure 2 shows confusion matrices to summarize par-
+ticipant decisions for both the original accept/flag ques-
+tion (Q1), and the follow-up accept/flag question instruct-
+ing participants to ignore cropping or framing artifacts (Q2).
+Interpreting manipulated (fake) notes as the positive class
+(i.e., the class participants should ideally flag as suspicious),
+the results reveal consistently weak detection performance
+across both evaluation conditions.
+
+Under the original evaluation setting (left panel), partici-
 pants correctly identified manipulated notes in only 125 out
 of 348 cases, corresponding to a recall (true positive rate)
-of 35.9%. Conversely, manipulated notes were incorrectly Discussion and Conclusion
-accepted as legitimate in 223 cases, yielding a false nega- This study examined the robustness of commercial multi-
-tive rate of 64.1%. This indicates that nearly two-thirds of modal LLM guardrails against healthcare-document manip-
-AI-manipulated doctors’ notes successfully evaded human ulation requests using doctors’ note modification as a con-
-detection despite participants being explicitly warned that crete case study. Across three RQs, we evaluated (1) whether
-some notes may have been altered using AI tools. commercial LLMs refuse adversarial medical-note manip- Participant precision was similarly limited. Among all ulation requests, (2) whether successful manipulations are
-notes flagged as suspicious, only 45.1% actually corre- accurate and plausible, and (3) whether high-quality manip-
-sponded to manipulated notes, indicating that participants ulated outputs are believable to human evaluators.
-frequently flagged unmodified notes incorrectly while still First, our findings bring to light the weaknesses in the
-failing to identify many manipulated notes. Overall clas- safeguards put in place by contemporary commercial LLM
-sification accuracy remained modest at 46.1%, with bal- systems against user requests for manipulating medical
-anced accuracy similarly close to chance-level performance. notes. Importantly, successfully bypassing safeguards in
-Together, these findings suggest that participants struggled current-day LLMs did not require sophisticated jailbreak
-to reliably distinguish manipulated notes from unmodified optimization, prompt obfuscation, or complex adversarial
-notes under realistic review conditions. prompting strategies. In almost all cases, straightforward The Q2 condition (right panel in Figure 2) produced natural-language requests were sufficient to induce models
-nearly identical results. Recall remained unchanged at to modify or generate fake medical notes, even under explicit
-35.6%, while overall participant accuracy remained approx- medical framing conditions where the harmful intent of the
-imately 46%. The close correspondence between the two request was relatively apparent. From a practical standpoint,
-confusion matrices suggests that participant decisions were this substantially lowers the technical and cognitive barriers
-not driven primarily by superficial image-quality artifacts. associated with healthcare-document fraud, making misuse
+of 35.9%. Conversely, manipulated notes were incorrectly
+accepted as legitimate in 223 cases, yielding a false nega-
+tive rate of 64.1%. This indicates that nearly two-thirds of
+AI-manipulated doctors’ notes successfully evaded human
+detection despite participants being explicitly warned that
+some notes may have been altered using AI tools.
+
+Participant precision was similarly limited. Among all
+notes flagged as suspicious, only 45.1% actually corre-
+sponded to manipulated notes, indicating that participants
+frequently flagged unmodified notes incorrectly while still
+failing to identify many manipulated notes. Overall clas-
+sification accuracy remained modest at 46.1%, with bal-
+anced accuracy similarly close to chance-level performance.
+Together, these findings suggest that participants struggled
+to reliably distinguish manipulated notes from unmodified
+notes under realistic review conditions.
+
+The Q2 condition (right panel in Figure 2) produced
+nearly identical results. Recall remained unchanged at
+35.6%, while overall participant accuracy remained approx-
+imately 46%. The close correspondence between the two
+confusion matrices suggests that participant decisions were
+not driven primarily by superficial image-quality artifacts.
+
+Figure 3: Histogram of participant accuracy in distinguish-
+ing authentic from manipulated doctors’ notes.
+
+Finally, Figure 3 shows the distribution of participant-
+level accuracy for Q1 (see Appendix for Q2 results). The dis-
+tribution is centered around near-chance performance, with
+the largest clusters falling in the 25-35% (39 participants)
+and 45-55% accuracy (40 participants) ranges. Only a small
+tail of participants performed substantially above chance,
+with 6 participants in the 75–85% range. Overall, this dis-
+tribution is consistent with the mean accuracy of approxi-
+mately 46%, suggesting that most participants struggled to
+distinguish authentic from manipulated doctors’ notes.
+
+Thus, these findings indicate that high-quality LLM-
+generated healthcare-document manipulations can achieve
+substantial real-world believability, successfully evading hu-
+man scrutiny even under adversarial evaluation settings
+specifically designed to encourage suspicion.
+
+This study examined the robustness of commercial multi-
+modal LLM guardrails against healthcare-document manip-
+ulation requests using doctors’ note modification as a con-
+crete case study. Across three RQs, we evaluated (1) whether
+commercial LLMs refuse adversarial medical-note manip-
+ulation requests, (2) whether successful manipulations are
+accurate and plausible, and (3) whether high-quality manip-
+ulated outputs are believable to human evaluators.
+
+First, our findings bring to light the weaknesses in the
+safeguards put in place by contemporary commercial LLM
+systems against user requests for manipulating medical
+notes. Importantly, successfully bypassing safeguards in
+current-day LLMs did not require sophisticated jailbreak
+optimization, prompt obfuscation, or complex adversarial
+prompting strategies. In almost all cases, straightforward
+natural-language requests were sufficient to induce models
+to modify or generate fake medical notes, even under explicit
+medical framing conditions where the harmful intent of the
+request was relatively apparent. From a practical standpoint,
+this substantially lowers the technical and cognitive barriers
+associated with healthcare-document fraud, making misuse
+
+Discussion and Conclusion
 
 --- PAGE 10 ---
 
-accessible even to relatively non-technical users with access increasing the administrative burden associated with verify-
-to paid subscriptions of commercial LLM platforms. ing medical documentation. Conversely, widespread prolif- Further, relatively minor changes in document represen- eration of AI-manipulated documents may contribute to in-
-tation format (from image to inline text) were often suffi- creased institutional skepticism and scrutiny toward individ-
-cient to substantially alter refusal behavior, particularly for uals with legitimate healthcare needs.
-Claude Sonnet 4.6. These findings suggest that current safe- Additionally, the findings raise important privacy and reg-
-guard mechanisms may rely heavily on shallow modality- ulatory concerns. In practical misuse scenarios, malicious
-dependent contextual signals rather than robust semantic un- users may manipulate real medical documents containing
-derstanding of the underlying manipulation intent. Given the sensitive personal information and/or real provider identi-
-rapid proliferation of LLMs in real-world healthcare work- ties. Such misuse could create significant downstream le-
-flows, these findings underscore the urgency of address- gal and compliance risks, including potential violations of
-ing the identified safety loopholes and strengthening current healthcare privacy regulations such as the Health Insurance
-guardrail mechanisms against healthcare-document misuse. Portability and Accountability Act (HIPAA). Further, the Beyond refusal behavior alone, however, an equally im- unauthorized use or fabrication of provider names, and sig-
-portant question concerns the quality of successful manip- natures within manipulated medical documents may expose
-ulations. Our results revealed notable differences in manip- healthcare professionals to reputational harm, legal disputes,
-ulation accuracy and collateral-edit behavior across models or administrative investigation despite having no involve-
-and document formats. In particular, GPT-image-1.5 demon- ment in the fraudulent document generation itself.
-strated comparatively high FSA together with relatively low Thus, the findings of this study suggest that healthcare-
-CER for image-based manipulations, suggesting that the document manipulation using contemporary multimodal
-model was often capable of performing targeted modifica- LLM systems is not merely a speculative future concern,
-tions while preserving the surrounding document structure. but a presently achievable misuse capability with meaning-
-In contrast, several PDF and inline-text workflows exhib- ful real-world implications. Across multiple LLMs, we ob-
-ited substantially higher CER values, even when FSA values served substantial weaknesses in refusal behavior, the abil-
-remained moderately high. From a safety perspective, high ity to generate accurate manipulations, and the capacity of
-collateral-edit rates may partially limit the practical realism high-quality outputs to evade human scrutiny under real-
-or institutional usability of some manipulated outputs. How- istic review conditions. These findings underscore the ur-
-ever, the comparatively strong image-editing performance gent need for stronger multimodal safeguard mechanisms,
-exhibited by GPT-image-1.5 is concerning because it en- and continued adversarial evaluation of commercial GenAI
-ables relatively precise and visually plausible modifications systems prior to their widespread deployment in healthcare
-to healthcare-related documents. More broadly, these find- settings. More broadly, companies developing frontier LLM
-ings suggest that increasingly capable multimodal editing systems for healthcare (including OpenAI, Google, and An-
-systems may inadvertently facilitate high-fidelity document thropic) would do well to critically introspect on the emerg-
-manipulation workflows capable of producing convincing ing capabilities and misuse potential of their systems before
-fraudulent healthcare documentation. deploying increasingly powerful products without rigorous These concerns were further reinforced by our believabil- safety testing and robust guardrail development.
+accessible even to relatively non-technical users with access
+to paid subscriptions of commercial LLM platforms.
+
+Further, relatively minor changes in document represen-
+tation format (from image to inline text) were often suffi-
+cient to substantially alter refusal behavior, particularly for
+Claude Sonnet 4.6. These findings suggest that current safe-
+guard mechanisms may rely heavily on shallow modality-
+dependent contextual signals rather than robust semantic un-
+derstanding of the underlying manipulation intent. Given the
+rapid proliferation of LLMs in real-world healthcare work-
+flows, these findings underscore the urgency of address-
+ing the identified safety loopholes and strengthening current
+guardrail mechanisms against healthcare-document misuse.
+
+Beyond refusal behavior alone, however, an equally im-
+portant question concerns the quality of successful manip-
+ulations. Our results revealed notable differences in manip-
+ulation accuracy and collateral-edit behavior across models
+and document formats. In particular, GPT-image-1.5 demon-
+strated comparatively high FSA together with relatively low
+CER for image-based manipulations, suggesting that the
+model was often capable of performing targeted modifica-
+tions while preserving the surrounding document structure.
+In contrast, several PDF and inline-text workflows exhib-
+ited substantially higher CER values, even when FSA values
+remained moderately high. From a safety perspective, high
+collateral-edit rates may partially limit the practical realism
+or institutional usability of some manipulated outputs. How-
+ever, the comparatively strong image-editing performance
+exhibited by GPT-image-1.5 is concerning because it en-
+ables relatively precise and visually plausible modifications
+to healthcare-related documents. More broadly, these find-
+ings suggest that increasingly capable multimodal editing
+systems may inadvertently facilitate high-fidelity document
+manipulation workflows capable of producing convincing
+fraudulent healthcare documentation.
+
+These concerns were further reinforced by our believabil-
 ity user study. Our participants frequently perceived high-
-quality manipulated doctors’ notes as legitimate despite be- Limitations and Future Work
-ing explicitly informed that some documents may have been Due to ethical and privacy considerations regarding the use
-altered or AI-generated. Manipulated notes were accepted of real medical documents, we relied exclusively on pub-
-far more often than they were flagged as suspicious, while licly available doctors’ note templates collected from on-
-overall participant accuracy remained close to 50%. line sources rather than authentic clinical records. Although Collectively, these findings suggest that sufficiently high- we attempted to select templates that resemble realistic doc-
-quality AI-generated healthcare-document manipulations tor’s notes, they may not fully capture the complexity, stylis-
-may be capable of evading casual human scrutiny in realis- tic variation, or formatting characteristics present in gen-
-tic institutional settings. This is particularly concerning be- uine medical documents. This might have resulted in dif-
-cause many real-world verification workflows for doctors’ ferences in quality and realism of the documents that may
-notes in educational and workplace environments rely heav- be achieved by using authentic clinical documents. Further,
-ily on informal visual inspection by non-expert reviewers our user study relied on participants recruited through an on-
-(e.g., professors and managers) rather than rigorous authen- line platform who were asked to imagine themselves acting
-tication procedures. As a result, increasingly capable multi- as teaching assistants evaluating submitted doctors’ notes.
-modal LLM systems may significantly amplify the practical While this allowed us to study participant perceptions under
-feasibility and scalability of healthcare-document fraud. a controlled setting, participants may not have experienced Taken together, these findings raise broader ethical, legal, the same responsibility, scrutiny, or real-world consequences
-and institutional concerns regarding the deployment of LLM that are associated with actual medical-document verifica-
-systems in healthcare settings. In educational and work- tion. Finally, our study focused specifically on doctors’ ex-
-place settings, manipulated healthcare documents could po- cuse notes as a concrete case study for healthcare-document
-tentially be used to justify fraudulent absences, examination manipulation. Future work should investigate whether sim-
-deferrals, or accommodation requests (Grove 2025), thereby ilar vulnerabilities arise for other forms of medical docu-
+quality manipulated doctors’ notes as legitimate despite be-
+ing explicitly informed that some documents may have been
+altered or AI-generated. Manipulated notes were accepted
+far more often than they were flagged as suspicious, while
+overall participant accuracy remained close to 50%.
+
+Collectively, these findings suggest that sufficiently high-
+quality AI-generated healthcare-document manipulations
+may be capable of evading casual human scrutiny in realis-
+tic institutional settings. This is particularly concerning be-
+cause many real-world verification workflows for doctors’
+notes in educational and workplace environments rely heav-
+ily on informal visual inspection by non-expert reviewers
+(e.g., professors and managers) rather than rigorous authen-
+tication procedures. As a result, increasingly capable multi-
+modal LLM systems may significantly amplify the practical
+feasibility and scalability of healthcare-document fraud.
+
+Taken together, these findings raise broader ethical, legal,
+and institutional concerns regarding the deployment of LLM
+systems in healthcare settings. In educational and work-
+place settings, manipulated healthcare documents could po-
+tentially be used to justify fraudulent absences, examination
+deferrals, or accommodation requests (Grove 2025), thereby
+
+increasing the administrative burden associated with verify-
+ing medical documentation. Conversely, widespread prolif-
+eration of AI-manipulated documents may contribute to in-
+creased institutional skepticism and scrutiny toward individ-
+uals with legitimate healthcare needs.
+
+Additionally, the findings raise important privacy and reg-
+ulatory concerns. In practical misuse scenarios, malicious
+users may manipulate real medical documents containing
+sensitive personal information and/or real provider identi-
+ties. Such misuse could create significant downstream le-
+gal and compliance risks, including potential violations of
+healthcare privacy regulations such as the Health Insurance
+Portability and Accountability Act (HIPAA). Further, the
+unauthorized use or fabrication of provider names, and sig-
+natures within manipulated medical documents may expose
+healthcare professionals to reputational harm, legal disputes,
+or administrative investigation despite having no involve-
+ment in the fraudulent document generation itself.
+
+Thus, the findings of this study suggest that healthcare-
+document manipulation using contemporary multimodal
+LLM systems is not merely a speculative future concern,
+but a presently achievable misuse capability with meaning-
+ful real-world implications. Across multiple LLMs, we ob-
+served substantial weaknesses in refusal behavior, the abil-
+ity to generate accurate manipulations, and the capacity of
+high-quality outputs to evade human scrutiny under real-
+istic review conditions. These findings underscore the ur-
+gent need for stronger multimodal safeguard mechanisms,
+and continued adversarial evaluation of commercial GenAI
+systems prior to their widespread deployment in healthcare
+settings. More broadly, companies developing frontier LLM
+systems for healthcare (including OpenAI, Google, and An-
+thropic) would do well to critically introspect on the emerg-
+ing capabilities and misuse potential of their systems before
+deploying increasingly powerful products without rigorous
+safety testing and robust guardrail development.
+
+Limitations and Future Work
+Due to ethical and privacy considerations regarding the use
+of real medical documents, we relied exclusively on pub-
+licly available doctors’ note templates collected from on-
+line sources rather than authentic clinical records. Although
+we attempted to select templates that resemble realistic doc-
+tor’s notes, they may not fully capture the complexity, stylis-
+tic variation, or formatting characteristics present in gen-
+uine medical documents. This might have resulted in dif-
+ferences in quality and realism of the documents that may
+be achieved by using authentic clinical documents. Further,
+our user study relied on participants recruited through an on-
+line platform who were asked to imagine themselves acting
+as teaching assistants evaluating submitted doctors’ notes.
+While this allowed us to study participant perceptions under
+a controlled setting, participants may not have experienced
+the same responsibility, scrutiny, or real-world consequences
+that are associated with actual medical-document verifica-
+tion. Finally, our study focused specifically on doctors’ ex-
+cuse notes as a concrete case study for healthcare-document
+manipulation. Future work should investigate whether sim-
+ilar vulnerabilities arise for other forms of medical docu-
 
 --- PAGE 11 ---
 
-mentation, such as prescriptions, laboratory reports, insur- Gong, Y.; Ran, D.; Liu, J.; Wang, C.; Cong, T.; Wang, A.;
-ance forms, vaccination records, referral letters, or diagnos- Duan, S.; and Wang, X. 2025. Figstep: Jailbreaking large
-tic summaries. Broadly, future research could examine these vision-language models via typographic visual prompts. In
-evaluations in more realistic institutional settings. Proceedings of the AAAI Conference on Artificial Intelli- gence, volume 39, 23951–23959. Ethical Statement Grove, J. 2025. Fake Sick Notes Rise in Student Cheating
-Our study investigates vulnerabilities in LLM guardrails re- Cases. https://www.timeshighereducation.com/news/fake-
-lated to healthcare-document manipulation. We acknowl- sick-notes-rise-student-cheating-cases. Times Higher Ed-
-edge that the techniques and findings discussed in this paper ucation. Accessed: 2026-05-21.
-could potentially be misused to facilitate harmful or decep- Hadi, M. U.; Qureshi, R.; Shah, A.; Irfan, M.; Zafar, A.;
-tive behavior. However, our intent is not to facilitate misuse, Shaikh, M. B.; Akhtar, N.; Wu, J.; Mirjalili, S.; et al. 2023.
-but rather to provide empirical evidence that can help re- Large language models: a comprehensive survey of its ap-
-searchers, model developers, and policymakers better under- plications, challenges, limitations, and future prospects. Au-
-stand and mitigate emerging risks associated with increas- thorea preprints, 1(3): 1–26.
-ingly capable LLMs. We believe that the societal benefits of Han, T.; Kumar, A.; Agarwal, C.; and Lakkaraju, H. 2024a.identifying and characterizing these vulnerabilities substan- Medsafetybench: Evaluating and improving the medicaltially outweigh the potential risks associated with it. safety of large language models. Advances in neural infor- mation processing systems, 37: 33423–33454. References Han, T.; Nebelung, S.; Khader, F.; Wang, T.; M¨uller-Franzes,
-Akhter, H. M.; Cooper, J. S.; and Cooper, J. 2023. Acute G.; Kuhl, C.; F¨orsch, S.; Kleesiek, J.; Haarburger, C.;
-pulmonary edema after hyperbaric oxygen treatment: a case Bressem, K. K.; et al. 2024b. Medical large language mod-
-report written with ChatGPT assistance. Cureus, 15(2). els are susceptible to targeted misinformation attacks. NPJ
-Alber, D. A.; Yang, Z.; Alyakin, A.; Yang, E.; Rai, S.; Val- digital medicine, 7(1): 288.
-liani, A. A.; Zhang, J.; Rosenbaum, G. R.; Amend-Thomas, Jin, K. W.; Rostam-Abadi, Y.; Chaudhary, P.; Garrett, M. A.;A. K.; Kurland, D. B.; et al. 2025. Medical large language Huang, A. S.; Montelongo, M.; Nagpal, C.; Shei, J.; Weath-models are vulnerable to data-poisoning attacks. Nature ers, J.; Zhang, J. S.; et al. 2026. Evaluating Diagnostic Ac-Medicine, 31(2): 618–626. curacy and Clinical Reasoning of Multiple Large Language
-Anthropic. 2026. Advancing Claude in Healthcare and the Models in Psychiatry. medRxiv.
-Life Sciences. Accessed: 2026-05-21. Ma, S.; Luo, W.; Wang, Y.; and Liu, X. 2024. Visual-
-Arawi, T.; El Bachour, J.; and El Khansa, T. 2024. The roleplay: Universal jailbreak attack on multimodal large
-fourth industrial revolution: its impact on artificial intelli- language models via role-playing image character. arXiv
-gence and medicine in developing countries. Asian Bioethics preprint arXiv:2405.20773.
-Review, 16(3): 513–526. Maity, S.; and Saikia, M. J. 2025. Large language models in
-Bedi, S.; Liu, Y.; Orr-Ewing, L.; Dash, D.; Koyejo, S.; healthcare and medical applications: a review. Bioengineer-
-Callahan, A.; Fries, J. A.; Wornow, M.; Swaminathan, A.; ing, 12(6): 631.
+mentation, such as prescriptions, laboratory reports, insur-
+ance forms, vaccination records, referral letters, or diagnos-
+tic summaries. Broadly, future research could examine these
+evaluations in more realistic institutional settings.
+
+Ethical Statement
+Our study investigates vulnerabilities in LLM guardrails re-
+lated to healthcare-document manipulation. We acknowl-
+edge that the techniques and findings discussed in this paper
+could potentially be misused to facilitate harmful or decep-
+tive behavior. However, our intent is not to facilitate misuse,
+but rather to provide empirical evidence that can help re-
+searchers, model developers, and policymakers better under-
+stand and mitigate emerging risks associated with increas-
+ingly capable LLMs. We believe that the societal benefits of
+identifying and characterizing these vulnerabilities substan-
+tially outweigh the potential risks associated with it.
+
+References
+Akhter, H. M.; Cooper, J. S.; and Cooper, J. 2023. Acute
+pulmonary edema after hyperbaric oxygen treatment: a case
+report written with ChatGPT assistance. Cureus, 15(2).
+Alber, D. A.; Yang, Z.; Alyakin, A.; Yang, E.; Rai, S.; Val-
+liani, A. A.; Zhang, J.; Rosenbaum, G. R.; Amend-Thomas,
+A. K.; Kurland, D. B.; et al. 2025. Medical large language
+models are vulnerable to data-poisoning attacks.
+Nature
+Medicine, 31(2): 618–626.
+Anthropic. 2026. Advancing Claude in Healthcare and the
+Life Sciences. Accessed: 2026-05-21.
+Arawi, T.; El Bachour, J.; and El Khansa, T. 2024.
+The
+fourth industrial revolution: its impact on artificial intelli-
+gence and medicine in developing countries. Asian Bioethics
+Review, 16(3): 513–526.
+Bedi, S.; Liu, Y.; Orr-Ewing, L.; Dash, D.; Koyejo, S.;
+Callahan, A.; Fries, J. A.; Wornow, M.; Swaminathan, A.;
 Lehmann, L. S.; et al. 2024. A systematic review of testing
-and evaluation of healthcare applications of large language Mazeika, M.; Phan, L.; Yin, X.; Zou, A.; Wang, Z.; Mu,
-models (LLMs). MedRxiv, 2024–04. N.; Sakhaee, E.; Li, N.; Basart, S.; Li, B.; et al. 2024. Harmbench: A standardized evaluation framework for au-Chow, J. C.; and Li, K. 2025. Large language models in tomated red teaming and robust refusal. arXiv preprintmedical chatbots: opportunities, challenges, and the need to arXiv:2402.04249.address AI risks. Information, 16(7): 549. Menz, B. D.; Kuderer, N. M.; Bacchi, S.; Modi, N. D.; Chin-DataM Intelligence. 2025. Healthcare LLM Platform Mar- Yee, B.; Hu, T.; Rickard, C.; Haseloff, M.; Vitry, A.; McKin-ket. https://www.datamintelligence.com/research-report/ non, R. A.; et al. 2024. Current safeguards, risk mitigation,healthcare-llm-platform-market. Accessed: 2026-05-19. and transparency measures of large language models against
-Draelos, R. L.; Afreen, S.; Blasko, B.; Brazile, T. L.; Chase, the generation of health disinformation: repeated cross sec-
-N.; Desai, D. P.; Evert, J.; Gardner, H. L.; Herrmann, L.; tional analysis. bmj, 384.
+and evaluation of healthcare applications of large language
+models (LLMs). MedRxiv, 2024–04.
+Chow, J. C.; and Li, K. 2025. Large language models in
+medical chatbots: opportunities, challenges, and the need to
+address AI risks. Information, 16(7): 549.
+DataM Intelligence. 2025. Healthcare LLM Platform Mar-
+ket.
+https://www.datamintelligence.com/research-report/
+healthcare-llm-platform-market. Accessed: 2026-05-19.
+Draelos, R. L.; Afreen, S.; Blasko, B.; Brazile, T. L.; Chase,
+N.; Desai, D. P.; Evert, J.; Gardner, H. L.; Herrmann, L.;
 House, A. V.; et al. 2026. Large language models provide
-unsafe answers to patient-posed medical questions. npj Dig- Nazi, Z. A.; and Peng, W. 2024. Large language models in
-ital Medicine. healthcare and medical domain: A review. In Informatics, volume 11, 57. MDPI.Fast, D.; Adams, L. C.; Busch, F.; Fallon, C.; Huppertz, M.;
-Siepmann, R.; Prucker, P.; Bayerl, N.; Truhn, D.; Makowski, Nori, H.; King, N.; McKinney, S. M.; Carignan, D.; and
-M.; et al. 2024. Autonomous medical evaluation for guide- Horvitz, E. 2023. Capabilities of gpt-4 on medical challenge
-line adherence of large language models. NPJ Digital problems. arXiv preprint arXiv:2303.13375.
-Medicine, 7(1): 358. OpenAI. 2026. Introducing ChatGPT Health. https://openai.
-Fisher, R. A.; and Yates, F. 1953. Statistical tables for bio- com/index/introducing-chatgpt-health/. OpenAI Blog. Ac-
-logical, agricultural and medical research. Oliver and Boyd. cessed: 2026-05-21.
+unsafe answers to patient-posed medical questions. npj Dig-
+ital Medicine.
+Fast, D.; Adams, L. C.; Busch, F.; Fallon, C.; Huppertz, M.;
+Siepmann, R.; Prucker, P.; Bayerl, N.; Truhn, D.; Makowski,
+M.; et al. 2024. Autonomous medical evaluation for guide-
+line adherence of large language models.
+NPJ Digital
+Medicine, 7(1): 358.
+Fisher, R. A.; and Yates, F. 1953. Statistical tables for bio-
+logical, agricultural and medical research. Oliver and Boyd.
+
+Gong, Y.; Ran, D.; Liu, J.; Wang, C.; Cong, T.; Wang, A.;
+Duan, S.; and Wang, X. 2025. Figstep: Jailbreaking large
+vision-language models via typographic visual prompts. In
+Proceedings of the AAAI Conference on Artificial Intelli-
+gence, volume 39, 23951–23959.
+Grove, J. 2025. Fake Sick Notes Rise in Student Cheating
+Cases.
+https://www.timeshighereducation.com/news/fake-
+sick-notes-rise-student-cheating-cases. Times Higher Ed-
+ucation. Accessed: 2026-05-21.
+Hadi, M. U.; Qureshi, R.; Shah, A.; Irfan, M.; Zafar, A.;
+Shaikh, M. B.; Akhtar, N.; Wu, J.; Mirjalili, S.; et al. 2023.
+Large language models: a comprehensive survey of its ap-
+plications, challenges, limitations, and future prospects. Au-
+thorea preprints, 1(3): 1–26.
+Han, T.; Kumar, A.; Agarwal, C.; and Lakkaraju, H. 2024a.
+Medsafetybench: Evaluating and improving the medical
+safety of large language models. Advances in neural infor-
+mation processing systems, 37: 33423–33454.
+Han, T.; Nebelung, S.; Khader, F.; Wang, T.; M¨uller-Franzes,
+G.; Kuhl, C.; F¨orsch, S.; Kleesiek, J.; Haarburger, C.;
+Bressem, K. K.; et al. 2024b. Medical large language mod-
+els are susceptible to targeted misinformation attacks. NPJ
+digital medicine, 7(1): 288.
+Jin, K. W.; Rostam-Abadi, Y.; Chaudhary, P.; Garrett, M. A.;
+Huang, A. S.; Montelongo, M.; Nagpal, C.; Shei, J.; Weath-
+ers, J.; Zhang, J. S.; et al. 2026. Evaluating Diagnostic Ac-
+curacy and Clinical Reasoning of Multiple Large Language
+Models in Psychiatry. medRxiv.
+Ma, S.; Luo, W.; Wang, Y.; and Liu, X. 2024.
+Visual-
+roleplay: Universal jailbreak attack on multimodal large
+language models via role-playing image character.
+arXiv
+preprint arXiv:2405.20773.
+Maity, S.; and Saikia, M. J. 2025. Large language models in
+healthcare and medical applications: a review. Bioengineer-
+ing, 12(6): 631.
+Mazeika, M.; Phan, L.; Yin, X.; Zou, A.; Wang, Z.; Mu,
+N.; Sakhaee, E.; Li, N.; Basart, S.; Li, B.; et al. 2024.
+Harmbench: A standardized evaluation framework for au-
+tomated red teaming and robust refusal.
+arXiv preprint
+arXiv:2402.04249.
+Menz, B. D.; Kuderer, N. M.; Bacchi, S.; Modi, N. D.; Chin-
+Yee, B.; Hu, T.; Rickard, C.; Haseloff, M.; Vitry, A.; McKin-
+non, R. A.; et al. 2024. Current safeguards, risk mitigation,
+and transparency measures of large language models against
+the generation of health disinformation: repeated cross sec-
+tional analysis. bmj, 384.
+Nazi, Z. A.; and Peng, W. 2024. Large language models in
+healthcare and medical domain: A review. In Informatics,
+volume 11, 57. MDPI.
+Nori, H.; King, N.; McKinney, S. M.; Carignan, D.; and
+Horvitz, E. 2023. Capabilities of gpt-4 on medical challenge
+problems. arXiv preprint arXiv:2303.13375.
+OpenAI. 2026. Introducing ChatGPT Health. https://openai.
+com/index/introducing-chatgpt-health/. OpenAI Blog. Ac-
+cessed: 2026-05-21.
 
 --- PAGE 12 ---
 
@@ -547,13 +1370,16 @@ How does llm safety training fail? Advances in neural infor-
 mation processing systems, 36: 80079–80110.
 Wu, D.; Haredasht, F. N.; Maharaj, S. K.; Jain, P.; Tran,
 J.; Gwiazdon, M.; Rustagi, A.; Jindal, J.; Koshy, J. M.;
-Kadiyala, V.; et al. 2025. First, do NOHARM: towards
-clinically safe large language models. arXiv preprint
+Kadiyala, V.; et al. 2025.
+First, do NOHARM: towards
+clinically safe large language models.
+arXiv preprint
 arXiv:2512.01241.
 Yang, Y.; Jin, Q.; Huang, F.; and Lu, Z. 2024. Adversarial
 attacks on large language models in medicine. ArXiv, arXiv–
 2406.
 Zou, A.; Wang, Z.; Carlini, N.; Nasr, M.; Kolter, J. Z.; and
-Fredrikson, M. 2023. Universal and transferable adver-
+Fredrikson, M. 2023.
+Universal and transferable adver-
 sarial attacks on aligned language models. arXiv preprint
 arXiv:2307.15043.

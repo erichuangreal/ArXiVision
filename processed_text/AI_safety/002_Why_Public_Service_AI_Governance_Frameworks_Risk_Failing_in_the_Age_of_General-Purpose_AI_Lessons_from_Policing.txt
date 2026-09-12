@@ -1,25 +1,57 @@
 --- PAGE 1 ---
 
-Why Public Service AI Governance Frameworks Risk Failing in the Age of General-Purpose AI: Lessons from Policing
+arXiv:2607.25648v1 [cs.CY] 28 Jul 2026
 
-Sam Relinsa,b,* Daniel Birksa,b
+Why Public Service AI Governance Frameworks
 
-a ESRC Vulnerability and Policing Futures Research Centre b School of Law, University of Leeds, Leeds, UK
+Risk Failing in the Age of General-Purpose AI:
+Lessons from Policing
+
+Sam Relinsa,b,*
+Daniel Birksa,b
+
+a ESRC Vulnerability and Policing Futures Research Centre
+b School of Law, University of Leeds, Leeds, UK
 
 * Corresponding author: [EMAIL]
 
 Preprint. This manuscript has been submitted for publication and has not yet been peer reviewed.
 
-Abstract2026 Public services face growing pressure to adopt artificial intelligence (AI) to close the gap between rising demand and falling resources. That pressure has intensified withJul the arrival of general-purpose AI (GPAI): AI built on large language models, that can
-28 be directed by prompt alone to perform an effectively unbounded range of tasks. We argue that the properties that make these models attractive: their generality, accessibility, and the low cost and expertise required to deploy them, undermine the conditions under which AI safety has historically been pursued. The safety concepts that public service governance frameworks foreground - accuracy, bias, explainability, and accountability - were made tractable by narrow, purpose-built AI, and the mitigations that guidance documents continue to prescribe presuppose exactly what GPAI removes. Accuracy cannot[cs.CY] be quantified over unbounded outputs. Bias cannot be disaggregated when outputs are free-text judgements rather than categorical predictions. Explainability gives way to the appearance of explanation, and accountability erodes as outputs are optimized to persuade. We develop this argument through the case of policing, where the consequences of governance failure are among the most severe, and show why the same failure is likely to recur across other public services. The two mitigations that dominate policing AI strategy - expert evaluation and human-in-the-loop oversight - both rest on assumptions that GPAI violates. The result is a structural inversion: safety assurance shifts from an intrinsic feature of building an AI tool to an optional, external add-on. We recommend a clear taxonomic distinction between narrow and general-purpose AI in governance documentation, a preference for technological parsimony, a pause on operational deployment of GPAI in policing until adequate evidence exists, and a coordinated national safety infrastructure with the independence and authority to generate that evidence and determine whenarXiv:2607.25648v1 responsible deployment is achievable.
+Public services face growing pressure to adopt artificial intelligence (AI) to close the
+gap between rising demand and falling resources. That pressure has intensified with
+the arrival of general-purpose AI (GPAI): AI built on large language models, that can
+be directed by prompt alone to perform an effectively unbounded range of tasks. We
+argue that the properties that make these models attractive: their generality, accessibility,
+and the low cost and expertise required to deploy them, undermine the conditions under
+which AI safety has historically been pursued. The safety concepts that public service
+governance frameworks foreground - accuracy, bias, explainability, and accountability
+- were made tractable by narrow, purpose-built AI, and the mitigations that guidance
 
-Keywords: artificial intelligence · general-purpose AI · regulatory governance · policing · public services · algorithmic accountability
+documents continue to prescribe presuppose exactly what GPAI removes. Accuracy cannot
+be quantified over unbounded outputs. Bias cannot be disaggregated when outputs are
+free-text judgements rather than categorical predictions. Explainability gives way to
+the appearance of explanation, and accountability erodes as outputs are optimized to
+persuade. We develop this argument through the case of policing, where the consequences
+of governance failure are among the most severe, and show why the same failure is likely to
+recur across other public services. The two mitigations that dominate policing AI strategy
+- expert evaluation and human-in-the-loop oversight - both rest on assumptions that GPAI
+
+violates. The result is a structural inversion: safety assurance shifts from an intrinsic feature
+of building an AI tool to an optional, external add-on. We recommend a clear taxonomic
+distinction between narrow and general-purpose AI in governance documentation, a
+preference for technological parsimony, a pause on operational deployment of GPAI in
+policing until adequate evidence exists, and a coordinated national safety infrastructure
+with the independence and authority to generate that evidence and determine when
+responsible deployment is achievable.
+
+Keywords: artificial intelligence · general-purpose AI · regulatory governance · policing ·
+public services · algorithmic accountability
+
+Abstract
 
 1
 
 --- PAGE 2 ---
-
-AI Governance in the Age of General-Purpose AI
 
 1 Introduction
 
@@ -66,11 +98,14 @@ reoffend. GPAI models are general by design. They accept instructions in natural
 and produce outputs that, in many cases, replicate work that would previously have
 required specialist human expertise. This has prompted a dramatic surge in adoption
 (Bengio et al., 2025) and lent fresh momentum to the political enthusiasm, described
+
 above, for AI across public services, policing included (DSIT, 2025a). It has also, we argue,
 marked a decisive departure from the systems on which the existing safety literature was
 built.
 
 A brief note on terminology. Following the EU AI Act (European Union, 2024, Arts.
+
+AI Governance in the Age of General-Purpose AI
 
 2
 
@@ -89,6 +124,7 @@ purpose-built alternative. We accordingly take the model as our unit of analysis
 
 This paper argues that the features which make general-purpose AI so transformational
 - its generality, its accessibility, and the dramatic reduction in the cost and expertise
+
 required to deploy it - fundamentally alter the conditions under which AI safety has
 historically been pursued, and that current governance frameworks have not kept pace
 with this shift. We trace the development of AI from narrow, purpose-built tools and the
@@ -162,6 +198,7 @@ correct output looks like, and a loss function makes the gap between predicted a
 output the very quantity training seeks to minimize. Because the model operates within
 a bounded input-output space, error rates are calculable and failure cases identifiable
 (Japkowicz & Shah, 2011). Accuracy in a narrow AI system is not inferred post-hoc; it is
+
 what the model is trained from the outset to optimize.
 
 Bias: Because performance can be quantified, it can be disaggregated: error rates can
@@ -170,6 +207,7 @@ measured directly (Barocas & Selbst, 2016; Chouldechova, 2017). The inputs are k
 and modifiable - training data can be inspected for underrepresentation or historical bias,
 and the learning process altered through reweighting, resampling, or fairness constraints
 (Mehrabi et al., 2021). Bias in a narrow AI system sits in identifiable components of a
+
 pipeline, available to be audited and, in some cases, corrected before deployment.
 
 Explainability: Although the internal workings of most machine learning models do
@@ -190,6 +228,7 @@ data.
 
 Accountability: Built for a single task, a narrow AI system produces a bounded output
 - a risk score, a match probability, a classification - and this clarity of function makes it
+
 straightforward to specify where automated judgement ends and human responsibility
 begins. Developers can document validated uses and known limitations, an approach
 formalized in model cards (Mitchell et al., 2019), and governance structures can assign
@@ -203,11 +242,14 @@ on errors - is itself the work that makes safety questions tractable, whether or
 developer frames it in those terms.
 
 Where safety concerns do emerge, an evidence base has developed around each application
-area. Recidivism prediction, predictive policing, and facial recognition each emerge
+
+area.
+Recidivism prediction, predictive policing, and facial recognition each emerge
 from circumscribed sub-disciplines with their own empirical findings on bias, accuracy
 limits, and operational performance. When systems perform the same core task, findings
 from one deployment generalise to others, and auditing standards develop across studies
 (Raji et al., 2020). Developers and procuring organisations therefore inherit tools whose
+
 weaknesses are to some degree known, with established evaluation protocols and a research
 community capable of independently raising concerns.
 
@@ -217,6 +259,7 @@ a bottleneck. The effect is not that any system is guaranteed safe; the record o
 AI in criminal justice proves otherwise (Buolamwini & Gebru, 2018; Dressel & Farid,
 2018; Richardson et al., 2019). It is that the pace and scope of deployment stay bounded.
 When the pipeline from conception to deployment is long, expensive, and technically
+
 demanding, operational systems remain few enough, and each specific enough in function,
 that regulatory scrutiny, institutional governance, and independent audit can realistically
 keep pace.
@@ -247,6 +290,7 @@ the cost of writing a prompt. The range of tasks to which AI can plausibly be ap
 longer set by development requirements but by the expressive range of natural language.
 The benchmarks that frontier developers use to evaluate these models reflect this directly.
 Where earlier systems were tested against narrow task-specific metrics, current evaluations
+
 span legal, medical, and scientific reasoning (Guha et al., 2023; Rein et al., 2023; Singhal
 et al., 2025), mathematics (Glazer et al., 2024), software engineering (Jimenez et al.,
 2024), and increasingly complex tasks involving multi-step tool use (Mialon et al., 2024),
@@ -263,6 +307,7 @@ services - with AI-driven automation a central lever - at over £45 billion per 
 for drafting reports, triaging demand, summarizing intelligence, and supporting frontline
 decision-making, with uptake driven as much by bottom-up adoption among practitioners
 (Bright et al., 2024) as by formal institutional rollout. The cumulative effect is that
+
 general-purpose AI is increasingly positioned not as one tool among many but as central
 to how the next generation of public services, policing included, is expected to be reformed
 (DSIT, 2025a).
@@ -298,6 +343,7 @@ turn.
 The challenge with narrow AI was one of degree. A system could be wrong, and wrong in
 ways that were hard to anticipate, but what it meant to be right was never in question
 - it had been settled in advance, when the task was defined. An image classifier either
+
 names the correct category or it does not; a risk score is either well calibrated or it is not.
 General-purpose AI poses a different kind of problem. Its outputs are often open-ended
 natural language - argument, analysis, judgement - and there is no equivalent definition of
@@ -317,6 +363,7 @@ resist reduction to a single accuracy score, and are in part matters of judgemen
 than fact (Wallach et al., 2025). Nor is this a critic’s objection; it is the position of the
 field itself. The frontier laboratories describe evaluation of their own models as unsolved
 (Anthropic, 2023; Ganguli et al., 2022), benchmarks are acknowledged to capture only
+
 narrow slices of the behavior that matters in use (Liang et al., 2023; Raji et al., 2021),
 and the UK AI Safety Institute (since renamed the AI Security Institute) has stated
 that evaluations cannot currently provide confident assurance that a system is safe (AI
@@ -356,6 +403,7 @@ generate its own evidence, under operational conditions.
 4.2 Bias as a Structural Property
 
 With narrow AI, bias is at least legible: where model outputs diverge systematically
+
 across demographic groups, the disparity can in principle be detected, quantified, and
 challenged. General-purpose AI does not work in this way. Trained on corpora representing
 a substantial proportion of all digitized text, models absorb the full spectrum of human
@@ -377,6 +425,7 @@ Recent work suggests that bias in GPAI may present itself not only in specific o
 features of the model’s learned associations themselves. Bai et al. (2025) find that LLMs
 which pass standard explicit bias benchmarks nevertheless exhibit pervasive implicit biases
 - including associations between race and criminality, and race and weapons - detectable
+
 only through indirect, psychologically inspired measures, and producing measurable effects
 on downstream decisions. The authors draw an analogy to humans who sincerely endorse
 egalitarian values yet show bias on the Implicit Association Test: alignment training
@@ -388,7 +437,8 @@ questioning these findings call into question.
 4.3 The Explainability Paradox
 
 General-purpose AI is fundamentally beyond the reach of the explainability techniques
-that offered at least partial transparency for narrow AI systems. The scale of the
+that offered at least partial transparency for narrow AI systems.
+The scale of the
 underlying models - hundreds of billions of parameters, trained on trillions of words -
 and the unbounded nature of both their inputs and outputs render them qualitatively
 more opaque even than the deep neural networks that already presented significant
@@ -403,6 +453,7 @@ from yielding deployment-ready explanations - limitations the research itself ac
 --- PAGE 9 ---
 
 (Bereska & Gavves, 2024). Explainability of GPAI is therefore better characterized as an
+
 experimental research programme than an assurance mechanism - and for proprietary
 commercial models, it is not available at all. An organization deploying a system built on a
 proprietary model accessed via an API has no access to the model’s internal representations
@@ -410,6 +461,7 @@ such analysis would require, and there is little reason to expect this to change
 evaluation of what major AI developers actually disclose finds that transparency on model
 internals - including weights and architectural details - is extremely low across the board
 (Bommasani et al., 2023), and commercial vendors have strong incentives to keep it that
+
 way.
 
 The more consequential problem, however, is not merely that general-purpose AI is
@@ -488,6 +540,7 @@ was circumscribed; no comparable accumulation exists for GPAI, and the general-p
 safety literature that has emerged in its place - alignment, emergent capability, catastrophic
 risk - offers limited purchase on the operational questions a specific deployment raises
 (Weidinger et al., 2023). To engage seriously with safety here is not to apply established
+
 methods but to attempt original research in a new and rapidly changing field. And the
 space in which this problem arises has no boundary: the marginal cost of a new application
 is the cost of writing a prompt, and the expertise once required even to attempt deployment
@@ -501,6 +554,7 @@ accessibility, and low cost that define the paradigm.
 Current AI governance frameworks in policing acknowledge, to varying degrees, that
 GPAI introduces new challenges. Some documents engage substantively with these issues
 (College of Policing, 2025; European Union, 2024; Oswald et al., 2025); others treat
+
 general-purpose AI as a minor variation on a familiar theme (INTERPOL & UNICRI,
 2024; National Institute of Standards and Technology, 2023). But even the more thoughtful
 frameworks can currently only recommend the following mitigations, which we argue are
@@ -565,7 +619,8 @@ achievable: the productivity benefits of automating analytical work, and the saf
 
 --- PAGE 12 ---
 
-benefits of human judgement over that same work. For general-purpose AI, this is
+benefits of human judgement over that same work.
+For general-purpose AI, this is
 incoherent. The degree of automation these tools promise is achievable only to the extent
 that human oversight is relaxed. Meaningful oversight, conversely, demands precisely the
 time, attention, and expertise that adoption was supposed to free up.
@@ -574,10 +629,12 @@ time, attention, and expertise that adoption was supposed to free up.
 
 Many frameworks prescribe enhanced scrutiny, or avoiding GPAI solutions entirely, in
 “high-stakes” contexts, implying that lower-stakes uses require less rigorous oversight. This
+
 distinction is more difficult to maintain in practice than it appears in policy, particularly
 when considering AI applications in public services generally and policing specifically.
 
 Who determines what constitutes a high-stakes use? In a large, complex organization
+
 such as a police force, the same piece of AI-generated output might inform decisions at
 multiple levels and in multiple contexts. A summary of an incident report might seem like
 a low-stakes administrative convenience, until it is the summary that a supervisor reads
@@ -616,7 +673,10 @@ recommendations are cumulative: each depends upon those that precede it.
 
 6.1 A Taxonomic Distinction in Governance
 
-Recommendation. Governance frameworks, strategic documents, and operational guidance addressing AI in policing should distinguish explicitly between narrow, purpose-built AI and general-purpose AI, and should specify which of their provisions apply to each.
+Recommendation. Governance frameworks, strategic documents, and operational
+guidance addressing AI in policing should distinguish explicitly between narrow,
+purpose-built AI and general-purpose AI, and should specify which of their provisions
+apply to each.
 
 Narrow AI and GPAI do not belong to the same technological category: they differ in
 how they are built, in the failure modes they exhibit at deployment, and in the assurance
@@ -632,11 +692,14 @@ argument of this paper is that they do not.
 
 6.2 Technological Parsimony as a Rule
 
-Recommendation. Where a problem can be addressed by a narrow tool, and the data, methodology, and expertise to build one are available, that route should be preferred.
+Recommendation. Where a problem can be addressed by a narrow tool, and the
+data, methodology, and expertise to build one are available, that route should be
+preferred.
 
 The corollary preference for narrow tools follows from the same logic. The safety properties
 of narrow AI are in significant part a consequence of the conditions under which it is built
 - bounded tasks, defined data, measurable outputs, an accumulated domain literature.
+
 Those conditions are themselves an asset, and forgoing them where they are available
 is a choice rather than a default. Narrow tools come with a development pipeline that
 makes assurance tractable; general-purpose AI does not. Critically, decades of research
@@ -658,7 +721,10 @@ convenient.
 
 6.3 A Pause on Operational Deployment
 
-Recommendation. Operational deployment of general-purpose AI models in polic- ing should be paused until domain-specific evaluation methodologies and empirical findings exist that are sufficient to characterize their behavior in the contexts where they would be used.
+Recommendation. Operational deployment of general-purpose AI models in polic-
+ing should be paused until domain-specific evaluation methodologies and empirical
+findings exist that are sufficient to characterize their behavior in the contexts where
+they would be used.
 
 The preceding sections have argued that the failure modes of GPAI are consequences of
 the technology’s architecture rather than incidental properties amenable to procedural
@@ -704,7 +770,10 @@ deployment commitments will tend to crowd out.
 
 6.4 Centralized Safety Infrastructure
 
-Recommendation. An independent body with regulatory authority over general- purpose AI use in policing should be established, with responsibility for developing the evidence base required for responsible deployment and determining when it is sufficient.
+Recommendation. An independent body with regulatory authority over general-
+purpose AI use in policing should be established, with responsibility for developing
+the evidence base required for responsible deployment and determining when it is
+sufficient.
 
 The conditions specified by the previous recommendation - domain-specific evaluation
 methodologies, empirical findings sufficient to characterize GPAI behavior in specific
@@ -773,6 +842,7 @@ The European Union’s AI Act (European Union, 2024) designates law enforcement 
 of AI as high-risk and conditions their deployment on conformity assessment rather
 than presuming it permissible by default. Singapore’s Model AI Governance Framework
 (Personal Data Protection Commission & Infocomm Media Development Authority, 2020)
+
 and AI Verify initiative (Infocomm Media Development Authority & Personal Data
 Protection Commission, 2022) concentrate technical evaluation capacity in bodies with
 the standing to set authoritative standards. National AI safety institutes, now established
@@ -810,6 +880,7 @@ pressures driving that adoption are real. We do not argue that this interest is 
 nor make a case for rejecting the technology outright.
 
 We do, however, argue that the conditions for responsible deployment of GPAI do not
+
 currently exist, and that the pace of adoption risks outstripping any effort to establish
 them. The question this paper presses is one of sequence: whether the evidence needed to
 deploy responsibly is established before deployment or assembled after it. The problem is
@@ -874,152 +945,388 @@ The authors declare that they have no conflict of interest.
 
 References
 
-AI Safety Institute. (2024). AI Safety Institute approach to evaluations. Department for Science, Innovation and Technology. https://www.gov.uk/government/publications/ai-safety-institute -approach-to-evaluations
+AI Safety Institute. (2024). AI Safety Institute approach to evaluations. Department for Science,
 
-Angwin, J., Larson, J., Mattu, S., & Kirchner, L. (2016, May 23). Machine bias: There’s software used across the country to predict future criminals. And it’s biased against Blacks. ProPublica. https://www.propublica.org/article/machine-bias-risk-assessments-in-criminal-sentencing
+Innovation and Technology. https://www.gov.uk/government/publications/ai-safety-institute
+-approach-to-evaluations
 
-Anthropic. (2023). Challenges in evaluating AI systems. https://www.anthropic.com/research/e valuating-ai-systems
+Angwin, J., Larson, J., Mattu, S., & Kirchner, L. (2016, May 23). Machine bias: There’s software
 
-Arcuschin, I., Janiak, J., Krzyzanowski, R., Rajamanoharan, S., Nanda, N., & Conmy, A. (2025). Chain-of-thought reasoning in the wild is not always faithful [Preprint]. arXiv. https: //arxiv.org/abs/2503.08679
+used across the country to predict future criminals. And it’s biased against Blacks. ProPublica.
+https://www.propublica.org/article/machine-bias-risk-assessments-in-criminal-sentencing
 
-Bai, X., Wang, A., Sucholutsky, I., & Griffiths, T. L. (2025). Explicitly unbiased large language models still form biased associations. Proceedings of the National Academy of Sciences, 122(8), Article e2416228122. https://doi.org/10.1073/pnas.2416228122
+Anthropic. (2023). Challenges in evaluating AI systems. https://www.anthropic.com/research/e
 
-Barez, F., Wu, T.-Y., Arcuschin, I., Lan, M., Wang, V., Siegel, N., Collignon, N., Neo, C., Lee, I., Paren, A., Bibi, A., Trager, R., Fornasiere, D., Yan, J., Elazar, Y., & Bengio, Y. (2025). Chain-of-thought is not explainability [Preprint]. AI Governance Initiative, University of Oxford. https://aigi.ox.ac.uk/wp-content/uploads/2025/07/Cot_Is_Not_Explainability.pdf
+valuating-ai-systems
 
-Barocas, S., & Selbst, A. D. (2016). Big data’s disparate impact. California Law Review, 104(3), 671–732. https://doi.org/10.15779/Z38BG31
+Arcuschin, I., Janiak, J., Krzyzanowski, R., Rajamanoharan, S., Nanda, N., & Conmy, A.
 
-Bender, E. M., Gebru, T., McMillan-Major, A., & Shmitchell, S. (2021). On the dangers of stochastic parrots: Can language models be too big? In Proceedings of the 2021 ACM Conference on Fairness, Accountability, and Transparency (pp. 610–623). Association for Computing Machinery. https://doi.org/10.1145/3442188.3445922
+(2025). Chain-of-thought reasoning in the wild is not always faithful [Preprint]. arXiv. https:
+//arxiv.org/abs/2503.08679
 
-Bengio, Y., Mindermann, S., Privitera, D., Besiroglu, T., Bommasani, R., Casper, S., Choi, Y., Fox, P., Garfinkel, B., Goldfarb, D., Heidari, H., Ho, A., Kapoor, S., Khalatbari, L., Longpre, S., Manning, S., Mavroudis, V., Mazeika, M., Michael, J., . . . Zeng, Y. (2025). International AI Safety Report (DSIT 2025/001). UK Department for Science, Innovation and Technology. https://arxiv.org/abs/2501.17805
+Bai, X., Wang, A., Sucholutsky, I., & Griffiths, T. L. (2025). Explicitly unbiased large language
 
-Bereska, L., & Gavves, E. (2024). Mechanistic interpretability for AI safety—A review. Transac- tions on Machine Learning Research. https://openreview.net/forum?id=ePUVetPKu6
+models still form biased associations. Proceedings of the National Academy of Sciences, 122(8),
+Article e2416228122. https://doi.org/10.1073/pnas.2416228122
+
+Barez, F., Wu, T.-Y., Arcuschin, I., Lan, M., Wang, V., Siegel, N., Collignon, N., Neo, C., Lee,
+
+I., Paren, A., Bibi, A., Trager, R., Fornasiere, D., Yan, J., Elazar, Y., & Bengio, Y. (2025).
+Chain-of-thought is not explainability [Preprint]. AI Governance Initiative, University of Oxford.
+
+https://aigi.ox.ac.uk/wp-content/uploads/2025/07/Cot_Is_Not_Explainability.pdf
+
+Barocas, S., & Selbst, A. D. (2016). Big data’s disparate impact. California Law Review, 104(3),
+
+671–732. https://doi.org/10.15779/Z38BG31
+
+Bender, E. M., Gebru, T., McMillan-Major, A., & Shmitchell, S. (2021).
+On the dangers
+of stochastic parrots: Can language models be too big? In Proceedings of the 2021 ACM
+Conference on Fairness, Accountability, and Transparency (pp. 610–623). Association for
+
+Computing Machinery. https://doi.org/10.1145/3442188.3445922
+
+Bengio, Y., Mindermann, S., Privitera, D., Besiroglu, T., Bommasani, R., Casper, S., Choi, Y.,
+
+Fox, P., Garfinkel, B., Goldfarb, D., Heidari, H., Ho, A., Kapoor, S., Khalatbari, L., Longpre,
+S., Manning, S., Mavroudis, V., Mazeika, M., Michael, J., . . . Zeng, Y. (2025). International
+AI Safety Report (DSIT 2025/001). UK Department for Science, Innovation and Technology.
+
+https://arxiv.org/abs/2501.17805
+
+Bereska, L., & Gavves, E. (2024). Mechanistic interpretability for AI safety—A review. Transac-
+
+tions on Machine Learning Research. https://openreview.net/forum?id=ePUVetPKu6
 
 18
 
 --- PAGE 19 ---
 
-Bommasani, R., Hudson, D. A., Adeli, E., Altman, R., Arora, S., von Arx, S., Bernstein, M. S., Bohg, J., Bosselut, A., Brunskill, E., Brynjolfsson, E., Buch, S., Card, D., Castellon, R., Chatterji, N., Chen, A., Creel, K., Davis, J. Q., Demszky, D., . . . Liang, P. (2021). On the opportunities and risks of foundation models. arXiv. https://arxiv.org/abs/2108.07258
+Bommasani, R., Hudson, D. A., Adeli, E., Altman, R., Arora, S., von Arx, S., Bernstein, M.
 
-Bommasani, R., Klyman, K., Longpre, S., Kapoor, S., Maslej, N., Xiong, B., Zhang, D., & Liang, P. (2023). The Foundation Model Transparency Index [Preprint]. arXiv. https: //arxiv.org/abs/2310.12941
+S., Bohg, J., Bosselut, A., Brunskill, E., Brynjolfsson, E., Buch, S., Card, D., Castellon, R.,
+Chatterji, N., Chen, A., Creel, K., Davis, J. Q., Demszky, D., . . . Liang, P. (2021). On the
+opportunities and risks of foundation models. arXiv. https://arxiv.org/abs/2108.07258
 
-Bricken, T., Templeton, A., Batson, J., Chen, B., Jermyn, A., Conerly, T., Turner, N., Anil, C., Denison, C., Askell, A., Lasenby, R., Wu, Y., Kravec, S., Schiefer, N., Maxwell, T., Joseph, N., Hatfield-Dodds, Z., Tamkin, A., Nguyen, K., ... Olah, C. (2023). Towards monosemanticity: Decomposing language models with dictionary learning. Transformer Circuits Thread. https://transformer-circuits.pub/2023/monosemantic-features/index.html
+Bommasani, R., Klyman, K., Longpre, S., Kapoor, S., Maslej, N., Xiong, B., Zhang, D., &
 
-Bright, J., Enock, F. E., Esnaashari, S., Francis, J., Hashem, Y., & Morgan, D. (2024). Generative AI is already widespread in the public sector: Evidence from a survey of UK public sector professionals. Digital Government: Research and Practice. https://doi.org/10.1145/3700140
+Liang, P. (2023).
+The Foundation Model Transparency Index [Preprint].
+arXiv.
+https:
+//arxiv.org/abs/2310.12941
 
-Buolamwini, J., & Gebru, T. (2018). Gender shades: Intersectional accuracy disparities in commercial gender classification. In S. A. Friedler & C. Wilson (Eds.), Proceedings of the 1st Conference on Fairness, Accountability and Transparency (Proceedings of Machine Learning Research, Vol. 81, pp. 77–91). PMLR. https://proceedings.mlr.press/v81/buolamwini18a.html
+Bricken, T., Templeton, A., Batson, J., Chen, B., Jermyn, A., Conerly, T., Turner, N., Anil,
 
-Burrell, J. (2016). How the machine ’thinks’: Understanding opacity in machine learning algorithms. Big Data & Society, 3(1). https://doi.org/10.1177/[CREDIT_CARD]
+C., Denison, C., Askell, A., Lasenby, R., Wu, Y., Kravec, S., Schiefer, N., Maxwell, T.,
+Joseph, N., Hatfield-Dodds, Z., Tamkin, A., Nguyen, K., ...
+Olah, C. (2023).
+Towards
+monosemanticity: Decomposing language models with dictionary learning. Transformer Circuits
+Thread. https://transformer-circuits.pub/2023/monosemantic-features/index.html
 
-Chouldechova, A. (2017). Fair prediction with disparate impact: A study of bias in recidivism prediction instruments. Big Data, 5(2), 153–163. https://doi.org/10.1089/big.2016.0047
+Bright, J., Enock, F. E., Esnaashari, S., Francis, J., Hashem, Y., & Morgan, D. (2024). Generative
 
-Citron, D. K., & Pasquale, F. (2014). The scored society: Due process for automated predictions. Washington Law Review, 89(1), 1–33. https://digitalcommons.law.uw.edu/wlr/vol89/iss1/2
+AI is already widespread in the public sector: Evidence from a survey of UK public sector
+professionals. Digital Government: Research and Practice. https://doi.org/10.1145/3700140
 
-College of Policing. (2025). Building AI-enabled tools and systems: Authorised professional practice. https://www.college.police.uk/guidance/building-ai-enabled-tools-and-systems
+Buolamwini, J., & Gebru, T. (2018).
+Gender shades: Intersectional accuracy disparities in
+commercial gender classification. In S. A. Friedler & C. Wilson (Eds.), Proceedings of the 1st
+Conference on Fairness, Accountability and Transparency (Proceedings of Machine Learning
 
-Department for Science, Innovation and Technology. (2025a). AI opportunities action plan. GOV.UK. https://www.gov.uk/government/publications/ai-opportunities-action-plan/ai-o pportunities-action-plan
+Research, Vol. 81, pp. 77–91). PMLR. https://proceedings.mlr.press/v81/buolamwini18a.html
 
-Department for Science, Innovation and Technology. (2025b). State of digital government review. GOV.UK. https://www.gov.uk/government/publications/state-of-digital-government-revie w/state-of-digital-government-review
+Burrell, J. (2016). How the machine ’thinks’: Understanding opacity in machine learning algorithms.
 
-Dressel, J., & Farid, H. (2018). The accuracy, fairness, and limits of predicting recidivism. Science Advances, 4(1), eaao5580. https://doi.org/10.1126/sciadv.aao5580
+Big Data & Society, 3(1). https://doi.org/10.1177/[CREDIT_CARD]
 
-Elhage, N., Hume, T., Olsson, C., Schiefer, N., Henighan, T., Kravec, S., Hatfield-Dodds, Z., Lasenby, R., Drain, D., Chen, C., Grosse, R., McCandlish, S., Kaplan, J., Amodei, D., Wattenberg, M., & Olah, C. (2022). Toy models of superposition. Transformer Circuits Thread. https://transformer-circuits.pub/2022/toy_model/index.html
+Chouldechova, A. (2017). Fair prediction with disparate impact: A study of bias in recidivism
 
-European Union. (2024). Regulation (EU) 2024/1689 of the European Parliament and of the Council of 13 June 2024 laying down harmonised rules on artificial intelligence (Artificial Intelligence Act). Official Journal of the European Union, L 2024/1689. http://data.europa.eu /eli/reg/2024/1689/oj
+prediction instruments. Big Data, 5(2), 153–163. https://doi.org/10.1089/big.2016.0047
 
-Gallegos, I. O., Rossi, R. A., Barrow, J., Tanjim, M. M., Kim, S., Dernoncourt, F., Yu, T., Zhang, R., & Ahmed, N. K. (2024). Bias and fairness in large language models: A survey. Computational Linguistics, 50(3), 1097–1179. https://doi.org/10.1162/coli_a_00524
+Citron, D. K., & Pasquale, F. (2014). The scored society: Due process for automated predictions.
+
+Washington Law Review, 89(1), 1–33. https://digitalcommons.law.uw.edu/wlr/vol89/iss1/2
+
+College of Policing. (2025). Building AI-enabled tools and systems: Authorised professional
+
+practice. https://www.college.police.uk/guidance/building-ai-enabled-tools-and-systems
+
+Department for Science, Innovation and Technology. (2025a). AI opportunities action plan.
+
+GOV.UK. https://www.gov.uk/government/publications/ai-opportunities-action-plan/ai-o
+pportunities-action-plan
+
+Department for Science, Innovation and Technology. (2025b). State of digital government review.
+
+GOV.UK. https://www.gov.uk/government/publications/state-of-digital-government-revie
+w/state-of-digital-government-review
+
+Dressel, J., & Farid, H. (2018). The accuracy, fairness, and limits of predicting recidivism. Science
+
+Advances, 4(1), eaao5580. https://doi.org/10.1126/sciadv.aao5580
+
+Elhage, N., Hume, T., Olsson, C., Schiefer, N., Henighan, T., Kravec, S., Hatfield-Dodds, Z.,
+
+Lasenby, R., Drain, D., Chen, C., Grosse, R., McCandlish, S., Kaplan, J., Amodei, D.,
+Wattenberg, M., & Olah, C. (2022). Toy models of superposition. Transformer Circuits Thread.
+
+https://transformer-circuits.pub/2022/toy_model/index.html
+
+European Union. (2024). Regulation (EU) 2024/1689 of the European Parliament and of the
+
+Council of 13 June 2024 laying down harmonised rules on artificial intelligence (Artificial
+
+Intelligence Act). Official Journal of the European Union, L 2024/1689. http://data.europa.eu
+/eli/reg/2024/1689/oj
+
+Gallegos, I. O., Rossi, R. A., Barrow, J., Tanjim, M. M., Kim, S., Dernoncourt, F., Yu, T.,
+
+Zhang, R., & Ahmed, N. K. (2024). Bias and fairness in large language models: A survey.
+Computational Linguistics, 50(3), 1097–1179. https://doi.org/10.1162/coli_a_00524
 
 19
 
 --- PAGE 20 ---
 
-Ganguli, D., Lovitt, L., Kernion, J., Askell, A., Bai, Y., Kadavath, S., Mann, B., Perez, E., Schiefer, N., Ndousse, K., Jones, A., Bowman, S., Chen, A., Conerly, T., DasSarma, N., Drain, D., Elhage, N., El-Showk, S., Fort, S., . . . Clark, J. (2022). Red teaming language models to reduce harms: Methods, scaling behaviors, and lessons learned. arXiv. https://arxiv.org/abs/2209.07858
+Ganguli, D., Lovitt, L., Kernion, J., Askell, A., Bai, Y., Kadavath, S., Mann, B., Perez, E., Schiefer,
 
-Glazer, E., Erdil, E., Besiroglu, T., Chicharro, D., Chen, E., Gunning, A., Falkman Olsson, C., Denain, J.-S., Ho, A., de Oliveira Santos, E., Järviniemi, O., Barnett, M., Sandler, R., Vrzala, M., Sevilla, J., Ren, Q., Pratt, E., Levine, L., Barkley, G., . . . Wildon, M. (2024). FrontierMath: A benchmark for evaluating advanced mathematical reasoning in AI. arXiv. https://arxiv.org/abs/2411.04872
+N., Ndousse, K., Jones, A., Bowman, S., Chen, A., Conerly, T., DasSarma, N., Drain, D., Elhage,
+N., El-Showk, S., Fort, S., . . . Clark, J. (2022). Red teaming language models to reduce harms:
+Methods, scaling behaviors, and lessons learned. arXiv. https://arxiv.org/abs/2209.07858
 
-Guha, N., Nyarko, J., Ho, D. E., Ré, C., Chilton, A., Narayana, A., Chohlas-Wood, A., Peters, A., Waldon, B., Rockmore, D. N., Zambrano, D., Talisman, D., Hoque, E., Surani, F., Fagan, F., Sarfaty, G., Dickinson, G. M., Porat, H., Hegland, J., . . . Li, Z. (2023). LegalBench: A collaboratively built benchmark for measuring legal reasoning in large language models. In Advances in Neural Information Processing Systems 36 (NeurIPS 2023), Datasets and Benchmarks Track. https://arxiv.org/abs/2308.11462
+Glazer, E., Erdil, E., Besiroglu, T., Chicharro, D., Chen, E., Gunning, A., Falkman Olsson,
 
-Hackenburg, K., Tappin, B. M., Hewitt, L., Saunders, E., Black, S., Lin, H., Fist, C., Margetts, H., Rand, D. G., & Summerfield, C. (2025). The levers of political persuasion with conversational artificial intelligence. Science, 390(6777), Article eaea3884. https://doi.org/10.1126/science.ae a3884
+C., Denain, J.-S., Ho, A., de Oliveira Santos, E., Järviniemi, O., Barnett, M., Sandler, R.,
+Vrzala, M., Sevilla, J., Ren, Q., Pratt, E., Levine, L., Barkley, G., . . . Wildon, M. (2024).
+FrontierMath: A benchmark for evaluating advanced mathematical reasoning in AI. arXiv.
 
-Harcourt, B. E. (2007). Against prediction: Profiling, policing, and punishing in an actuarial age. University of Chicago Press.
+https://arxiv.org/abs/2411.04872
 
-Hofmann, V., Kalluri, P. R., Jurafsky, D., & King, S. (2024). AI generates covertly racist decisions about people based on their dialect. Nature, 633(8028), 147–154. https://doi.org/10.1038/s4 1586-024-07856-5
+Guha, N., Nyarko, J., Ho, D. E., Ré, C., Chilton, A., Narayana, A., Chohlas-Wood, A., Peters,
 
-Home Office. (2026). PoliceAI to speed up investigations and fight crime. GOV.UK. https: //www.gov.uk/government/news/policeai-to-speed-up-investigations-and-fight-crime
+A., Waldon, B., Rockmore, D. N., Zambrano, D., Talisman, D., Hoque, E., Surani, F., Fagan,
+F., Sarfaty, G., Dickinson, G. M., Porat, H., Hegland, J., . . .
+Li, Z. (2023). LegalBench:
+A collaboratively built benchmark for measuring legal reasoning in large language models.
+In Advances in Neural Information Processing Systems 36 (NeurIPS 2023), Datasets and
+Benchmarks Track. https://arxiv.org/abs/2308.11462
 
-Infocomm Media Development Authority & Personal Data Protection Commission. (2022). AI Verify: An AI governance testing framework and toolkit. IMDA/PDPC. https://www.imda.gov .sg/resources/press-releases-factsheets-and-speeches/press-releases/2022/sg-launches-world s-first-ai-testing-framework-and-toolkit-to-promote-transparency
+Hackenburg, K., Tappin, B. M., Hewitt, L., Saunders, E., Black, S., Lin, H., Fist, C., Margetts, H.,
 
-INTERPOL & UNICRI. (2024). Toolkit for responsible AI innovation in law enforcement (Rev. ed.). https://www.interpol.int/en/How-we-work/Innovation/Artificial-Intelligence-Toolkit
+Rand, D. G., & Summerfield, C. (2025). The levers of political persuasion with conversational
+artificial intelligence. Science, 390(6777), Article eaea3884. https://doi.org/10.1126/science.ae
+a3884
 
-Jacobs, A. Z., & Wallach, H. (2021). Measurement and fairness. In Proceedings of the 2021 ACM Conference on Fairness, Accountability, and Transparency (pp. 375–385). Association for Computing Machinery. https://doi.org/10.1145/3442188.3445901
+Harcourt, B. E. (2007). Against prediction: Profiling, policing, and punishing in an actuarial age.
 
-Japkowicz, N., & Shah, M. (2011). Evaluating learning algorithms: A classification perspective. Cambridge University Press.
+University of Chicago Press.
 
-Jimenez, C. E., Yang, J., Wettig, A., Yao, S., Pei, K., Press, O., & Narasimhan, K. (2024). SWE- bench: Can language models resolve real-world GitHub issues? In The Twelfth International Conference on Learning Representations (ICLR 2024). https://arxiv.org/abs/2310.06770
+Hofmann, V., Kalluri, P. R., Jurafsky, D., & King, S. (2024). AI generates covertly racist decisions
 
-Jordan, M. I., & Mitchell, T. M. (2015). Machine learning: Trends, perspectives, and prospects. Science, 349(6245), 255–260. https://doi.org/10.1126/science.aaa8415
+about people based on their dialect. Nature, 633(8028), 147–154. https://doi.org/10.1038/s4
+1586-024-07856-5
 
-Liang, P., Bommasani, R., Lee, T., Tsipras, D., Soylu, D., Yasunaga, M., Zhang, Y., Narayanan, D., Wu, Y., Kumar, A., Newman, B., Yuan, B., Yan, B., Zhang, C., Cosgrove, C., Manning, C. D., Ré, C., Acosta-Navas, D., Hudson, D. A., . . . Koreeda, Y. (2023). Holistic evaluation of language models. Transactions on Machine Learning Research. https://arxiv.org/abs/2211.0 9110
+Home Office. (2026). PoliceAI to speed up investigations and fight crime. GOV.UK. https:
+
+//www.gov.uk/government/news/policeai-to-speed-up-investigations-and-fight-crime
+
+Infocomm Media Development Authority & Personal Data Protection Commission. (2022). AI
+
+Verify: An AI governance testing framework and toolkit. IMDA/PDPC. https://www.imda.gov
+
+.sg/resources/press-releases-factsheets-and-speeches/press-releases/2022/sg-launches-world
+s-first-ai-testing-framework-and-toolkit-to-promote-transparency
+
+INTERPOL & UNICRI. (2024). Toolkit for responsible AI innovation in law enforcement (Rev.
+
+ed.). https://www.interpol.int/en/How-we-work/Innovation/Artificial-Intelligence-Toolkit
+
+Jacobs, A. Z., & Wallach, H. (2021). Measurement and fairness. In Proceedings of the 2021 ACM
+
+Conference on Fairness, Accountability, and Transparency (pp. 375–385). Association for
+
+Computing Machinery. https://doi.org/10.1145/3442188.3445901
+
+Japkowicz, N., & Shah, M. (2011). Evaluating learning algorithms: A classification perspective.
+
+Cambridge University Press.
+
+Jimenez, C. E., Yang, J., Wettig, A., Yao, S., Pei, K., Press, O., & Narasimhan, K. (2024). SWE-
+
+bench: Can language models resolve real-world GitHub issues? In The Twelfth International
+Conference on Learning Representations (ICLR 2024). https://arxiv.org/abs/2310.06770
+
+Jordan, M. I., & Mitchell, T. M. (2015). Machine learning: Trends, perspectives, and prospects.
+
+Science, 349(6245), 255–260. https://doi.org/10.1126/science.aaa8415
+
+Liang, P., Bommasani, R., Lee, T., Tsipras, D., Soylu, D., Yasunaga, M., Zhang, Y., Narayanan,
+
+D., Wu, Y., Kumar, A., Newman, B., Yuan, B., Yan, B., Zhang, C., Cosgrove, C., Manning, C.
+D., Ré, C., Acosta-Navas, D., Hudson, D. A., . . . Koreeda, Y. (2023). Holistic evaluation of
+language models. Transactions on Machine Learning Research. https://arxiv.org/abs/2211.0
+9110
 
 20
 
 --- PAGE 21 ---
 
-Lum, K., & Isaac, W. (2016). To predict and serve? Significance, 13(5), 14–19. https://doi.org/ 10.1111/j.1740-9713.2016.00960.x
+Lum, K., & Isaac, W. (2016). To predict and serve? Significance, 13(5), 14–19. https://doi.org/
 
-Lundberg, S. M., & Lee, S.-I. (2017). A unified approach to interpreting model predictions. In Advances in Neural Information Processing Systems 30.
+10.1111/j.1740-9713.2016.00960.x
 
-Mehrabi, N., Morstatter, F., Saxena, N., Lerman, K., & Galstyan, A. (2021). A survey on bias and fairness in machine learning. ACM Computing Surveys, 54(6), 1–35. https://doi.org/10.1 145/3457607
+Lundberg, S. M., & Lee, S.-I. (2017). A unified approach to interpreting model predictions. In
 
-Mialon, G., Fourrier, C., Swift, C., Wolf, T., LeCun, Y., & Scialom, T. (2024). GAIA: A benchmark for general AI assistants. In The Twelfth International Conference on Learning Representations (ICLR 2024). https://arxiv.org/abs/2311.12983
+Advances in Neural Information Processing Systems 30.
 
-Mitchell, M., Wu, S., Zaldivar, A., Barnes, P., Vasserman, L., Hutchinson, B., Spitzer, E., Raji, I. D., & Gebru, T. (2019). Model cards for model reporting. In Proceedings of the Conference on Fairness, Accountability, and Transparency (pp. 220–229). Association for Computing Machinery. https://doi.org/10.1145/3287560.3287596
+Mehrabi, N., Morstatter, F., Saxena, N., Lerman, K., & Galstyan, A. (2021). A survey on bias
 
-National Institute of Standards and Technology. (2023). Artificial intelligence risk management framework (AI RMF 1.0) (NIST AI 100–1). U.S. Department of Commerce. https://doi.org/ 10.6028/NIST.AI.100-1
+and fairness in machine learning. ACM Computing Surveys, 54(6), 1–35. https://doi.org/10.1
+145/3457607
 
-National Police Chiefs’ Council. (2023). Covenant for using artificial intelligence (AI) in policing. Office of the Police Chief Scientific Adviser. https://science.police.uk/site/assets/files/4682/ai _principles_1_1_1.pdf
+Mialon, G., Fourrier, C., Swift, C., Wolf, T., LeCun, Y., & Scialom, T. (2024). GAIA: A benchmark
 
-Organization for Economic Co-operation and Development. (2019). Recommendation of the Council on artificial intelligence (OECD/LEGAL/0449). https://legalinstruments.oecd.org/en /instruments/OECD-LEGAL-0449
+for general AI assistants. In The Twelfth International Conference on Learning Representations
+(ICLR 2024). https://arxiv.org/abs/2311.12983
 
-Organization for Economic Co-operation and Development. (2024). National AI policies & strategies. OECD.AI Policy Observatory. Retrieved July 13, 2026, from https://oecd.ai/en/d ashboards/overview
+Mitchell, M., Wu, S., Zaldivar, A., Barnes, P., Vasserman, L., Hutchinson, B., Spitzer, E., Raji, I.
 
-Oswald, M., Calder, M., Paterson-Young, C., & Dunkwu, J. (2025). PROBabLE Futures and NPCC responsible AI checklist for policing. Northumbria University. https://bit.ly/PROBabL EFuturesNPCC
+D., & Gebru, T. (2019). Model cards for model reporting. In Proceedings of the Conference
+on Fairness, Accountability, and Transparency (pp. 220–229). Association for Computing
 
-Oswald, M., Grace, J., Urwin, S., & Barnes, G. C. (2018). Algorithmic risk assessment policing models: Lessons from the Durham HART model and ’experimental’ proportionality. Informa- tion & Communications Technology Law, 27(2), 223–250. https://doi.org/10.1080/13600834.2 018.1458455
+Machinery. https://doi.org/10.1145/3287560.3287596
 
-Personal Data Protection Commission & Infocomm Media Development Authority. (2020). Model artificial intelligence governance framework (2nd ed.). PDPC. https://www.pdpc.gov.sg/-/me dia/files/pdpc/pdf-files/resource-for-organisation/ai/sgmodelaigovframework2.pdf
+National Institute of Standards and Technology. (2023). Artificial intelligence risk management
 
-Policing Productivity Review. (2023). Policing Productivity Review: Improving outcomes for the public [Independent review]. Home Office. https://www.gov.uk/government/publications/pol icing-productivity-review
+framework (AI RMF 1.0) (NIST AI 100–1). U.S. Department of Commerce. https://doi.org/
+10.6028/NIST.AI.100-1
+
+National Police Chiefs’ Council. (2023). Covenant for using artificial intelligence (AI) in policing.
+
+Office of the Police Chief Scientific Adviser. https://science.police.uk/site/assets/files/4682/ai
+_principles_1_1_1.pdf
+
+Organization for Economic Co-operation and Development. (2019). Recommendation of the
+
+Council on artificial intelligence (OECD/LEGAL/0449). https://legalinstruments.oecd.org/en
+/instruments/OECD-LEGAL-0449
+
+Organization for Economic Co-operation and Development. (2024). National AI policies &
+
+strategies. OECD.AI Policy Observatory. Retrieved July 13, 2026, from https://oecd.ai/en/d
+
+ashboards/overview
+
+Oswald, M., Calder, M., Paterson-Young, C., & Dunkwu, J. (2025). PROBabLE Futures and
+
+NPCC responsible AI checklist for policing. Northumbria University. https://bit.ly/PROBabL
+
+EFuturesNPCC
+
+Oswald, M., Grace, J., Urwin, S., & Barnes, G. C. (2018). Algorithmic risk assessment policing
+
+models: Lessons from the Durham HART model and ’experimental’ proportionality. Informa-
+tion & Communications Technology Law, 27(2), 223–250. https://doi.org/10.1080/13600834.2
+
+018.1458455
+
+Personal Data Protection Commission & Infocomm Media Development Authority. (2020). Model
+
+artificial intelligence governance framework (2nd ed.). PDPC. https://www.pdpc.gov.sg/-/me
+
+dia/files/pdpc/pdf-files/resource-for-organisation/ai/sgmodelaigovframework2.pdf
+
+Policing Productivity Review. (2023). Policing Productivity Review: Improving outcomes for the
+
+public [Independent review]. Home Office. https://www.gov.uk/government/publications/pol
+icing-productivity-review
 
 R (Bridges) v Chief Constable of South Wales Police [2020] EWCA Civ 1058.
 
-Raji, I. D., Bender, E. M., Paullada, A., Denton, E., & Hanna, A. (2021). AI and the everything in the whole wide world benchmark. In Proceedings of the 35th Conference on Neural Information Processing Systems (NeurIPS 2021) Datasets and Benchmarks Track (Round 2). https: //arxiv.org/abs/2111.15366
+Raji, I. D., Bender, E. M., Paullada, A., Denton, E., & Hanna, A. (2021). AI and the everything in
 
-Raji, I. D., Smart, A., White, R. N., Mitchell, M., Gebru, T., Hutchinson, B., Smith-Loud, J., Theron, D., & Barnes, P. (2020). Closing the AI accountability gap: Defining an end-to- end framework for internal algorithmic auditing. In Proceedings of the 2020 Conference on
+the whole wide world benchmark. In Proceedings of the 35th Conference on Neural Information
+Processing Systems (NeurIPS 2021) Datasets and Benchmarks Track (Round 2).
+https:
+//arxiv.org/abs/2111.15366
+
+Raji, I. D., Smart, A., White, R. N., Mitchell, M., Gebru, T., Hutchinson, B., Smith-Loud, J.,
+
+Theron, D., & Barnes, P. (2020). Closing the AI accountability gap: Defining an end-to-
+end framework for internal algorithmic auditing. In Proceedings of the 2020 Conference on
 
 21
 
 --- PAGE 22 ---
 
-Fairness, Accountability, and Transparency (pp. 33–44). Association for Computing Machinery. https://doi.org/10.1145/3351095.3372873
+Fairness, Accountability, and Transparency (pp. 33–44). Association for Computing Machinery.
 
-Rein, D. (2025, August 12). Research update: Algorithmic vs. holistic evaluation. METR. https://metr.org/blog/2025-08-12-research-update-towards-reconciling-slowdown-with-tim e-horizons/
+https://doi.org/10.1145/3351095.3372873
 
-Rein, D., Hou, B. L., Stickland, A. C., Petty, J., Pang, R. Y., Dirani, J., Michael, J., & Bowman, S. R. (2023). GPQA: A graduate-level Google-proof Q&A benchmark. arXiv. https://arxiv.org/abs/2311.12022
+Rein, D. (2025, August 12). Research update: Algorithmic vs. holistic evaluation. METR.
 
-Ribeiro, M. T., Singh, S., & Guestrin, C. (2016). “Why should I trust you?”: Explaining the predictions of any classifier. In Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining (pp. 1135–1144). Association for Computing Machinery. https://doi.org/10.1145/2939672.2939778
+https://metr.org/blog/2025-08-12-research-update-towards-reconciling-slowdown-with-tim
+e-horizons/
 
-Richardson, R., Schultz, J. M., & Crawford, K. (2019). Dirty data, bad predictions: How civil rights violations impact police data, predictive policing systems, and justice. New York University Law Review Online, 94, 192–233. https://www.nyulawreview.org/wp-content/uploa ds/2019/04/NYULawReview-94-Richardson-Schultz-Crawford.pdf
+Rein, D., Hou, B. L., Stickland, A. C., Petty, J., Pang, R. Y., Dirani, J., Michael, J., &
 
-Rudin, C. (2019). Stop explaining black box machine learning models for high stakes decisions and use interpretable models instead. Nature Machine Intelligence, 1(5), 206–215. https: //doi.org/10.1038/s42256-019-0048-x
+Bowman, S. R. (2023).
+GPQA: A graduate-level Google-proof Q&A benchmark.
+arXiv.
+https://arxiv.org/abs/2311.12022
 
-Singhal, K., Tu, T., Gottweis, J., Sayres, R., Wulczyn, E., Amin, M., Hou, L., Clark, K., Pfohl, S. R., Cole-Lewis, H., Neal, D., Rashid, Q. M., Schaekermann, M., Wang, A., Dash, D., Chen, J. H., Shah, N. H., Lachgar, S., Mansfield, P. A., . . . Natarajan, V. (2025). Toward expert-level medical question answering with large language models. Nature Medicine, 31(3), 943–950. https://doi.org/10.1038/s41591-024-03423-7
+Ribeiro, M. T., Singh, S., & Guestrin, C. (2016).
+“Why should I trust you?”: Explaining
+the predictions of any classifier. In Proceedings of the 22nd ACM SIGKDD International
+Conference on Knowledge Discovery and Data Mining (pp.
+1135–1144).
+Association for
+Computing Machinery. https://doi.org/10.1145/2939672.2939778
 
-Turpin, M., Michael, J., Perez, E., & Bowman, S. R. (2023). Language models don’t always say what they think: Unfaithful explanations in chain-of-thought prompting. In Advances in Neural Information Processing Systems 36 (pp. 74952–74965). https://arxiv.org/abs/2305.04388
+Richardson, R., Schultz, J. M., & Crawford, K. (2019).
+Dirty data, bad predictions: How
+civil rights violations impact police data, predictive policing systems, and justice. New York
+University Law Review Online, 94, 192–233. https://www.nyulawreview.org/wp-content/uploa
 
-Wallach, H., Desai, M., Cooper, A. F., Wang, A., Atalla, C., Barocas, S., Blodgett, S. L., Chouldechova, A., Corvi, E., Dow, P. A., Garcia-Gathright, J., Olteanu, A., Pangakis, N. J., Reed, S., Sheng, E., Vann, D., Wortman Vaughan, J., Vogel, M., Washington, H., & Jacobs, A. Z. (2025). Position: Evaluating generative AI systems is a social science measurement challenge. In Proceedings of the 42nd International Conference on Machine Learning. https: //openreview.net/forum?id=1ZC4RNjqzU
+ds/2019/04/NYULawReview-94-Richardson-Schultz-Crawford.pdf
 
-Wei, J., Tay, Y., Bommasani, R., Raffel, C., Zoph, B., Borgeaud, S., Yogatama, D., Bosma, M., Zhou, D., Metzler, D., Chi, E. H., Hashimoto, T., Vinyals, O., Liang, P., Dean, J., & Fedus, W. (2022). Emergent abilities of large language models. Transactions on Machine Learning Research. https://openreview.net/forum?id=yzkSU5zdwD
+Rudin, C. (2019). Stop explaining black box machine learning models for high stakes decisions
 
-Weidinger, L., Rauh, M., Marchal, N., Manzini, A., Hendricks, L. A., Mateos-Garcia, J., Bergman, S., Kay, J., Griffin, C., Bariach, B., Gabriel, I., Rieser, V., & Isaac, W. (2023). Sociotechnical safety evaluation of generative AI systems. arXiv. https://arxiv.org/abs/2310.11986
+and use interpretable models instead. Nature Machine Intelligence, 1(5), 206–215. https:
+//doi.org/10.1038/s42256-019-0048-x
+
+Singhal, K., Tu, T., Gottweis, J., Sayres, R., Wulczyn, E., Amin, M., Hou, L., Clark, K., Pfohl, S.
+
+R., Cole-Lewis, H., Neal, D., Rashid, Q. M., Schaekermann, M., Wang, A., Dash, D., Chen, J.
+H., Shah, N. H., Lachgar, S., Mansfield, P. A., . . . Natarajan, V. (2025). Toward expert-level
+medical question answering with large language models. Nature Medicine, 31(3), 943–950.
+https://doi.org/10.1038/s41591-024-03423-7
+
+Turpin, M., Michael, J., Perez, E., & Bowman, S. R. (2023). Language models don’t always say
+
+what they think: Unfaithful explanations in chain-of-thought prompting. In Advances in Neural
+Information Processing Systems 36 (pp. 74952–74965). https://arxiv.org/abs/2305.04388
+
+Wallach, H., Desai, M., Cooper, A. F., Wang, A., Atalla, C., Barocas, S., Blodgett, S. L.,
+
+Chouldechova, A., Corvi, E., Dow, P. A., Garcia-Gathright, J., Olteanu, A., Pangakis, N. J.,
+Reed, S., Sheng, E., Vann, D., Wortman Vaughan, J., Vogel, M., Washington, H., & Jacobs,
+A. Z. (2025). Position: Evaluating generative AI systems is a social science measurement
+challenge. In Proceedings of the 42nd International Conference on Machine Learning. https:
+//openreview.net/forum?id=1ZC4RNjqzU
+
+Wei, J., Tay, Y., Bommasani, R., Raffel, C., Zoph, B., Borgeaud, S., Yogatama, D., Bosma, M.,
+
+Zhou, D., Metzler, D., Chi, E. H., Hashimoto, T., Vinyals, O., Liang, P., Dean, J., & Fedus,
+W. (2022). Emergent abilities of large language models. Transactions on Machine Learning
+Research. https://openreview.net/forum?id=yzkSU5zdwD
+
+Weidinger, L., Rauh, M., Marchal, N., Manzini, A., Hendricks, L. A., Mateos-Garcia, J., Bergman,
+
+S., Kay, J., Griffin, C., Bariach, B., Gabriel, I., Rieser, V., & Isaac, W. (2023). Sociotechnical
+safety evaluation of generative AI systems. arXiv. https://arxiv.org/abs/2310.11986
 
 22

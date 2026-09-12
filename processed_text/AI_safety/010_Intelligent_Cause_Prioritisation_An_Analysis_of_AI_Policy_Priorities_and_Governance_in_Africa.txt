@@ -1,16 +1,8 @@
 --- PAGE 1 ---
 
-Intelligent Cause Prioritisation? ​
+*We’ve benefited from helpful comments given to us by Dr. Chinasa T. Okolo, Dr. Nikita Makarchev, and Professor Jonathan Shock. We’d also like to extend our thanks to attendees at the 2026 Effective Altruism Global Conference in London for inspiring further thoughts on this topic.
 
 An Analysis of AI Policy Priorities and Governance in Africa​
-
-​
-
-Osaremen Iluobe Kisso Selvan​
-
-[EMAIL] [EMAIL]​
-
-Abstract
 
 The rapid improvement of AI systems has intensified debate about humanity’s
 
@@ -38,20 +30,19 @@ governments are highly attentive to AI’s opportunities, they devote comparativ
 
 little attention to AI safety.​
 
-*We’ve benefited from helpful comments given to us by Dr. Chinasa T. Okolo, Dr. Nikita
-Makarchev, and Professor Jonathan Shock. We’d also like to extend our thanks to attendees at
-the 2026 Effective Altruism Global Conference in London for inspiring further thoughts on this
-topic.
+Intelligent Cause Prioritisation? ​
+
+Osaremen Iluobe Kisso Selvan​
+
+[EMAIL] [EMAIL]​
+
+Abstract
+
+​
 
 --- PAGE 2 ---
 
-“Our Slumber Worries Me More Than AI”
-— Abiy Ahmed (2026), Prime Minister of Ethiopia¹​
-
-“A more moral AI is not enough if that morality is determined by a few. What is needed
-is a more active political involvement that is capable of slowing things down when
-everything is accelerating…”​
-— Pope Leo XIV (2026)²
+“Our Slumber Worries Me More Than AI” — Abiy Ahmed (2026), Prime Minister of Ethiopia¹​ “A more moral AI is not enough if that morality is determined by a few. What is needed is a more active political involvement that is capable of slowing things down when everything is accelerating…”​ — Pope Leo XIV (2026)²
 
 Introduction​
 
@@ -479,7 +470,7 @@ with questions of risk generally taking a subordinate position.
 
 Table 1: Comparative Characteristics of African National AI Strategies
 
-Development Framework Country Tone Safety Emphasis Depth
+Country Tone Development
 
 Nigeria Instrumental High High Substantive
 
@@ -505,12 +496,18 @@ Morocco Cautious High High Substantive
 
 Mauritania Instrumental High Low Moderate
 
-African Instrumental High Med-High Substantive Union
+African
+
+Union Instrumental High Med-High Substantive
 
 Notes: Tone captures the overall framing of AI (Enthusiastic, Instrumental, or Cautious).
+
 Development Emphasis reflects the extent to which AI is presented as a tool for economic
+
 transformation and public-sector development. Safety captures the prominence of ethical,
+
 governance, and risk-management concerns. Framework Depth assesses the level of institutional
+
 specificity, implementation mechanisms, and monitoring provisions contained in the strategy.
 
 4.2 Safety Engagement is Uneven and Concentrated on Proximate Risks
@@ -518,6 +515,10 @@ specificity, implementation mechanisms, and monitoring provisions contained in t
 In contrast to the near-universal emphasis on development, engagement with safety
 
 concerns varies considerably across countries. South Africa, Kenya, and Morocco place
+
+Emphasis Safety Framework
+
+Depth
 
 --- PAGE 12 ---
 
@@ -569,29 +570,30 @@ Table 2: Classification of AI Speech and Press Release Narratives
 
 Country Tone Development Safety Speech Posture
 
-Enthusiastic / Nigeria High Medium Strategic Balancer Instrumental
+Nigeria Enthusiastic /
 
-Governance South Africa Mixed High Medium–High Advocate
+South Africa Mixed High Medium–High Governance
 
-Governance Kenya Instrumental High Medium–High Advocate
+Kenya Instrumental High Medium–High Governance
 
 Ghana Enthusiastic High Medium Strategic Balancer
 
-Development Ethiopia Enthusiastic High Low Champion
+Rwanda Instrumental High Medium Strategic Balancer
 
-Enthusiastic / Development Zambia High Low Instrumental Champion
+Ethiopia Enthusiastic High Low Development
 
-Development Côte d'Ivoire Enthusiastic High Low Champion
+Zambia Enthusiastic /
 
-Governance Morocco Cautious Medium High Advocate
+Morocco Cautious Medium High Governance
 
-Development Uganda Enthusiastic High Low Champion
-
-African Governance Instrumental High Medium–High Union Advocate
+Uganda Enthusiastic High Low Development
 
 Notes: Development Champions frame AI primarily as an opportunity for growth, investment,
+
 and digital transformation, with limited attention to risks. Governance Advocates place greater
+
 emphasis on ethics, regulation, inclusion, and responsible deployment. Strategic Balancers
+
 combine strong developmental ambitions with substantive engagement with governance and risk
 
 concerns.​
@@ -603,6 +605,12 @@ The findings raise two broader questions. Why do African governments consistentl
 largely overlook AI safety? And what are the consequences of this pattern for Africa's
 
 position in the emerging AI order?
+
+Instrumental High Low Development
+
+Advocate
+
+Champion
 
 --- PAGE 14 ---
 
@@ -796,13 +804,15 @@ safety. It needs to.
 
 Notes
 
-1.​ Ethiopian Broadcasting Corporation (2026) ‘Our Slumber Worries Me More Than
+1.​
+Ethiopian Broadcasting Corporation (2026) ‘Our Slumber Worries Me More Than
 
 AI,’ Says Ethiopian Prime Minister. Available at:
 
 https://www.ebc.et/english/Home/NewsDetails?NewsId=3840 (Accessed: 13 March 2026).
 
-2.​ Holy See (2026) Encyclical Letter: Magnifica Humanitas of His Holiness Pope Leo
+2.​
+Holy See (2026) Encyclical Letter: Magnifica Humanitas of His Holiness Pope Leo
 
 XIV on Safeguarding the Human Person in the Time of Artificial Intelligence. Available
 

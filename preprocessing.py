@@ -15,6 +15,71 @@ def copy_metadata_files(input_directory: Path, output_directory: Path) -> None:
         shutil.copy2(metadata_path, output_path)
     print(f"Copied metadata.json files from {input_directory} to {output_directory}.")
 
+# Subset-embedded fonts ship a broken ToUnicode map, so ligature glyphs extract as
+# the wrong character. Every extractor reads the same map, so this is repaired here.
+LIGATURE_REPAIRS = {"H": "ti", "Y": "tt", "A": "ti", "O": "tti", "M": "tt", "p": "tt"}
+
+# Share of words that must look mis-encoded before a document is repaired.
+CORRUPTION_RATE = 0.01
+
+WORD_PATTERN = re.compile(r"\b[A-Za-z][A-Za-z'-]{2,}\b")
+SYSTEM_WORDS = Path("/usr/share/dict/words")
+
+
+def build_vocabulary(texts):
+    # A word must appear in two documents to count. Mis-encoding is per-PDF, so a
+    # corrupted token never corroborates itself, while real words recur.
+    texts = list(texts)
+    document_frequency = Counter()
+    for text in texts:
+        document_frequency.update({w.lower() for w in WORD_PATTERN.findall(text)})
+
+    minimum = 2 if len(texts) > 1 else 1
+    vocabulary = {w for w, n in document_frequency.items() if n >= minimum}
+
+    if SYSTEM_WORDS.exists():
+        vocabulary |= set(SYSTEM_WORDS.read_text(errors="ignore").lower().split())
+    return vocabulary
+
+
+def mis_encoded_rate(text, vocabulary):
+    # An uppercase letter between two lowercase ones, in a word nothing else uses.
+    tokens = WORD_PATTERN.findall(text)
+    if not tokens:
+        return 0.0
+    suspicious = sum(
+        1 for token in tokens
+        if re.search(r"[a-z][A-Z][a-z]", token) and token.lower() not in vocabulary
+    )
+    return suspicious / len(tokens)
+
+
+def repair_ligatures(text, vocabulary):
+    # Clean documents are skipped entirely, so the ambiguous p->tt rule can never
+    # rewrite an abbreviation like "sep." that happens to become a real word.
+    if mis_encoded_rate(text, vocabulary) < CORRUPTION_RATE:
+        return text, 0
+
+    # Only rewrites a token that is unknown and becomes known, so correct
+    # camelCase such as arXiv or ImageNet is never touched.
+    repairs = 0
+
+    def repair(match):
+        nonlocal repairs
+        token = match.group()
+        if token.lower() in vocabulary:
+            return token
+        for bad, good in LIGATURE_REPAIRS.items():
+            if bad in token:
+                candidate = token.replace(bad, good)
+                if candidate.lower() in vocabulary:
+                    repairs += 1
+                    return candidate
+        return token
+
+    return WORD_PATTERN.sub(repair, text), repairs
+
+
 def minhash_deduplication(texts, threshold=0.7):
     lsh = MinHashLSH(threshold=threshold, num_perm=128)
     unique_texts = []

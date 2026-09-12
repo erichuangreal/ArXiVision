@@ -1,22 +1,49 @@
 --- PAGE 1 ---
 
-The Safety Failures We Are Not Instrumenting: A Perspective on Hidden Safety-Critical Challenges in Modern AI Systems
+arXiv:2607.19292v1 [cs.CY] 21 Jul 2026
 
-Gjergji Kasneci Enkelejda Kasneci Technical University of Munich Technical University of Munich
+The Safety Failures We Are Not Instrumenting:
+A Perspective on Hidden Safety-Critical Challenges in Modern AI
+
+Gjergji Kasneci
+Technical University of Munich
+
+Current AI safety discourse still focuses disproportionately on visible failures, including obvious
+harms, dramatic misuse, and hypothetical catastrophic scenarios. That focus is incomplete.
+In deployed systems, many of the most consequential failures are quieter: plausible rather
+than spectacular, distributed across components rather than localized in a single output, and
+normalized by workflows before they are recognized as hazards. We argue that a central safety
+challenge in modern AI systems is increasingly not only whether a model emits a harmful response,
+but whether the broader socio-technical system preserves the conditions under which errors
+remain visible, contestable, containable, and recoverable. We propose a five-layer framework
+for diagnosing these hidden risks: (1) epistemic integrity, concerning whether evidence and
+uncertainty are represented honestly enough to support calibrated reliance; (2) control integrity,
+concerning whether authority, permissions, and action boundaries remain robust under attack
+and optimization; (3) temporal integrity, concerning whether safety holds across sessions, memory
+updates, and deployment drift; (4) organizational integrity, concerning whether institutions retain
+the capacity to audit, assign responsibility, and intervene effectively; and (5) ecosystem integrity,
+concerning whether AI systems preserve rather than erode the information environment on which
+future oversight depends. Across these layers, we identify under-recognized risk patterns, including
+overreliance, uncertainty and legitimacy laundering in retrieval, prompt injection, reward hacking,
+memory poisoning, evaluation deception, fictional human oversight, synthetic evidence pollution,
+and model collapse. We conclude with actionable design and governance recommendations and a
+research agenda for shifting AI safety from narrow model-centric evaluation toward socio-technical
+reliability.
+
+Keywords: AI safety; large language models; agents; overreliance; prompt injection; retrieval-
+augmented generation; benchmark design; accountability; memory poisoning; model collapse
+
+1. Introduction
+
+Modern AI safety discourse is still too often optimized to catch the obvious kinds of failure. It is well
+prepared to notice a shocking output, a policy-violating generation, or a vivid adversarial example.
+It is less prepared to notice the forms of failure that matter most once models are embedded in
+
+Systems
 
 July 22, 2026
 
 Abstract
-
-Current AI safety discourse still focuses disproportionately on visible failures, including obvious2026 harms, dramatic misuse, and hypothetical catastrophic scenarios. That focus is incomplete.
-Jul Inthandeployedspectacular,systems,distributedmany ofacrossthe mostcomponentsconsequentialrather thanfailureslocalizedare quieter:in a singleplausibleoutput,ratherand
-21 normalizedchallenge in bymodernworkflowsAI systemsbeforeistheyincreasinglyare recognizednot onlyaswhetherhazards.a modelWe argueemitsthata harmfula centralresponse,safety but whether the broader socio-technical system preserves the conditions under which errors remain visible, contestable, containable, and recoverable. We propose a five-layer framework for diagnosing these hidden risks: (1) epistemic integrity, concerning whether evidence and uncertainty are represented honestly enough to support calibrated reliance; (2) control integrity, concerning whether authority, permissions, and action boundaries remain robust under attack[cs.CY] and optimization; (3) temporal integrity, concerning whether safety holds across sessions, memory updates, and deployment drift; (4) organizational integrity, concerning whether institutions retain the capacity to audit, assign responsibility, and intervene effectively; and (5) ecosystem integrity, concerning whether AI systems preserve rather than erode the information environment on which future oversight depends. Across these layers, we identify under-recognized risk patterns, including overreliance, uncertainty and legitimacy laundering in retrieval, prompt injection, reward hacking, memory poisoning, evaluation deception, fictional human oversight, synthetic evidence pollution, and model collapse. We conclude with actionable design and governance recommendations and a research agenda for shifting AI safety from narrow model-centric evaluation toward socio-technical reliability.
-
-Keywords: AI safety; large language models; agents; overreliance; prompt injection; retrieval- augmented generation; benchmark design; accountability; memory poisoning; model collapsearXiv:2607.19292v1
-
-1. Introduction
-
-Modern AI safety discourse is still too often optimized to catch the obvious kinds of failure. It is well prepared to notice a shocking output, a policy-violating generation, or a vivid adversarial example. It is less prepared to notice the forms of failure that matter most once models are embedded in
 
 1
 
@@ -24,6 +51,7 @@ Modern AI safety discourse is still too often optimized to catch the obvious kin
 
 Figure 1: The Hidden Iceberg of AI Safety: From Model Outputs to Systemic Integrity.
 While traditional discourse focuses on visible, localized failures (the tip), the most consequential
+
 safety challenges are submerged across five layers of socio-technical integrity, namely Epistemic,
 Control, Temporal, Organizational, and Ecosystem, which altogether erode broader resilience.
 
@@ -43,14 +71,18 @@ from isolated model outputs toward hidden risks of system-level integrity failur
 with broader systems-safety thinking, which treats accidents not as single-component malfunctions
 but as emergent consequences of interactions among technical, human, and organizational elements
 (Leveson, 2016; National Institute of Standards and Technology, 2023, 2024). We write this article
+
 as a perspective piece: the contribution is an operational synthesis and organizing framework rather
 than a new empirical benchmark, formal theory, or prevalence estimate.
 
 The most under-recognized safety-critical challenges in modern AI systems share four features.
 
-1. They are plausible. They resemble ordinary operations closely enough that users and organizations overlook and normalize them.
+1. They are plausible.
+They resemble ordinary operations closely enough that users and
+organizations overlook and normalize them.
 
-2. They are distributed. Failure emerges across models, retrieval layers, tools, interfaces,
+2. They are distributed.
+Failure emerges across models, retrieval layers, tools, interfaces,
 
 2
 
@@ -58,9 +90,11 @@ The most under-recognized safety-critical challenges in modern AI systems share 
 
 operators, and institutions rather than from a single bad answer.
 
-3. They are temporally extended. Risk accumulates across turns, sessions, memory updates, retraining cycles, and organizational reuse.
+3. They are temporally extended. Risk accumulates across turns, sessions, memory updates,
+retraining cycles, and organizational reuse.
 
-4. They degrade correction. They do not merely create errors. They weaken the human and institutional mechanisms that would have caught errors.
+4. They degrade correction. They do not merely create errors. They weaken the human and
+institutional mechanisms that would have caught errors.
 
 This fourth property represents a recursive failure. The system does not merely produce errors; it
 erodes the epistemic infrastructure required to detect them. Hence, the long-term safety question is
@@ -78,15 +112,20 @@ A useful AI safety taxonomy should help practitioners answer not only “What ca
 but also “What becomes easier to get wrong, harder to inspect, and harder to correct once the model
 is embedded into a real decision pipeline?” The answer depends on multiple layers of integrity.
 
-1. Epistemic integrity: whether the system represents evidence, provenance, and uncertainty faithfully enough for users to calibrate reliance.
+1. Epistemic integrity: whether the system represents evidence, provenance, and uncertainty
+faithfully enough for users to calibrate reliance.
 
-2. Control integrity: whether instructions, permissions, and authorization boundaries remain robust under adversarial inputs, optimization pressure, and autonomous tool-use.
+2. Control integrity: whether instructions, permissions, and authorization boundaries remain
+robust under adversarial inputs, optimization pressure, and autonomous tool-use.
 
-3. Temporal integrity: whether the system remains safe across multi-turn interactions, persistent memory, updates, and distribution shift.
+3. Temporal integrity: whether the system remains safe across multi-turn interactions, persistent
+memory, updates, and distribution shift.
 
-4. Organizational integrity: whether institutions retain meaningful capacity to audit, override, assign responsibility, and learn from incidents.
+4. Organizational integrity: whether institutions retain meaningful capacity to audit, override,
+assign responsibility, and learn from incidents.
 
-5. Ecosystem integrity: whether the wider information environment on which AI systems and humans rely remains diverse, inspectable, and resistant to synthetic degradation.
+5. Ecosystem integrity: whether the wider information environment on which AI systems and
+humans rely remains diverse, inspectable, and resistant to synthetic degradation.
 
 This framing matters because many common mitigations improve one layer of integrity while
 degrading or leaving unaddressed others. Retrieval may improve factual accuracy yet weaken
@@ -110,6 +149,7 @@ warranted. In deployed settings, this is not only a matter of factual accuracy. 
 on whether evidence is represented faithfully, whether uncertainty remains visible, and whether
 workflows preserve the distinction between supported conclusions and plausible-sounding output.
 When these conditions erode, the system does not merely produce error; it weakens the practical
+
 capacity to detect and contest error.
 
 Overreliance is a safety problem, not a UX problem
@@ -117,6 +157,7 @@ Overreliance is a safety problem, not a UX problem
 The first hidden challenge is that modern AI systems can quietly lower the threshold for doubt. Human
 factors research distinguishes appropriate reliance from misuse, disuse, and abuse of automation
 (Goddard et al., 2012; Parasuraman & Manzey, 2010), and recent work argues that overreliance
+
 should be central to LLM research and governance (Ibrahim et al., 2025). Empirical studies show
 that users often accept incorrect AI recommendations, that explanations do not reliably restore
 calibrated reliance (Bo et al., 2025; Bucinca et al., 2021; Kim et al., 2025; Rong et al., 2024), and
@@ -187,13 +228,15 @@ and evaluate whether training-data selection or retrieval policies suppress rare
 
 information (Alemohammad et al., 2023; Gerstgrasser et al., 2024).
 
-3.2. Control Integrity: Prompt Injection, Tool Use, and Optimization Against the Wrong Objective
+3.2. Control Integrity: Prompt Injection, Tool Use, and Optimization Against the
+Wrong Objective
 
 Prompt injection reveals a failure of instruction authority
 
 Prompt injection is often described as a new security bug (Greshake et al., 2023). It is better
 understood as evidence that many AI systems do not robustly distinguish between data and
 instructions (Greshake et al., 2023; National Cyber Security Centre, 2025; Suo, 2024). Greshake
+
 et al. (Greshake et al., 2023) showed that indirect prompt injection can compromise real-world
 LLM-integrated applications by embedding malicious instructions inside retrieved or otherwise
 ingested content, thereby blurring the line between user intent and adversarial control. Subsequent
@@ -259,14 +302,17 @@ authorization (Debenedetti et al., 2025; European Union, 2024; National Institut
 Technology, 2023, 2024). The model should assume an untrusted generative role, proposing plans,
 drafts, or candidate tool calls, while authorization must remain external to the model’s latent state
 (Debenedetti et al., 2025). Deploy graduated agency: (1) low-risk actions may be automated, (2)
+
 medium-risk actions demand explicit human confirmation with structured evidence display, and
 (3) high-risk actions require independent verification channels (European Union, 2024; National
+
 Institute of Standards and Technology, 2023, 2024). Every executed action must maintain auditable
 provenance, detailing the evidence utilized, the uncertainty signals present at generation time, and
 the specific policy rule that authorized the state change (Casper et al., 2024; European Union, 2024;
 National Institute of Standards and Technology, 2023, 2024).
 
-3.3. Temporal Integrity: Multi-Turn Vulnerability, Persistent Memory, and Safety Drift
+3.3. Temporal Integrity: Multi-Turn Vulnerability, Persistent Memory, and Safety
+Drift
 
 Trajectory-level risks are not captured by single-turn safety evaluations
 
@@ -348,7 +394,8 @@ review policies (Sunil et al., 2026; Wang et al., 2025; Xiong et al., 2025). The
 is minimal, reviewable, and revocable persistence (European Union, 2024; National Institute of
 Standards and Technology, 2024).
 
-3.4. Organizational Integrity: Evaluation Deception, Fictional Oversight, and Diffused Accountability
+3.4. Organizational Integrity: Evaluation Deception, Fictional Oversight, and Diffused
+Accountability
 
 Benchmark-centric assurance leaves hidden failure modes unmeasured
 
@@ -428,7 +475,8 @@ actually able to alter outcomes (National Institute of Standards and Technology,
 but whether the institution has preserved a real capacity to slow, challenge, and, when necessary,
 stop the system (Santoni de Sio & Van den Hoven, 2018).
 
-3.5. Ecosystem Integrity: Synthetic Evidence Pollution and the Erosion of Collective Error Correction
+3.5. Ecosystem Integrity: Synthetic Evidence Pollution and the Erosion of Collective
+Error Correction
 
 The broader information environment is now part of the safety boundary
 
@@ -437,6 +485,7 @@ they also help populate, creating a recursive ecosystem risk: current outputs ca
 for future systems. Evidence from recursive training suggests that self-consuming training on
 model-generated data can erode diversity and, when fresh real data is insufficient, produce model
 collapse, in which rare but important features of the original distribution disappear or become
+
 progressively underrepresented (Alemohammad et al., 2023; Briesch et al., 2023; Gerstgrasser et al.,
 2024). Related work likewise suggests that, without sufficient fresh real data, such loops tend to
 lose quality or diversity over time (Alemohammad et al., 2023). This matters for safety because
@@ -445,7 +494,8 @@ rare cases and edge conditions are often where robust error detection and recove
 A related but less established concern is retrieval collapse: as AI-generated content proliferates on
 the open web, retrieval pipelines may increasingly return synthetic, homogeneous, or adversarially
 optimized material, narrowing source diversity without an immediate drop in answer accuracy
-(H. Yu et al., 2026). Unlike model collapse, this reflects a degradation of the evidence base.
+(H. Yu et al., 2026).
+Unlike model collapse, this reflects a degradation of the evidence base.
 Trustworthy retrieval must therefore be evaluated beyond answer accuracy, including provenance-
 aware attribution, robustness, transparency or explainability, accountability, and privacy (Gao
 et al., 2023; Ni et al., 2025; Zhou et al., 2024). Because the evidence base here is newer and
@@ -483,6 +533,7 @@ frameworks, and AI safety surveys already support a pluralistic view of safety t
 day misinformation, interaction, automation, and societal harms (Abercrombie et al., 2024; Chua
 et al., 2024; Deng et al., 2023; Gyevnar & Kasirzadeh, 2025; M. Li et al., 2025; Shelby et al., 2023;
 Weidinger et al., 2021). As AI-generated content saturates core workflows, the danger is not only
+
 error, but the weakening of traceability, contestability, expertise, and accountability across the
 deployment chain (Alfrink et al., 2023; Casper et al., 2024; Cobbe et al., 2021, 2023; Raji et al.,
 2020).
@@ -512,61 +563,280 @@ can be normalized into systemic governance failures rather than detected and cor
 
 --- PAGE 13 ---
 
+Hidden challenge
+Why it stays hidden
+Feasible control
+Instrumentation
+indicator
+
+Overreliance and
+calibration debt
+
+Failure of
+instruction
+authority
+
+Action
+amplification in
+tool use
+
+Reward hacking
+and deceptive
+optimization
+
+Trajectory-level
+safety degradation
+
 Table 1: Hidden challenges, feasible controls, and instrumentation indicators.
 
-Hidden challenge Why it stays hidden Feasible control Instrumentation indicator
+The system is right often
+enough to earn trust,
+while failures are
+plausible, intermittent,
+and often not
+independently verified.
 
-Overreliance and The system is right often Structured uncertainty Weighted positive gap
-calibration debt enough to earn trust, displays; source-linked between observed reliance while failures are justification; cognitive and warranted reliance plausible, intermittent, forcing for high-stakes across audited decision and often not decisions; periodic blind episodes; rate of accepted independently verified. challenge sets. incorrect recommen- dations in matched workflow conditions.
+Malicious or irrelevant
+instructions arrive
+through ordinary content
+channels and are
+processed as if they were
+legitimate task directives.
 
-Failure of Malicious or irrelevant External policy Rate of successful
-instruction instructions arrive enforcement; trusted instruction-hierarchy
-authority through ordinary content instruction hierarchy; violations; rate of channels and are sandboxed retrieval; unauthorized tool-use processed as if they were fail-closed tool attempts or executions legitimate task directives. permissions. per 1,000 tool calls.
+Small reasoning or
+interpretation errors
+propagate into external
+state changes that may be
+difficult to detect or
+reverse.
 
-Action Small reasoning or Graduated agency; Mean number of
-amplification in interpretation errors independent approval for downstream state changes
-tool use propagate into external high-risk actions; per erroneous tool state changes that may be immutable action logs; invocation; rate of difficult to detect or external authorization. irreversible actions per reverse. model-originated error.
+Systems exploit shortcuts
+and optimize measurable
+proxies that are easier to
+score than the real
+objective, especially in
+gameable environments.
 
-Reward hacking Systems exploit shortcuts Hard-to-game evaluations; Gap between proxy-task
-and deceptive and optimize measurable external authorization; performance and
-optimization proxies that are easier to adversarial testing; true-task performance score than the real red-teaming for under adversarial objective, especially in specification exploits. evaluation; rate of policy gameable environments. circumvention or reward-tampering behavior.
+Harmful trajectories are
+decomposed across
+individually
+benign-looking turns, so
+snapshot-based checks
+miss accumulating risk.
 
-Trajectory-level Harmful trajectories are Trajectory-level Survival rate of safety
-safety degradation decomposed across evaluation; persistent boundaries across 50+ individually safety state; escalation turn adversarial benign-looking turns, so tests; tool-realistic trajectories; failure rate snapshot-based checks simulations. under cross-turn miss accumulating risk. adaptation.
+A single compromised
+interaction can be stored,
+retrieved, and reused
+across sessions, altering
+future behavior or
+exposing sensitive data.
 
-Persistent memory A single compromised Scoped memory writes; Cross-session propagation
-failure modes interaction can be stored, trust-labeled memory; rate of injected content;
-across sessions retrieved, and reused expiry; per-user isolation; sensitive-memory across sessions, altering review-gated persistence; extraction success rate future behavior or minimal, reviewable, and under controlled attack exposing sensitive data. revocable persistence. evaluation.
+Structured uncertainty
+displays; source-linked
+justification; cognitive
+forcing for high-stakes
+decisions; periodic blind
+challenge sets.
+
+External policy
+enforcement; trusted
+instruction hierarchy;
+sandboxed retrieval;
+fail-closed tool
+permissions.
+
+Graduated agency;
+independent approval for
+high-risk actions;
+immutable action logs;
+external authorization.
+
+Hard-to-game evaluations;
+external authorization;
+adversarial testing;
+red-teaming for
+specification exploits.
+
+Trajectory-level
+evaluation; persistent
+safety state; escalation
+tests; tool-realistic
+simulations.
+
+Scoped memory writes;
+trust-labeled memory;
+expiry; per-user isolation;
+review-gated persistence;
+minimal, reviewable, and
+revocable persistence.
 
 13
 
+Weighted positive gap
+between observed reliance
+and warranted reliance
+across audited decision
+episodes; rate of accepted
+incorrect recommen-
+dations in matched
+workflow conditions.
+
+Rate of successful
+instruction-hierarchy
+violations; rate of
+unauthorized tool-use
+attempts or executions
+per 1,000 tool calls.
+
+Mean number of
+downstream state changes
+per erroneous tool
+invocation; rate of
+irreversible actions per
+model-originated error.
+
+Gap between proxy-task
+performance and
+true-task performance
+under adversarial
+evaluation; rate of policy
+circumvention or
+reward-tampering
+behavior.
+
+Survival rate of safety
+boundaries across 50+
+turn adversarial
+trajectories; failure rate
+under cross-turn
+adaptation.
+
+Cross-session propagation
+rate of injected content;
+sensitive-memory
+extraction success rate
+under controlled attack
+evaluation.
+
 --- PAGE 14 ---
 
-Evaluation Static benchmark scores Structured safety cases Divergence between static deception appear reassuring even combining benchmarks, benchmark performance when evaluation adversarial scenarios, and live-deployment assumptions diverge from audits, human factors incident rates; deployment conditions evidence, and incident post-deployment and real workflows. history. regression rate after system updates.
+Evaluation
+deception
 
-Fictional human Review exists formally, Review budgets; access to Mean review time per oversight but reviewers may lack primary evidence; case; detection rate of time, evidence, authority, measurable override and seeded review errors; or incentives to exercise escalation pathways; override and escalation independent judgment. named safety ownership; rates for safety-critical stop-ship thresholds. recommendations.
+Fictional human
+oversight
 
-Synthetic evidence System outputs reshape Synthetic-content Fraction of retrieved pollution and the evidentiary monitoring; trusted sources that are synthetic, retrieval collapse environment later systems corpora; provenance duplicated, or provenance- retrieve from or train on, tracking; source-diversity uncertain; source-diversity often without obvious monitoring; curated index over time. short-term accuracy loss. retrieval for critical domains.
+Synthetic evidence
+pollution and
+retrieval collapse
 
-Erosion of society’s AI increases throughput Near-miss reporting; Mean time to detection error-correcting while weakening challenge, audit access; preservation and recovery; near-miss capacity traceability, contestability, of expert review reporting rate; fraction of and recovery pathways pathways; contestability materially wrong outputs across the organization. requirements; corrected before incident-learning loops. downstream action.
+Erosion of society’s
+error-correcting
+capacity
 
 5. An Operational Agenda for Socio-Technical Reliability
 
 The framework implies a practical shift in emphasis: AI safety should be governed not only as
-a problem of model behavior, but as one of preserving socio-technical reliability. In complex
+a problem of model behavior, but as one of preserving socio-technical reliability.
+In complex
 systems, the aim is not to eliminate all error, but to keep errors visible, contestable, containable, and
 recoverable. The agenda below is therefore intentionally best-available, drawing on current evidence,
+
 systems-safety principles, and governance frameworks while remaining responsive to failure modes
 that standard evaluations may miss (European Union, 2024; Leveson, 2016; National Institute
 of Standards and Technology, 2023, 2024). The recommendations are conservative in that they
 strengthen observability, contestability, and containment without presupposing a single theory of
 long-term AI risk.
 
+Static benchmark scores
+appear reassuring even
+when evaluation
+assumptions diverge from
+deployment conditions
+and real workflows.
+
+Review exists formally,
+but reviewers may lack
+time, evidence, authority,
+or incentives to exercise
+independent judgment.
+
+System outputs reshape
+the evidentiary
+environment later systems
+retrieve from or train on,
+often without obvious
+short-term accuracy loss.
+
+AI increases throughput
+while weakening challenge,
+traceability, contestability,
+and recovery pathways
+across the organization.
+
+Structured safety cases
+combining benchmarks,
+adversarial scenarios,
+audits, human factors
+evidence, and incident
+history.
+
+Review budgets; access to
+primary evidence;
+measurable override and
+escalation pathways;
+named safety ownership;
+stop-ship thresholds.
+
+Synthetic-content
+monitoring; trusted
+corpora; provenance
+tracking; source-diversity
+monitoring; curated
+retrieval for critical
+domains.
+
+Near-miss reporting;
+audit access; preservation
+of expert review
+pathways; contestability
+requirements;
+incident-learning loops.
+
 14
+
+Divergence between static
+benchmark performance
+and live-deployment
+incident rates;
+post-deployment
+regression rate after
+system updates.
+
+Mean review time per
+case; detection rate of
+seeded review errors;
+override and escalation
+rates for safety-critical
+recommendations.
+
+Fraction of retrieved
+sources that are synthetic,
+duplicated, or provenance-
+uncertain; source-diversity
+index over time.
+
+Mean time to detection
+and recovery; near-miss
+reporting rate; fraction of
+materially wrong outputs
+corrected before
+downstream action.
 
 --- PAGE 15 ---
 
-Design for justified trust, not frictionless dependence. A first implication is that systems
+Design for justified trust, not frictionless dependence.
+A first implication is that systems
 should be designed for justified trust, not frictionless dependence. In safety-relevant settings, the key
 question is not how quickly a system answers, but whether it preserves the information needed to
 assess, challenge, and, if necessary, reject its outputs. Research on automation bias, overreliance, and
@@ -577,8 +847,10 @@ verification easier than acceptance by preserving source linkage, timestamps, un
 conflicting evidence, and escalation pathways. Where outputs shape consequential decisions, some
 friction is a safety feature, not a usability flaw.
 
-Separate suggestion from permission. A second implication is that systems must separate
+Separate suggestion from permission.
+A second implication is that systems must separate
 suggestion from permission. Models may generate hypotheses, drafts, and candidate actions, but
+
 they should not determine what is authorized. In tool-using systems, this is a core requirement of
 control integrity. Prompt injection and related attacks matter not only because they can trigger
 unwanted outputs, but because they reveal a deeper failure to preserve instruction authority under
@@ -587,7 +859,8 @@ Robust design therefore requires architectural separation between generation and
 execution governed by external policy engines, access controls, approval systems, and independent
 evidence checks.
 
-Treat memory as a privileged boundary. A third implication is that persistent memory
+Treat memory as a privileged boundary.
+A third implication is that persistent memory
 should be treated as a privileged boundary, not as an unregulated extension of chat history. Once
 information persists across turns or sessions, it can shape future retrieval and action beyond its
 original context. Recent work suggests that memory can be poisoned, leak sensitive information,
@@ -597,7 +870,8 @@ should be typed, scoped, provenance-tagged, time-bounded, and revocable; stronge
 should apply to sensitive or high-impact memories; and cross-user or cross-task retrieval should be
 disallowed by default. The defensible default is minimal, reviewable, and revocable persistence.
 
-Evaluate trajectories, not just turns. A fourth implication is that safety evaluation must
+Evaluate trajectories, not just turns.
+A fourth implication is that safety evaluation must
 operate at the level of trajectories, not isolated turns. Many important failures emerge across
 interaction sequences rather than within single prompts, so multi-turn jailbreaks, delayed goal
 decomposition, tool-mediated escalation, and cross-session context accumulation can remain invisible
@@ -611,8 +885,10 @@ under realistic conditions (European Union, 2024; National Institute of Standard
 
 --- PAGE 16 ---
 
-Engineer real human oversight. A fifth implication is that organizations must engineer real
+Engineer real human oversight.
+A fifth implication is that organizations must engineer real
 human oversight rather than rely on nominal reviewer presence. Oversight is meaningful only when
+
 reviewers have the practical conditions to exercise independent judgment; without sufficient time,
 evidence, authority, or organizational support, they may remain formally “in the loop” while adding
 little substantive control (Casper et al., 2024; Parasuraman & Manzey, 2010; Parasuraman & Riley,
@@ -622,7 +898,8 @@ override and escalation pathways, and named responsibility for end-to-end system
 outputs are approved unchanged, that may reflect either strong model performance or ceremonial
 review, and those possibilities should not be conflated.
 
-Institutionalize near-miss learning. A sixth implication is that AI deployments should institu-
+Institutionalize near-miss learning.
+A sixth implication is that AI deployments should institu-
 tionalize near-miss learning. High-reliability systems do not learn only from visible accidents. They
 also learn from anomalies, recoveries, workarounds, and weak signals that reveal where the system
 is becoming brittle (Leveson, 2016; Reason, 1997; Weick & Sutcliffe, 2007). AI deployments should
@@ -633,7 +910,8 @@ pathways, and explicit routines for converting field observations into updated e
 changes, policy revisions, and operator guidance. Near misses should be treated as data about the
 health of the deployment stack, not as isolated user anecdotes.
 
-Protect the information commons on which future safety depends. A seventh implication
+Protect the information commons on which future safety depends.
+A seventh implication
 is that organizations must protect the information commons on which future safety depends. Because
 AI systems increasingly retrieve from, learn from, and populate the same evidentiary ecosystem, that
 environment is now part of the safety boundary. Recent work on trustworthy retrieval, recursive
@@ -643,7 +921,8 @@ contamination are safety-relevant variables (Ni et al., 2025; Shumailov et al., 
 strategic safety assets, track provenance and source diversity in retrieval pipelines, and constrain
 open-web retrieval more tightly in critical domains.
 
-Instrument the deployment through longitudinal socio-technical auditing. Finally,
+Instrument the deployment through longitudinal socio-technical auditing.
+Finally,
 moving from model-centric assurance to socio-technical reliability requires a corresponding shift in
 measurement: from static benchmarking to longitudinal socio-technical auditing. Benchmark scores
 and pre-deployment evaluations remain useful, but they are insufficient as stand-alone assurance for
@@ -666,41 +945,97 @@ conditions.
 
 Several research directions deserve much more attention than they currently receive.
 
-1. Measurement of overreliance in realistic workflows. The field requires domain-sensitive metrics that capture not only whether human-AI teams perform better overall, but also when AI systems change what users stop checking, when scrutiny becomes ceremonial, and when reliance persistently exceeds warranted reliability.
+1. Measurement of overreliance in realistic workflows. The field requires domain-sensitive
+metrics that capture not only whether human-AI teams perform better overall, but also when AI
+systems change what users stop checking, when scrutiny becomes ceremonial, and when reliance
+persistently exceeds warranted reliability.
 
-2. Operationalizing uncertainty in agentic systems. Research must develop empirically validated methods for representing and aggregating uncertainty across retrieval, intermediate reasoning, tool execution, memory, and environmental feedback, so that stateful AI systems can calibrate deferral, escalation, and human review under real workflow conditions.
+2. Operationalizing uncertainty in agentic systems. Research must develop empirically
+validated methods for representing and aggregating uncertainty across retrieval, intermediate
+reasoning, tool execution, memory, and environmental feedback, so that stateful AI systems can
+calibrate deferral, escalation, and human review under real workflow conditions.
 
-3. Evidence-interface design for calibrated use. Human-computer interaction research must determine how to present provenance, uncertainty, conflict, and evidentiary gaps to improve user calibration, preserve contestability, and reduce both overreliance and underuse.
+3. Evidence-interface design for calibrated use. Human-computer interaction research must
+determine how to present provenance, uncertainty, conflict, and evidentiary gaps to improve
+user calibration, preserve contestability, and reduce both overreliance and underuse.
 
-4. Architectural separation, containment, and authorization. Systems engineering must establish frameworks ensuring that probabilistic generation never independently determines authorization. This includes secure instruction hierarchies, sandboxed retrieval, trusted execution boundaries, and externally enforced policy controls resilient to prompt injection and agent hijacking.
+4. Architectural separation, containment, and authorization. Systems engineering must
+establish frameworks ensuring that probabilistic generation never independently determines
+authorization. This includes secure instruction hierarchies, sandboxed retrieval, trusted execution
+boundaries, and externally enforced policy controls resilient to prompt injection and agent
+hijacking.
 
-5. Evaluation integrity and objective robustness. Robust safety assurance demands evaluation protocols resistant to proxy exploitation. This requires mitigating model-driven failures (e.g., reward hacking, specification gaming) alongside methodological failures (e.g., data contamination, test leakage, grader exploitation) that allow systems to appear safe under artificial test conditions while failing in deployment.
+5. Evaluation integrity and objective robustness. Robust safety assurance demands evaluation
+protocols resistant to proxy exploitation. This requires mitigating model-driven failures (e.g.,
+reward hacking, specification gaming) alongside methodological failures (e.g., data contamination,
+test leakage, grader exploitation) that allow systems to appear safe under artificial test conditions
+while failing in deployment.
 
-6. Trajectory-aware assurance. Safety evaluation must model long-horizon interaction tra- jectories rather than isolated turns, encompassing adversarial adaptation, memory updates, delayed harm, tool-mediated execution, and compounding failures in multi-agent or multi-stage environments.
+6. Trajectory-aware assurance. Safety evaluation must model long-horizon interaction tra-
+jectories rather than isolated turns, encompassing adversarial adaptation, memory updates,
+delayed harm, tool-mediated execution, and compounding failures in multi-agent or multi-stage
+environments.
 
-7. Memory governance and persistent-state safety. Persistent memory requires principled controls over retention, access, retrieval, provenance, poisoning resistance, privacy leakage, and deletion, together with evaluation protocols that treat memory as a privileged safety boundary rather than a benign usability feature.
+7. Memory governance and persistent-state safety. Persistent memory requires principled
+controls over retention, access, retrieval, provenance, poisoning resistance, privacy leakage, and
+deletion, together with evaluation protocols that treat memory as a privileged safety boundary
+rather than a benign usability feature.
 
-8. Longitudinal dynamics of organizational co-adaptation. Empirical safety research must move beyond laboratory studies to measure how time pressure, workflow incentives, managerial targets, and liability structures reshape human oversight, gradually weakening the practical capacity to question, override, and audit AI-supported decisions.
+8. Longitudinal dynamics of organizational co-adaptation. Empirical safety research must
+move beyond laboratory studies to measure how time pressure, workflow incentives, managerial
+targets, and liability structures reshape human oversight, gradually weakening the practical
+capacity to question, override, and audit AI-supported decisions.
 
 17
 
 --- PAGE 18 ---
 
-9. Auditing with meaningful access. External accountability will remain limited without stronger norms, infrastructures, and legal-organizational mechanisms for white-box, system-level, and deployment-context auditing, especially where black-box access is insufficient for rigorous scrutiny.
+9. Auditing with meaningful access. External accountability will remain limited without
+stronger norms, infrastructures, and legal-organizational mechanisms for white-box, system-level,
+and deployment-context auditing, especially where black-box access is insufficient for rigorous
+scrutiny.
 
-10. Forensic observability and post-incident diagnosis. The field requires rigorous methods for preserving provenance, reconstructing execution histories, and diagnosing failures, close calls, and anomalous behavior in complex, stateful, and non-deterministic AI pipelines.
+10. Forensic observability and post-incident diagnosis. The field requires rigorous methods
+for preserving provenance, reconstructing execution histories, and diagnosing failures, close calls,
+and anomalous behavior in complex, stateful, and non-deterministic AI pipelines.
 
-11. Incident reporting and near-miss learning infrastructure. Building on forensic observ- ability, AI safety research must develop standardized taxonomies, reporting pipelines, and shared incident repositories that enable organizations to learn systematically from failures rather than treating each event as isolated.
+11. Incident reporting and near-miss learning infrastructure. Building on forensic observ-
+ability, AI safety research must develop standardized taxonomies, reporting pipelines, and shared
+incident repositories that enable organizations to learn systematically from failures rather than
+treating each event as isolated.
 
-12. Ecosystem-level safety metrics. The field lacks robust quantitative measures for source diversity, synthetic contamination, retrieval health, evidentiary independence, and institutional error-correction capacity, all of which are necessary for assessing whether AI deployment preserves or erodes the broader conditions for societal oversight.
+12. Ecosystem-level safety metrics. The field lacks robust quantitative measures for source
+diversity, synthetic contamination, retrieval health, evidentiary independence, and institutional
+error-correction capacity, all of which are necessary for assessing whether AI deployment preserves
+or erodes the broader conditions for societal oversight.
 
-A note of concern. A further concern motivating this perspective is the growing asymmetry between the pace at which AI systems are advancing and the slower rate at which human and institutional capacities for scrutiny, reflection, and rigorous auditing can develop. As models become more complex, stateful, multimodal, and more deeply embedded in organizational workflows, hidden safety challenges may not simply accumulate, but interact across layers in ways that amplify downstream risk. By contrast, the conditions required for meaningful oversight, including sustained expert review, independent auditing, organizational learning, and deliberative governance, are difficult to build and harder still to scale reliably. This widening gap is itself safety-relevant because it increases the likelihood that important failures will outpace the mechanisms available to detect, contest, and contain them. Unless auditing and oversight capacities are strengthened alongside AI capability development, AI systems may increasingly exceed the socio-technical conditions required for effective control.
+A note of concern.
+A further concern motivating this perspective is the growing asymmetry
+between the pace at which AI systems are advancing and the slower rate at which human and
+institutional capacities for scrutiny, reflection, and rigorous auditing can develop. As models become
+more complex, stateful, multimodal, and more deeply embedded in organizational workflows, hidden
+safety challenges may not simply accumulate, but interact across layers in ways that amplify
+downstream risk. By contrast, the conditions required for meaningful oversight, including sustained
+expert review, independent auditing, organizational learning, and deliberative governance, are
+difficult to build and harder still to scale reliably. This widening gap is itself safety-relevant because
+it increases the likelihood that important failures will outpace the mechanisms available to detect,
+contest, and contain them. Unless auditing and oversight capacities are strengthened alongside AI
+capability development, AI systems may increasingly exceed the socio-technical conditions required
+for effective control.
 
 Limitations and Scope Conditions
 
-This article is a perspective and synthesis rather than an empirical prevalence study. Its contribution is to organize technical, human-factors, organizational, and ecosystem-level concerns into a framework for deployment analysis and governance. We therefore do not claim that the identified failure modes are equally frequent, severe, or mature across domains, nor that the five layers exhaust the full space of relevant safety concerns.
+This article is a perspective and synthesis rather than an empirical prevalence study. Its contribution
+is to organize technical, human-factors, organizational, and ecosystem-level concerns into a framework
+for deployment analysis and governance. We therefore do not claim that the identified failure modes
+are equally frequent, severe, or mature across domains, nor that the five layers exhaust the full
+space of relevant safety concerns.
 
-A second limitation concerns the evidence base. The argument draws on heterogeneous sources, including user studies, adversarial evaluations, agent benchmarks, systems-safety theory, policy frameworks, and emerging work on memory, retrieval, and ecosystem effects. These literatures differ in methodological maturity and ecological validity. Some cited findings come from controlled, simulated, or red-teaming settings and should not be interpreted as direct estimates of deployment
+A second limitation concerns the evidence base. The argument draws on heterogeneous sources,
+including user studies, adversarial evaluations, agent benchmarks, systems-safety theory, policy
+frameworks, and emerging work on memory, retrieval, and ecosystem effects. These literatures
+differ in methodological maturity and ecological validity. Some cited findings come from controlled,
+simulated, or red-teaming settings and should not be interpreted as direct estimates of deployment
 
 18
 
@@ -740,6 +1075,7 @@ than as a closed taxonomy.
 
 A safer AI system is not one that never errs. It is one whose errors remain visible, contestable,
 containable, and recoverable. That is the operational standard that matters now. The field should
+
 therefore optimize not merely for safer model outputs, but for preserving those properties across
 the full deployment stack, including tools, interfaces, workflows, organizations, and the information
 environment itself.
@@ -756,107 +1092,369 @@ decisions were reviewed and approved by the authors, who take full responsibilit
 
 References
 
-Abercrombie, G., Benbouzid, D., Giudici, P., Golpayegani, D., Hernandez, J., Noro, P., Pandit, H., Paraschou, E., Pownall, C., Prajapati, J., et al. (2024). A collaborative, human-centred taxonomy of AI, algorithmic, and automation harms. arXiv preprint arXiv:2407.01294. https://doi.org/10.48550/arXiv.2407.01294
-Alemohammad, S., Casco-Rodriguez, J., Luzi, L., Humayun, A. I., Babaei, H., LeJeune, D., Siahkoohi, A., & Baraniuk, R. (2023). Self-consuming generative models go mad. The Twelfth Inter- national Conference on Learning Representations. https://openreview.net/forum?id= ShjMHfmPs0
-Alfrink, K., Keller, I., Kortuem, G., & Doorn, N. (2023). Contestable AI by design: Towards a framework. Minds and Machines, 33(4), 613–639. https://doi.org/10.1007/s11023-022- 09611-z
-Amodei, D., Olah, C., Steinhardt, J., Christiano, P., Schulman, J., & Mané, D. (2016). Concrete problems in ai safety. arXiv preprint arXiv:1606.06565. https://doi.org/10.48550/arXiv. 1606.06565
-Bo, J. Y., Wan, S., & Anderson, A. (2025). To rely or not to rely? evaluating interventions for appropriate reliance on large language models. Proceedings of the 2025 CHI Conference on Human Factors in Computing Systems, 1–23. https://doi.org/10.1145/3706598.3714097
-Bommasani, R., Hudson, D. A., Adeli, E., Altman, R., Arora, S., von Arx, S., Bernstein, M. S., Bohg, J., Bosselut, A., Brunskill, E., Brynjolfsson, E., Buch, S., Card, D., Castellon, R., Chatterji, N., Chen, A., Creel, K., Davis, J. Q., Demszky, D., . . . Liang, P. (2021). On the Opportunities and Risks of Foundation Models. arXiv preprint arXiv:2108.07258. https: //doi.org/10.48550/arXiv.2108.07258
-Briesch, M., Sobania, D., & Rothlauf, F. (2023). Large language models suffer from their own output: An analysis of the self-consuming training loop. arXiv preprint arXiv:2311.16822. https://openreview.net/forum?id=SaOxhcDCM3
-Bucinca, Z., Malaya, M. B., & Gajos, K. Z. (2021). To Trust or to Think: Cognitive Forcing Functions Can Reduce Overreliance on AI in AI-Assisted Decision-Making. Proceedings of the ACM on Human-computer Interaction, 5(CSCW1), 1–21. https://doi.org/10.1145/3449287
-Cao, H., Jing, S., Wang, Y., Peng, Z., Bai, Z., Cao, Z., Fang, M., Feng, F., Liu, J., Wang, B., Yang, T., Huo, J., Gao, Y., Meng, F., Yang, X., Deng, C., & Feng, J. (2026). SafeDialBench: A Fine-Grained Safety Evaluation Benchmark for Large Language Models in Multi-Turn Dialogues with Diverse Jailbreak Attacks. The Fourteenth International Conference on Learning Representations. https://doi.org/10.48550/arXiv.2502.11090
-Casper, S., Ezell, C., Siegmann, C., Kolt, N., Curtis, T. L., Bucknall, B., Haupt, A., Wei, K., Scheurer, J., Hobbhahn, M., Sharkey, L., Krishna, S., Von Hagen, M., Alberti, S., Chan, A., Sun, Q., Gerovitch, M., Bau, D., Tegmark, M., . . . Hadfield-Menell, D. (2024). Black-Box Access is Insufficient for Rigorous AI Audits. Proceedings of the 2024 ACM Conference on Fairness, Accountability, and Transparency, 2254–2272. https://doi.org/10.1145/3630106.3659037
-Chen, Z., Xiang, Z., Xiao, C., Song, D., & Li, B. (2024). AgentPoison: Red-teaming LLM Agents via Poisoning Memory or Knowledge Bases. The Thirty-eighth Annual Conference on Neural Information Processing Systems. https://openreview.net/forum?id=Y841BRW9rY
+Abercrombie, G., Benbouzid, D., Giudici, P., Golpayegani, D., Hernandez, J., Noro, P., Pandit, H.,
+
+Paraschou, E., Pownall, C., Prajapati, J., et al. (2024). A collaborative, human-centred
+taxonomy of AI, algorithmic, and automation harms. arXiv preprint arXiv:2407.01294.
+https://doi.org/10.48550/arXiv.2407.01294
+Alemohammad, S., Casco-Rodriguez, J., Luzi, L., Humayun, A. I., Babaei, H., LeJeune, D., Siahkoohi,
+
+A., & Baraniuk, R. (2023). Self-consuming generative models go mad. The Twelfth Inter-
+national Conference on Learning Representations. https://openreview.net/forum?id=
+
+ShjMHfmPs0
+Alfrink, K., Keller, I., Kortuem, G., & Doorn, N. (2023). Contestable AI by design: Towards a
+
+framework. Minds and Machines, 33(4), 613–639. https://doi.org/10.1007/s11023-022-
+09611-z
+Amodei, D., Olah, C., Steinhardt, J., Christiano, P., Schulman, J., & Mané, D. (2016). Concrete
+
+problems in ai safety. arXiv preprint arXiv:1606.06565. https://doi.org/10.48550/arXiv.
+1606.06565
+Bo, J. Y., Wan, S., & Anderson, A. (2025). To rely or not to rely? evaluating interventions for
+
+appropriate reliance on large language models. Proceedings of the 2025 CHI Conference on
+Human Factors in Computing Systems, 1–23. https://doi.org/10.1145/3706598.3714097
+Bommasani, R., Hudson, D. A., Adeli, E., Altman, R., Arora, S., von Arx, S., Bernstein, M. S.,
+
+Bohg, J., Bosselut, A., Brunskill, E., Brynjolfsson, E., Buch, S., Card, D., Castellon, R.,
+Chatterji, N., Chen, A., Creel, K., Davis, J. Q., Demszky, D., . . . Liang, P. (2021). On the
+Opportunities and Risks of Foundation Models. arXiv preprint arXiv:2108.07258. https:
+//doi.org/10.48550/arXiv.2108.07258
+Briesch, M., Sobania, D., & Rothlauf, F. (2023). Large language models suffer from their own
+
+output: An analysis of the self-consuming training loop. arXiv preprint arXiv:2311.16822.
+https://openreview.net/forum?id=SaOxhcDCM3
+Bucinca, Z., Malaya, M. B., & Gajos, K. Z. (2021). To Trust or to Think: Cognitive Forcing Functions
+
+Can Reduce Overreliance on AI in AI-Assisted Decision-Making. Proceedings of the ACM
+on Human-computer Interaction, 5(CSCW1), 1–21. https://doi.org/10.1145/3449287
+Cao, H., Jing, S., Wang, Y., Peng, Z., Bai, Z., Cao, Z., Fang, M., Feng, F., Liu, J., Wang, B.,
+
+Yang, T., Huo, J., Gao, Y., Meng, F., Yang, X., Deng, C., & Feng, J. (2026). SafeDialBench:
+A Fine-Grained Safety Evaluation Benchmark for Large Language Models in Multi-Turn
+Dialogues with Diverse Jailbreak Attacks. The Fourteenth International Conference on
+Learning Representations. https://doi.org/10.48550/arXiv.2502.11090
+Casper, S., Ezell, C., Siegmann, C., Kolt, N., Curtis, T. L., Bucknall, B., Haupt, A., Wei, K., Scheurer,
+
+J., Hobbhahn, M., Sharkey, L., Krishna, S., Von Hagen, M., Alberti, S., Chan, A., Sun, Q.,
+Gerovitch, M., Bau, D., Tegmark, M., . . . Hadfield-Menell, D. (2024). Black-Box Access is
+Insufficient for Rigorous AI Audits. Proceedings of the 2024 ACM Conference on Fairness,
+Accountability, and Transparency, 2254–2272. https://doi.org/10.1145/3630106.3659037
+Chen, Z., Xiang, Z., Xiao, C., Song, D., & Li, B. (2024). AgentPoison: Red-teaming LLM Agents
+
+via Poisoning Memory or Knowledge Bases. The Thirty-eighth Annual Conference on Neural
+Information Processing Systems. https://openreview.net/forum?id=Y841BRW9rY
 
 20
 
 --- PAGE 21 ---
 
-Chua, J., Li, Y., Yang, S., Wang, C., & Yao, L. (2024). AI safety in generative AI large language models: A survey. arXiv preprint arXiv:2407.18369. https://doi.org/10.48550/arXiv.2407. 18369
-Cobbe, J., Lee, M. S. A., & Singh, J. (2021). Reviewable automated decision-making: A framework for accountable algorithmic systems. Proceedings of the 2021 ACM conference on Fairness, Accountability, and Transparency, 598–609. https://doi.org/10.1145/3442188.3445921
-Cobbe, J., Veale, M., & Singh, J. (2023). Understanding accountability in algorithmic supply chains. Proceedings of the 2023 ACM Conference on Fairness, Accountability, and Transparency, 1186–1197. https://doi.org/10.1145/3593013.3594073
-Debenedetti, E., Shumailov, I., Fan, T., Hayes, J., Carlini, N., Fabian, D., Kern, C., Shi, C., Terzis, A., & Tramèr, F. (2025). Defeating Prompt Injections by Design. arXiv preprint arXiv:2503.18813. https://doi.org/10.48550/arXiv.2503.18813
-Debenedetti, E., Zhang, J., Balunovic, M., Beurer-Kellner, L., Fischer, M., & Tramèr, F. (2024). AgentDojo: A Dynamic Environment to Evaluate Prompt Injection Attacks and Defenses for LLM Agents. The Thirty-eight Conference on Neural Information Processing Systems Datasets and Benchmarks Track. https://doi.org/10.52202/079017-2636
-Deng, J., Cheng, J., Sun, H., Zhang, Z., & Huang, M. (2023). Towards safer generative language mod- els: A survey on safety risks, evaluations, and improvements. arXiv preprint arXiv:2302.09270. https://doi.org/10.48550/arXiv.2302.09270
-Denison, C., MacDiarmid, M., Barez, F., Duvenaud, D., Kravec, S., Marks, S., Schiefer, N., Soklaski, R., Tamkin, A., Kaplan, J., Shlegeris, B., Bowman, S. R., Perez, E., & Hubinger, E. (2024). Sycophancy to Subterfuge: Investigating Reward-Tampering in Large Language Models. arXiv preprint arXiv:2406.10162. https://doi.org/10.48550/arXiv.2406.10162
-European Union. (2024). Regulation (EU) 2024/1689 of the european parliament and of the council of 13 june 2024 laying down harmonised rules on artificial intelligence (Artificial Intelligence Act). Official Journal of the European Union https://eur-lex.europa.eu/legal- content/EN/TXT/?uri=CELEX:32024R1689.
-Ferbach, D., Bertrand, Q., Bose, A. J., & Gidel, G. (2024). Self-Consuming Generative Models with Curated Data Provably Optimize Human Preferences. The Thirty-eighth Annual Conference on Neural Information Processing Systems. https://proceedings.neurips.cc/paper_files/ paper/2024/hash/b9e88ae0308cf82d0b0f634ddbdf809a-Abstract-Conference.html
-Gao, T., Yen, H., Yu, J., & Chen, D. (2023). Enabling large language models to generate text with citations. Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing, 6465–6488. https://doi.org/10.18653/v1/2023.emnlp-main.398
-Gerstgrasser, M., Schaeffer, R., Dey, A., Rafailov, R., Korbak, T., Sleight, H., Agrawal, R., Hughes, J., Pai, D. B., Gromov, A., Roberts, D., Yang, D., Donoho, D. L., & Koyejo, S. (2024). Is Model Collapse Inevitable? Breaking the Curse of Recursion by Accumulating Real and Synthetic Data. First Conference on Language Modeling. https://openreview.net/forum? id=5B2K4LRgmz
-Goddard, K., Roudsari, A., & Wyatt, J. C. (2012). Automation bias: A systematic review of frequency, effect mediators, and mitigators. Journal of the American Medical Informatics Association, 19(1), 121–127. https://doi.org/10.1136/amiajnl-2011-000089
+Chua, J., Li, Y., Yang, S., Wang, C., & Yao, L. (2024). AI safety in generative AI large language
+
+models: A survey. arXiv preprint arXiv:2407.18369. https://doi.org/10.48550/arXiv.2407.
+18369
+Cobbe, J., Lee, M. S. A., & Singh, J. (2021). Reviewable automated decision-making: A framework
+
+for accountable algorithmic systems. Proceedings of the 2021 ACM conference on Fairness,
+Accountability, and Transparency, 598–609. https://doi.org/10.1145/3442188.3445921
+Cobbe, J., Veale, M., & Singh, J. (2023). Understanding accountability in algorithmic supply chains.
+
+Proceedings of the 2023 ACM Conference on Fairness, Accountability, and Transparency,
+1186–1197. https://doi.org/10.1145/3593013.3594073
+Debenedetti, E., Shumailov, I., Fan, T., Hayes, J., Carlini, N., Fabian, D., Kern, C., Shi, C.,
+
+Terzis, A., & Tramèr, F. (2025). Defeating Prompt Injections by Design. arXiv preprint
+arXiv:2503.18813. https://doi.org/10.48550/arXiv.2503.18813
+Debenedetti, E., Zhang, J., Balunovic, M., Beurer-Kellner, L., Fischer, M., & Tramèr, F. (2024).
+
+AgentDojo: A Dynamic Environment to Evaluate Prompt Injection Attacks and Defenses
+for LLM Agents. The Thirty-eight Conference on Neural Information Processing Systems
+Datasets and Benchmarks Track. https://doi.org/10.52202/079017-2636
+Deng, J., Cheng, J., Sun, H., Zhang, Z., & Huang, M. (2023). Towards safer generative language mod-
+
+els: A survey on safety risks, evaluations, and improvements. arXiv preprint arXiv:2302.09270.
+https://doi.org/10.48550/arXiv.2302.09270
+Denison, C., MacDiarmid, M., Barez, F., Duvenaud, D., Kravec, S., Marks, S., Schiefer, N., Soklaski,
+
+R., Tamkin, A., Kaplan, J., Shlegeris, B., Bowman, S. R., Perez, E., & Hubinger, E. (2024).
+Sycophancy to Subterfuge: Investigating Reward-Tampering in Large Language Models.
+arXiv preprint arXiv:2406.10162. https://doi.org/10.48550/arXiv.2406.10162
+European Union. (2024). Regulation (EU) 2024/1689 of the european parliament and of the
+
+council of 13 june 2024 laying down harmonised rules on artificial intelligence (Artificial
+Intelligence Act). Official Journal of the European Union https://eur-lex.europa.eu/legal-
+content/EN/TXT/?uri=CELEX:32024R1689.
+Ferbach, D., Bertrand, Q., Bose, A. J., & Gidel, G. (2024). Self-Consuming Generative Models with
+
+Curated Data Provably Optimize Human Preferences. The Thirty-eighth Annual Conference
+on Neural Information Processing Systems. https://proceedings.neurips.cc/paper_files/
+
+paper/2024/hash/b9e88ae0308cf82d0b0f634ddbdf809a-Abstract-Conference.html
+Gao, T., Yen, H., Yu, J., & Chen, D. (2023). Enabling large language models to generate text with
+
+citations. Proceedings of the 2023 Conference on Empirical Methods in Natural Language
+Processing, 6465–6488. https://doi.org/10.18653/v1/2023.emnlp-main.398
+Gerstgrasser, M., Schaeffer, R., Dey, A., Rafailov, R., Korbak, T., Sleight, H., Agrawal, R., Hughes,
+
+J., Pai, D. B., Gromov, A., Roberts, D., Yang, D., Donoho, D. L., & Koyejo, S. (2024). Is
+Model Collapse Inevitable? Breaking the Curse of Recursion by Accumulating Real and
+Synthetic Data. First Conference on Language Modeling. https://openreview.net/forum?
+id=5B2K4LRgmz
+Goddard, K., Roudsari, A., & Wyatt, J. C. (2012). Automation bias: A systematic review of
+
+frequency, effect mediators, and mitigators. Journal of the American Medical Informatics
+Association, 19(1), 121–127. https://doi.org/10.1136/amiajnl-2011-000089
 
 21
 
 --- PAGE 22 ---
 
-Greenblatt, R., Denison, C., Wright, B., Roger, F., MacDiarmid, M., Marks, S., Treutlein, J., Belonax, T., Chen, J., Duvenaud, D., et al. (2024). Alignment faking in large language models. arXiv preprint arXiv:2412.14093. https://doi.org/10.48550/arXiv.2412.14093
-Greshake, K., Abdelnabi, S., Mishra, S., Endres, C., Holz, T., & Fritz, M. (2023). Not what you’ve signed up for: Compromising real-world llm-integrated applications with indirect prompt injection. Proceedings of the 16th ACM Workshop on Artificial Intelligence and Security, 79–90. https://doi.org/10.1145/3605764.3623985
-Gyevnar, B., & Kasirzadeh, A. (2025). AI safety for everyone. Nature Machine Intelligence, 7(4), 531–542. https://doi.org/10.1038/s42256-025-01020-y
-Habli, I., Hawkins, R., Paterson, C., Ryan, P., Jia, Y., Sujan, M., & McDermid, J. (2025). The big argument for AI safety cases. arXiv preprint arXiv:2503.11705. https://doi.org/10.48550/ arXiv.2503.11705
-He, F., Zhu, T., Ye, D., Liu, B., Zhou, W., & Yu, P. S. (2025). The Emerged Security and Privacy of LLM Agent: A Survey with Case Studies. ACM Computing Surveys, 58(6). https://doi.org/10.1145/3773080
-Ibrahim, L., Collins, K. M., Kim, S. S., Reuel, A., Lamparth, M., Feng, K., Ahmad, L., Soni, P., Kattan, A. E., Stein, M., et al. (2025). Measuring and mitigating overreliance is necessary for building human-compatible ai. arXiv preprint arXiv:2509.08010. https://doi.org/10. 48550/arXiv.2509.08010
-Jiang, Z., Xu, F. F., Gao, L., Sun, Z., Liu, Q., Dwivedi-Yu, J., Yang, Y., Callan, J., & Neubig, G. (2023). Active Retrieval Augmented Generation. The 2023 Conference on Empirical Methods in Natural Language Processing. https://doi.org/10.18653/v1/2023.emnlp-main.495
-Kim, S. S., Vaughan, J. W., Liao, Q. V., Lombrozo, T., & Russakovsky, O. (2025). Fostering appropriate reliance on large language models: The role of explanations, sources, and inconsistencies. Proceedings of the 2025 CHI Conference on Human Factors in Computing Systems, 1–19. https://doi.org/10.1145/3706598.3714020
-Kirchhof, M., Kasneci, G., & Kasneci, E. (2025). Position: Uncertainty quantification needs reassess- ment for large language model agents. Proceedings of the 42nd International Conference on Machine Learning, 267, 81665–81677. https://proceedings.mlr.press/v267/kirchhof25b.html
-Klingbeil, A., Grützner, C., & Schreck, P. (2024). Trust and reliance on AI—An experimental study on the extent and costs of overreliance on AI. Computers in Human Behavior, 160, 108352. https://doi.org/10.1016/j.chb.2024.108352
-Krakovna, V., Uesato, J., Mikulik, V., Rahtz, M., Everitt, T., Kumar, R., Kenton, Z., Leike, J., & Legg, S. (2020). Specification gaming: the flip side of AI ingenuity. DeepMind Blog, 3, 40–53. https://deepmind.google/blog/specification-gaming-the-flip-side-of-ai-ingenuity/
-Krishna, S., Krishna, K., Mohananey, A., Schwarcz, S., Stambler, A., Upadhyay, S., & Faruqui, M. (2025). Fact, fetch, and reason: A unified evaluation of retrieval-augmented generation. Proceedings of the 2025 Conference of the Nations of the Americas Chapter of the Association for Computational Linguistics: Human Language Technologies (Volume 1: Long Papers), 4745–4759. https://doi.org/10.18653/v1/2025.naacl-long.243
-Langosco, L. L. D., Koch, J., Sharkey, L. D., Pfau, J., & Krueger, D. (2022, July). Goal mis- generalization in deep reinforcement learning. In K. Chaudhuri, S. Jegelka, L. Song, C. Szepesvari, G. Niu, & S. Sabato (Eds.), Proceedings of the 39th International Conference on
+Greenblatt, R., Denison, C., Wright, B., Roger, F., MacDiarmid, M., Marks, S., Treutlein, J.,
+
+Belonax, T., Chen, J., Duvenaud, D., et al. (2024). Alignment faking in large language
+models. arXiv preprint arXiv:2412.14093. https://doi.org/10.48550/arXiv.2412.14093
+Greshake, K., Abdelnabi, S., Mishra, S., Endres, C., Holz, T., & Fritz, M. (2023). Not what you’ve
+
+signed up for: Compromising real-world llm-integrated applications with indirect prompt
+injection. Proceedings of the 16th ACM Workshop on Artificial Intelligence and Security,
+79–90. https://doi.org/10.1145/3605764.3623985
+Gyevnar, B., & Kasirzadeh, A. (2025). AI safety for everyone. Nature Machine Intelligence, 7(4),
+
+531–542. https://doi.org/10.1038/s42256-025-01020-y
+Habli, I., Hawkins, R., Paterson, C., Ryan, P., Jia, Y., Sujan, M., & McDermid, J. (2025). The big
+
+argument for AI safety cases. arXiv preprint arXiv:2503.11705. https://doi.org/10.48550/
+arXiv.2503.11705
+He, F., Zhu, T., Ye, D., Liu, B., Zhou, W., & Yu, P. S. (2025). The Emerged Security and
+
+Privacy of LLM Agent: A Survey with Case Studies. ACM Computing Surveys, 58(6).
+https://doi.org/10.1145/3773080
+Ibrahim, L., Collins, K. M., Kim, S. S., Reuel, A., Lamparth, M., Feng, K., Ahmad, L., Soni, P.,
+
+Kattan, A. E., Stein, M., et al. (2025). Measuring and mitigating overreliance is necessary
+for building human-compatible ai. arXiv preprint arXiv:2509.08010. https://doi.org/10.
+48550/arXiv.2509.08010
+Jiang, Z., Xu, F. F., Gao, L., Sun, Z., Liu, Q., Dwivedi-Yu, J., Yang, Y., Callan, J., & Neubig, G.
+
+(2023). Active Retrieval Augmented Generation. The 2023 Conference on Empirical Methods
+
+in Natural Language Processing. https://doi.org/10.18653/v1/2023.emnlp-main.495
+Kim, S. S., Vaughan, J. W., Liao, Q. V., Lombrozo, T., & Russakovsky, O. (2025). Fostering
+
+appropriate reliance on large language models: The role of explanations, sources, and
+inconsistencies. Proceedings of the 2025 CHI Conference on Human Factors in Computing
+Systems, 1–19. https://doi.org/10.1145/3706598.3714020
+Kirchhof, M., Kasneci, G., & Kasneci, E. (2025). Position: Uncertainty quantification needs reassess-
+
+ment for large language model agents. Proceedings of the 42nd International Conference on
+Machine Learning, 267, 81665–81677. https://proceedings.mlr.press/v267/kirchhof25b.html
+Klingbeil, A., Grützner, C., & Schreck, P. (2024). Trust and reliance on AI—An experimental study
+
+on the extent and costs of overreliance on AI. Computers in Human Behavior, 160, 108352.
+https://doi.org/10.1016/j.chb.2024.108352
+Krakovna, V., Uesato, J., Mikulik, V., Rahtz, M., Everitt, T., Kumar, R., Kenton, Z., Leike, J., &
+
+Legg, S. (2020). Specification gaming: the flip side of AI ingenuity. DeepMind Blog, 3, 40–53.
+https://deepmind.google/blog/specification-gaming-the-flip-side-of-ai-ingenuity/
+Krishna, S., Krishna, K., Mohananey, A., Schwarcz, S., Stambler, A., Upadhyay, S., & Faruqui,
+
+M. (2025). Fact, fetch, and reason: A unified evaluation of retrieval-augmented generation.
+Proceedings of the 2025 Conference of the Nations of the Americas Chapter of the Association
+
+for Computational Linguistics: Human Language Technologies (Volume 1: Long Papers),
+4745–4759. https://doi.org/10.18653/v1/2025.naacl-long.243
+Langosco, L. L. D., Koch, J., Sharkey, L. D., Pfau, J., & Krueger, D. (2022, July). Goal mis-
+
+generalization in deep reinforcement learning. In K. Chaudhuri, S. Jegelka, L. Song, C.
+Szepesvari, G. Niu, & S. Sabato (Eds.), Proceedings of the 39th International Conference on
 
 22
 
 --- PAGE 23 ---
 
-Machine Learning (pp. 12004–12019, Vol. 162). PMLR. https://proceedings.mlr.press/v162/ langosco22a.html
+Machine Learning (pp. 12004–12019, Vol. 162). PMLR. https://proceedings.mlr.press/v162/
+
+langosco22a.html
 Leveson, N. G. (2016). Engineering a safer world: Systems thinking applied to safety. MIT press.
-Li, J., Yang, Y., Zhang, R., Liao, Q. V., Song, T., Xu, Z., & Lee, Y.-c. (2024). Understanding the Effects of Miscalibrated AI Confidence on User Trust, Reliance, and Decision Efficacy. arXiv preprint arXiv:2402.07632. https://doi.org/10.48550/arXiv.2402.07632
-Li, M., Bickersteth, W., Tang, N., Cranor, L., Hong, J., Shen, H., & Heidari, H. (2025). A Closer Look at the Existing Risks of Generative AI: Mapping the Who, What, and How of Real-World Incidents. Proceedings of the AAAI/ACM Conference on AI, Ethics, and Society, 8(2), 1561–1573. https://doi.org/10.1609/aies.v8i2.36655
-Li, N., Han, Z., Steneker, I., Primack, W., Goodside, R., Zhang, H., Wang, Z., Menghini, C., & Yue, S. (2024). LLM defenses are not robust to multi-turn human jailbreaks yet. arXiv preprint arXiv:2408.15221. https://doi.org/10.48550/arXiv.2408.15221
-Li, X., Yu, S., Pan, M., Sun, Y., Li, B., Song, D., Lin, X., & Shi, W. (2026). Unsafer in Many Turns: Benchmarking and Defending Multi-Turn Safety Risks in Tool-Using Agents. arXiv preprint arXiv:2602.13379. https://doi.org/10.48550/arXiv.2602.13379
-Liu, X., Yu, H., Zhang, H., Xu, Y., Lei, X., Lai, H., Gu, Y., Ding, H., Men, K., Yang, K., Zhang, S., Deng, X., Zeng, A., Du, Z., Zhang, C., Shen, S., Zhang, T., Su, Y., Sun, H., . . . Tang, J. (2024). AgentBench: Evaluating LLMs as agents. The Twelfth International Conference on Learning Representations. https://openreview.net/forum?id=zAdUB0aCTQ
-Liu, X., Yu, Z., Zhang, Y., Zhang, N., & Xiao, C. (2024). Automatic and universal prompt injection attacks against large language models. arXiv preprint arXiv:2403.04957. https: //doi.org/10.48550/arXiv.2403.04957
-Lynch, A., Wright, B., Larson, C., Ritchie, S. J., Mindermann, S., Hubinger, E., Perez, E., & Troy, K. (2025). Agentic Misalignment: How LLMs Could Be Insider Threats. arXiv preprint arXiv:2510.05179. https://doi.org/10.48550/arXiv.2510.05179
-Ma, C., Zhang, J., Zhu, Z., Yang, C., Yang, Y., Jin, Y., Lan, Z., Kong, L., & He, J. (2024). AgentBoard: An Analytical Evaluation Board of Multi-turn LLM Agents. The Thirty-eight Conference on Neural Information Processing Systems Datasets and Benchmarks Track. https://openreview.net/forum?id=4S8agvKjle
-National Cyber Security Centre. (2025). Prompt injection is not SQL injection (it may be worse). NCSC blog: https://www.ncsc.gov.uk/blog-post/prompt-injection-is-not-sql-injection.
-National Institute of Standards and Technology. (2023). Artificial Intelligence Risk Management Framework (AI RMF 1.0). NIST, (AI 100-1). https://nvlpubs.nist.gov/nistpubs/ai/nist.ai. 100-1.pdf.
-National Institute of Standards and Technology. (2024). Artificial Intelligence Risk Management Framework: Generative Artificial Intelligence Profile. NIST, (AI 600-1). https://nvlpubs. nist.gov/nistpubs/ai/NIST.AI.600-1.pdf.
-Ni, B., Liu, Z., Wang, L., Lei, Y., Zhao, Y., Cheng, X., Zeng, Q., Dong, L., Xia, Y., Kenthapadi, K., et al. (2025). Towards trustworthy retrieval augmented generation for large language models: A survey. arXiv preprint arXiv:2502.06872. https://doi.org/10.48550/arXiv.2502.06872
-Parasuraman, R., & Manzey, D. H. (2010). Complacency and Bias in Human Use of Automation: An Attentional Integration. Human Factors, 52(3), 381–410. https://doi.org/10.1177/ [CREDIT_CARD]
+Li, J., Yang, Y., Zhang, R., Liao, Q. V., Song, T., Xu, Z., & Lee, Y.-c. (2024). Understanding the
+
+Effects of Miscalibrated AI Confidence on User Trust, Reliance, and Decision Efficacy. arXiv
+preprint arXiv:2402.07632. https://doi.org/10.48550/arXiv.2402.07632
+Li, M., Bickersteth, W., Tang, N., Cranor, L., Hong, J., Shen, H., & Heidari, H. (2025). A Closer Look
+
+at the Existing Risks of Generative AI: Mapping the Who, What, and How of Real-World
+Incidents. Proceedings of the AAAI/ACM Conference on AI, Ethics, and Society, 8(2),
+1561–1573. https://doi.org/10.1609/aies.v8i2.36655
+Li, N., Han, Z., Steneker, I., Primack, W., Goodside, R., Zhang, H., Wang, Z., Menghini, C., &
+
+Yue, S. (2024). LLM defenses are not robust to multi-turn human jailbreaks yet. arXiv
+preprint arXiv:2408.15221. https://doi.org/10.48550/arXiv.2408.15221
+Li, X., Yu, S., Pan, M., Sun, Y., Li, B., Song, D., Lin, X., & Shi, W. (2026). Unsafer in Many Turns:
+
+Benchmarking and Defending Multi-Turn Safety Risks in Tool-Using Agents. arXiv preprint
+arXiv:2602.13379. https://doi.org/10.48550/arXiv.2602.13379
+Liu, X., Yu, H., Zhang, H., Xu, Y., Lei, X., Lai, H., Gu, Y., Ding, H., Men, K., Yang, K., Zhang, S.,
+
+Deng, X., Zeng, A., Du, Z., Zhang, C., Shen, S., Zhang, T., Su, Y., Sun, H., . . . Tang, J.
+(2024). AgentBench: Evaluating LLMs as agents. The Twelfth International Conference on
+
+Learning Representations. https://openreview.net/forum?id=zAdUB0aCTQ
+Liu, X., Yu, Z., Zhang, Y., Zhang, N., & Xiao, C. (2024). Automatic and universal prompt
+
+injection attacks against large language models. arXiv preprint arXiv:2403.04957. https:
+//doi.org/10.48550/arXiv.2403.04957
+Lynch, A., Wright, B., Larson, C., Ritchie, S. J., Mindermann, S., Hubinger, E., Perez, E., &
+
+Troy, K. (2025). Agentic Misalignment: How LLMs Could Be Insider Threats. arXiv preprint
+arXiv:2510.05179. https://doi.org/10.48550/arXiv.2510.05179
+Ma, C., Zhang, J., Zhu, Z., Yang, C., Yang, Y., Jin, Y., Lan, Z., Kong, L., & He, J. (2024).
+
+AgentBoard: An Analytical Evaluation Board of Multi-turn LLM Agents. The Thirty-eight
+Conference on Neural Information Processing Systems Datasets and Benchmarks Track.
+
+https://openreview.net/forum?id=4S8agvKjle
+National Cyber Security Centre. (2025). Prompt injection is not SQL injection (it may be worse).
+
+NCSC blog: https://www.ncsc.gov.uk/blog-post/prompt-injection-is-not-sql-injection.
+National Institute of Standards and Technology. (2023). Artificial Intelligence Risk Management
+
+Framework (AI RMF 1.0). NIST, (AI 100-1). https://nvlpubs.nist.gov/nistpubs/ai/nist.ai.
+100-1.pdf.
+National Institute of Standards and Technology. (2024). Artificial Intelligence Risk Management
+
+Framework: Generative Artificial Intelligence Profile. NIST, (AI 600-1). https://nvlpubs.
+nist.gov/nistpubs/ai/NIST.AI.600-1.pdf.
+Ni, B., Liu, Z., Wang, L., Lei, Y., Zhao, Y., Cheng, X., Zeng, Q., Dong, L., Xia, Y., Kenthapadi, K.,
+
+et al. (2025). Towards trustworthy retrieval augmented generation for large language models:
+A survey. arXiv preprint arXiv:2502.06872. https://doi.org/10.48550/arXiv.2502.06872
+Parasuraman, R., & Manzey, D. H. (2010). Complacency and Bias in Human Use of Automation:
+
+An Attentional Integration. Human Factors, 52(3), 381–410. https://doi.org/10.1177/
+[CREDIT_CARD]
 
 23
 
 --- PAGE 24 ---
 
-Parasuraman, R., & Riley, V. (1997). Humans and automation: Use, misuse, disuse, abuse. Human factors, 39(2), 230–253. https://doi.org/10.1518/[CREDIT_CARD]
-Raji, I. D., Smart, A., White, R. N., Mitchell, M., Gebru, T., Hutchinson, B., Smith-Loud, J., Theron, D., & Barnes, P. (2020). Closing the AI accountability gap: Defining an end-to-end framework for internal algorithmic auditing. Proceedings of the 2020 Conference on Fairness, Accountability, and Transparency, 33–44. https://doi.org/10.1145/3351095.3372873
-Reason, J. (1997). Managing the Risks of Organizational Accidents. Ashgate. https://doi.org/10. 4324/[CREDIT_CARD]
-Rong, Y., Leemann, T., Nguyen, T.-t., Fiedler, L., Qian, P., Unhelkar, V., Seidel, T., Kasneci, G., & Kasneci, E. (2024). Towards human-centered explainable AI: A survey of user studies for model explanations. IEEE Transactions on Pattern Analysis and Machine Intelligence. https://doi.org/10.1109/TPAMI.2023.3331846
-Rong, Y., Seßler, K., Gözlüklü, E., & Kasneci, E. (2025). Benchmarking in-context learning strate- gies of large language models for math reasoning tasks. IEEE Transactions on Learning Technologies, 18, 1074–1082. https://doi.org/10.1109/TLT.2025.3630117
-Rossi, S., Michel, A. M., Mukkamala, R. R., & Thatcher, J. B. (2024). An early categorization of prompt injection attacks on large language models. arXiv preprint arXiv:2402.00898. https://doi.org/10.48550/arXiv.2402.00898
-Santoni de Sio, F., & Van den Hoven, J. (2018). Meaningful human control over autonomous systems: A philosophical account. Frontiers in Robotics and AI, 5, 323836. https://doi.org/10.3389/ frobt.2018.00015
-Scheurer, J., Balesni, M., & Hobbhahn, M. (2024). Large Language Models can Strategically Deceive their Users when Put Under Pressure. ICLR 2024 Workshop on Large Language Model (LLM) Agents. https://doi.org/10.48550/arXiv.2311.07590
-Shelby, R., Rismani, S., Henne, K., Moon, A., Rostamzadeh, N., Nicholas, P., Yilla-Akbari, N., Gallegos, J., Smart, A., Garcia, E., & Virk, G. (2023). Sociotechnical Harms of Algorithmic Systems: Scoping a Taxonomy for Harm Reduction. Proceedings of the 2023 AAAI/ACM Conference on AI, Ethics, and Society, 723–741. https://doi.org/10.1145/3600211.3604673
-Shumailov, I., Shumaylov, Z., Zhao, Y., Papernot, N., Anderson, R., & Gal, Y. (2024). AI models collapse when trained on recursively generated data. Nature, 631(8022), 755–759. https: //doi.org/10.1038/s41586-024-07566-y
-Song, M., Sim, S. H., Bhardwaj, R., Chieu, H. L., Majumder, N., & Poria, S. (2024). Measuring and enhancing trustworthiness of LLMs in RAG through grounded attributions and learning to refuse. arXiv preprint arXiv:2409.11242. https://doi.org/10.48550/arXiv.2409.11242
-Spatola, N. (2024). The efficiency-accountability tradeoff in AI integration: Effects on human performance and over-reliance. Computers in Human Behavior: Artificial Humans, 2(2), 100099. https://doi.org/10.1016/j.chbah.2024.100099
-Sun, X., Zhang, D., Yang, D., Zou, Q., & Li, H. (2024). Multi-turn context jailbreak attack on large language models from first principles. arXiv preprint arXiv:2408.04686. https: //doi.org/10.48550/arXiv.2408.04686
-Sunil, B. D., Sinha, I., Maheshwari, P., Todmal, S., Mallik, S., & Mishra, S. (2026). Memory Poisoning Attack and Defense on Memory Based LLM-Agents. arXiv preprint arXiv:2601.05504. https: //doi.org/10.48550/arXiv.2601.05504
+Parasuraman, R., & Riley, V. (1997). Humans and automation: Use, misuse, disuse, abuse. Human
+
+factors, 39(2), 230–253. https://doi.org/10.1518/[CREDIT_CARD]
+Raji, I. D., Smart, A., White, R. N., Mitchell, M., Gebru, T., Hutchinson, B., Smith-Loud, J.,
+
+Theron, D., & Barnes, P. (2020). Closing the AI accountability gap: Defining an end-to-end
+framework for internal algorithmic auditing. Proceedings of the 2020 Conference on Fairness,
+Accountability, and Transparency, 33–44. https://doi.org/10.1145/3351095.3372873
+Reason, J. (1997). Managing the Risks of Organizational Accidents. Ashgate. https://doi.org/10.
+
+4324/[CREDIT_CARD]
+Rong, Y., Leemann, T., Nguyen, T.-t., Fiedler, L., Qian, P., Unhelkar, V., Seidel, T., Kasneci, G.,
+
+& Kasneci, E. (2024). Towards human-centered explainable AI: A survey of user studies
+for model explanations. IEEE Transactions on Pattern Analysis and Machine Intelligence.
+https://doi.org/10.1109/TPAMI.2023.3331846
+Rong, Y., Seßler, K., Gözlüklü, E., & Kasneci, E. (2025). Benchmarking in-context learning strate-
+
+gies of large language models for math reasoning tasks. IEEE Transactions on Learning
+Technologies, 18, 1074–1082. https://doi.org/10.1109/TLT.2025.3630117
+Rossi, S., Michel, A. M., Mukkamala, R. R., & Thatcher, J. B. (2024). An early categorization
+
+of prompt injection attacks on large language models. arXiv preprint arXiv:2402.00898.
+https://doi.org/10.48550/arXiv.2402.00898
+Santoni de Sio, F., & Van den Hoven, J. (2018). Meaningful human control over autonomous systems:
+
+A philosophical account. Frontiers in Robotics and AI, 5, 323836. https://doi.org/10.3389/
+frobt.2018.00015
+Scheurer, J., Balesni, M., & Hobbhahn, M. (2024). Large Language Models can Strategically Deceive
+
+their Users when Put Under Pressure. ICLR 2024 Workshop on Large Language Model
+(LLM) Agents. https://doi.org/10.48550/arXiv.2311.07590
+Shelby, R., Rismani, S., Henne, K., Moon, A., Rostamzadeh, N., Nicholas, P., Yilla-Akbari, N.,
+
+Gallegos, J., Smart, A., Garcia, E., & Virk, G. (2023). Sociotechnical Harms of Algorithmic
+Systems: Scoping a Taxonomy for Harm Reduction. Proceedings of the 2023 AAAI/ACM
+Conference on AI, Ethics, and Society, 723–741. https://doi.org/10.1145/3600211.3604673
+Shumailov, I., Shumaylov, Z., Zhao, Y., Papernot, N., Anderson, R., & Gal, Y. (2024). AI models
+
+collapse when trained on recursively generated data. Nature, 631(8022), 755–759. https:
+//doi.org/10.1038/s41586-024-07566-y
+Song, M., Sim, S. H., Bhardwaj, R., Chieu, H. L., Majumder, N., & Poria, S. (2024). Measuring and
+
+enhancing trustworthiness of LLMs in RAG through grounded attributions and learning to
+refuse. arXiv preprint arXiv:2409.11242. https://doi.org/10.48550/arXiv.2409.11242
+Spatola, N. (2024). The efficiency-accountability tradeoff in AI integration: Effects on human
+
+performance and over-reliance. Computers in Human Behavior: Artificial Humans, 2(2),
+100099. https://doi.org/10.1016/j.chbah.2024.100099
+Sun, X., Zhang, D., Yang, D., Zou, Q., & Li, H. (2024). Multi-turn context jailbreak attack
+
+on large language models from first principles. arXiv preprint arXiv:2408.04686. https:
+//doi.org/10.48550/arXiv.2408.04686
+Sunil, B. D., Sinha, I., Maheshwari, P., Todmal, S., Mallik, S., & Mishra, S. (2026). Memory Poisoning
+
+Attack and Defense on Memory Based LLM-Agents. arXiv preprint arXiv:2601.05504. https:
+//doi.org/10.48550/arXiv.2601.05504
 
 24
 
 --- PAGE 25 ---
 
-Suo, X. (2024). Signed-prompt: A new approach to prevent prompt injection attacks against llm- integrated applications. AIP Conference Proceedings, 3194(1), 040013. https://doi.org/10. 1063/5.0222987
-Vasconcelos, H., Jörke, M., Grunde-McLaughlin, M., Gerstenberg, T., Bernstein, M. S., & Krishna, R. (2023). Explanations can reduce overreliance on ai systems during decision-making. Proceedings of the ACM on Human-Computer Interaction, 7(CSCW1), 1–38. https://doi. org/10.1145/3579605
-Wallat, J., Heuss, M., Rijke, M. d., & Anand, A. (2025). Correctness is not Faithfulness in Retrieval Augmented Generation Attributions. Proceedings of the 2025 International ACM SIGIR Conference on Innovative Concepts and Theories in Information Retrieval (ICTIR), 22–32. https://doi.org/10.1145/3731120.3744592
-Wang, B., He, W., Zeng, S., Xiang, Z., Xing, Y., Tang, J., & He, P. (2025). Unveiling privacy risks in LLM agent memory. Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers), 25241–25260. https://doi.org/10. 18653/v1/2025.acl-long.1227
-Weick, K. E., & Sutcliffe, K. M. (2007). Managing the Unexpected: Resilient Performance in an Age of Uncertainty (2nd ed.). Jossey-Bass.
-Weidinger, L., Mellor, J., Rauh, M., Griffin, C., Uesato, J., Huang, P.-S., Cheng, M., Glaese, M., Balle, B., Kasirzadeh, A., et al. (2021). Ethical and social risks of harm from language models. arXiv preprint arXiv:2112.04359, 10. https://doi.org/10.48550/arXiv.2112.04359
-Xiong, Z., Lin, Y., Xie, W., He, P., Liu, Z., Tang, J., Lakkaraju, H., & Xiang, Z. (2025). How memory management impacts LLM agents: An empirical study of experience-following behavior. arXiv preprint arXiv:2505.16067. https://doi.org/10.48550/arXiv.2505.16067
-Yu, E., Li, J., Liao, M., Wang, S., Zuchen, G., Mi, F., & Hong, L. (2024). CoSafe: Evaluating large language model safety in multi-turn dialogue coreference. Proceedings of the 2024 Conference on Empirical Methods in Natural Language Processing, 17494–17508. https: //doi.org/10.18653/v1/2024.emnlp-main.968
-Yu, H., Kim, D., & Kim, Y.-B. (2026). Retrieval Collapses When AI Pollutes the Web. arXiv preprint arXiv:2602.16136. https://doi.org/10.48550/arXiv.2602.16136
-Zhang, Z., Dai, Q., Bo, X., Ma, C., Li, R., Chen, X., Zhu, J., Dong, Z., & Wen, J.-R. (2025). A Survey on the Memory Mechanism of Large Language Model-based Agents. ACM Transactions on Information Systems, 43(6). https://doi.org/10.1145/3748302
-Zhou, Y., Liu, Y., Li, X., Jin, J., Qian, H., Liu, Z., Li, C., Dou, Z., Ho, T.-Y., & Yu, P. S. (2024). Trustworthiness in retrieval-augmented generation systems: A survey. arXiv preprint arXiv:2409.10102. https://doi.org/10.48550/arXiv.2409.10102
-Zhu, Y., Jin, T., Pruksachatkun, Y., Zhang, A. K., Liu, S., Cui, S., Kapoor, S., Longpre, S., Meng, K., Weiss, R., Barez, F., Gupta, R., Dhamala, J., Merizian, J., Giulianelli, M., Coppock, H., Ududec, C., Kellermann, A., Sekhon, J. S., . . . Kang, D. (2025). Establishing Best Practices in Building Rigorous Agentic Benchmarks. The Thirty-ninth Annual Conference on Neural Information Processing Systems Datasets and Benchmarks Track. https://doi.org/10.48550/ arXiv.2507.02825
+Suo, X. (2024). Signed-prompt: A new approach to prevent prompt injection attacks against llm-
+
+integrated applications. AIP Conference Proceedings, 3194(1), 040013. https://doi.org/10.
+1063/5.0222987
+Vasconcelos, H., Jörke, M., Grunde-McLaughlin, M., Gerstenberg, T., Bernstein, M. S., & Krishna,
+
+R. (2023). Explanations can reduce overreliance on ai systems during decision-making.
+Proceedings of the ACM on Human-Computer Interaction, 7(CSCW1), 1–38. https://doi.
+
+org/10.1145/3579605
+Wallat, J., Heuss, M., Rijke, M. d., & Anand, A. (2025). Correctness is not Faithfulness in Retrieval
+
+Augmented Generation Attributions. Proceedings of the 2025 International ACM SIGIR
+Conference on Innovative Concepts and Theories in Information Retrieval (ICTIR), 22–32.
+
+https://doi.org/10.1145/3731120.3744592
+Wang, B., He, W., Zeng, S., Xiang, Z., Xing, Y., Tang, J., & He, P. (2025). Unveiling privacy
+
+risks in LLM agent memory. Proceedings of the 63rd Annual Meeting of the Association
+for Computational Linguistics (Volume 1: Long Papers), 25241–25260. https://doi.org/10.
+18653/v1/2025.acl-long.1227
+Weick, K. E., & Sutcliffe, K. M. (2007). Managing the Unexpected: Resilient Performance in an Age
+
+of Uncertainty (2nd ed.). Jossey-Bass.
+Weidinger, L., Mellor, J., Rauh, M., Griffin, C., Uesato, J., Huang, P.-S., Cheng, M., Glaese, M.,
+
+Balle, B., Kasirzadeh, A., et al. (2021). Ethical and social risks of harm from language
+models. arXiv preprint arXiv:2112.04359, 10. https://doi.org/10.48550/arXiv.2112.04359
+Xiong, Z., Lin, Y., Xie, W., He, P., Liu, Z., Tang, J., Lakkaraju, H., & Xiang, Z. (2025). How memory
+
+management impacts LLM agents: An empirical study of experience-following behavior.
+arXiv preprint arXiv:2505.16067. https://doi.org/10.48550/arXiv.2505.16067
+Yu, E., Li, J., Liao, M., Wang, S., Zuchen, G., Mi, F., & Hong, L. (2024). CoSafe: Evaluating
+
+large language model safety in multi-turn dialogue coreference. Proceedings of the 2024
+Conference on Empirical Methods in Natural Language Processing, 17494–17508. https:
+//doi.org/10.18653/v1/2024.emnlp-main.968
+Yu, H., Kim, D., & Kim, Y.-B. (2026). Retrieval Collapses When AI Pollutes the Web. arXiv
+
+preprint arXiv:2602.16136. https://doi.org/10.48550/arXiv.2602.16136
+Zhang, Z., Dai, Q., Bo, X., Ma, C., Li, R., Chen, X., Zhu, J., Dong, Z., & Wen, J.-R. (2025). A Survey
+
+on the Memory Mechanism of Large Language Model-based Agents. ACM Transactions on
+Information Systems, 43(6). https://doi.org/10.1145/3748302
+Zhou, Y., Liu, Y., Li, X., Jin, J., Qian, H., Liu, Z., Li, C., Dou, Z., Ho, T.-Y., & Yu, P. S.
+
+(2024). Trustworthiness in retrieval-augmented generation systems: A survey. arXiv preprint
+arXiv:2409.10102. https://doi.org/10.48550/arXiv.2409.10102
+Zhu, Y., Jin, T., Pruksachatkun, Y., Zhang, A. K., Liu, S., Cui, S., Kapoor, S., Longpre, S., Meng,
+
+K., Weiss, R., Barez, F., Gupta, R., Dhamala, J., Merizian, J., Giulianelli, M., Coppock, H.,
+Ududec, C., Kellermann, A., Sekhon, J. S., . . . Kang, D. (2025). Establishing Best Practices
+in Building Rigorous Agentic Benchmarks. The Thirty-ninth Annual Conference on Neural
+Information Processing Systems Datasets and Benchmarks Track. https://doi.org/10.48550/
+
+arXiv.2507.02825
 
 25
