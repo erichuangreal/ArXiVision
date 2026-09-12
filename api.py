@@ -16,6 +16,7 @@ from evaluate.grounding import (
     collect_authors,
     format_context,
 )
+import ingest
 import research_store
 import synthesis
 
@@ -36,6 +37,20 @@ rag.setup_retriever()
 rag.setup_qa_chain()
 
 known_authors = collect_authors(rag.paper_metadata)
+
+
+def rebuild_rag():
+    # Builds a fresh index from everything under processed_text/, then swaps
+    # it in atomically so in-flight requests never see a half-built RAGClass.
+    global rag, known_authors
+    new_rag = RAGClass("processed_text")
+    new_rag.load_documents()
+    new_rag.split_documents()
+    new_rag.create_vectorstore()
+    new_rag.setup_retriever()
+    new_rag.setup_qa_chain()
+    rag = new_rag
+    known_authors = collect_authors(rag.paper_metadata)
 
 EVAL_RESULTS_PATH = Path(__file__).resolve().parent / "evaluate" / "evaluation_results.json"
 
@@ -73,6 +88,11 @@ class PaperSelection(BaseModel):
 class CollectionRequest(BaseModel):
     question: str
     papers: List[PaperSelection]
+
+
+class IngestRequest(BaseModel):
+    topic: str
+    num_papers: int = 10
 
 
 @app.get("/")
@@ -157,6 +177,25 @@ def ask(request: AskRequest):
         "sources": sources,
         "evidence": evidence
     }
+
+
+@app.post("/ingest")
+def start_ingest(request: IngestRequest):
+    if not request.topic.strip():
+        raise HTTPException(status_code=400, detail="topic must not be empty.")
+    if not 1 <= request.num_papers <= 30:
+        raise HTTPException(status_code=400, detail="num_papers must be between 1 and 30.")
+
+    job_id = ingest.start_ingest(request.topic, request.num_papers, rebuild_rag)
+    return ingest.JOBS[job_id]
+
+
+@app.get("/ingest/{job_id}")
+def ingest_status(job_id: str):
+    job = ingest.JOBS.get(job_id)
+    if job is None:
+        raise HTTPException(status_code=404, detail="No ingest job with that id.")
+    return job
 
 
 @app.get("/papers")

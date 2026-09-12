@@ -45,8 +45,13 @@ def extract_pdf_text(pdf_path: Path) -> str:
 
     return "".join(pages).strip()
 
-def extract_all_pdfs(input_directory: Path, output_directory: Path) -> None:
-    """Extract text from every PDF under the input directory."""
+def extract_all_pdfs(input_directory: Path, output_directory: Path, progress_callback=None) -> None:
+    """Extract text from every PDF under the input directory.
+
+    progress_callback(index, total, pdf_path, status), called after each file,
+    lets a caller (e.g. a background ingest job) report progress; unused by
+    the CLI entry point below.
+    """
     if not input_directory.exists():
         raise FileNotFoundError(
             f"Input directory does not exist: {input_directory}"
@@ -79,7 +84,7 @@ def extract_all_pdfs(input_directory: Path, output_directory: Path) -> None:
     vocabulary = build_vocabulary(extracted.values())
     print(f"Vocabulary: {len(vocabulary)} words.")
 
-    for pdf_path, raw_text in extracted.items():
+    for index, (pdf_path, raw_text) in enumerate(extracted.items(), start=1):
         try:
             text, repairs = repair_ligatures(raw_text, vocabulary)
             if repairs:
@@ -98,10 +103,15 @@ def extract_all_pdfs(input_directory: Path, output_directory: Path) -> None:
 
             successful += 1
             print(f"[OK] {pdf_path} -> {output_path}")
+            status = "ok"
 
         except Exception as error:
             failed += 1
             print(f"[FAILED] {pdf_path}: {error}")
+            status = "failed"
+
+        if progress_callback:
+            progress_callback(index, len(extracted), pdf_path, status)
 
     print("\nExtraction complete.")
     print(f"Successful: {successful}")
