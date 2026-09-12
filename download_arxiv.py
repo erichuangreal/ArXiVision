@@ -27,35 +27,6 @@ def clean_filename(text: str, max_length: int = 120) -> str:
     return text[:max_length]
 
 
-# arXiv blocks bursts for minutes, so a refusal is waited out rather than retried fast.
-RETRY_DELAY = 60
-RETRY_ATTEMPTS = 2
-
-
-def request_with_retry(url: str) -> requests.Response:
-    """Fetch a URL, waiting out one arXiv rate limit or timeout before giving up."""
-    for attempt in range(1, RETRY_ATTEMPTS + 1):
-        try:
-            response = requests.get(url, headers=HEADERS, timeout=30)
-            if response.status_code != 429 and response.status_code < 500:
-                response.raise_for_status()
-                return response
-            reason = f"HTTP {response.status_code}"
-            retry_after = response.headers.get("Retry-After", "")
-            delay = int(retry_after) if retry_after.isdigit() else RETRY_DELAY
-        except requests.Timeout:
-            reason, delay = "timed out", RETRY_DELAY
-
-        if attempt == RETRY_ATTEMPTS:
-            raise requests.HTTPError(
-                f"arXiv is rate limiting this address ({reason}). "
-                f"Wait 15-30 minutes and run again."
-            )
-
-        print(f"arXiv {reason}. Waiting {delay}s, then one more attempt.")
-        time.sleep(delay)
-
-
 def search_arxiv(topic: str, max_results: int = 10) -> list[dict]:
     """
     Search arXiv and return paper metadata.
@@ -70,7 +41,12 @@ def search_arxiv(topic: str, max_results: int = 10) -> list[dict]:
 
     url = f"{ARXIV_API_URL}?{urlencode(parameters)}"
 
-    response = request_with_retry(url)
+    response = requests.get(
+        url,
+        headers=HEADERS,
+        timeout=30,
+    )
+    response.raise_for_status()
 
     feed = feedparser.parse(response.content)
 
@@ -186,7 +162,7 @@ def save_metadata(
 
 def main() -> None:
     topic = "AI safety" # CHOOSE TOPIC HERE
-    number_of_papers = 100
+    number_of_papers = 10
 
     output_directory = Path("papers") / clean_filename(topic)
     output_directory.mkdir(parents=True, exist_ok=True)
