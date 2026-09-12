@@ -63,10 +63,10 @@ def extract_all_pdfs(input_directory: Path, output_directory: Path) -> None:
 
 if __name__ == "__main__":
     extract_all_pdfs(
-        input_directory=Path("raw_text"),
+        input_directory=Path("papers"),
         output_directory=Path("processed_text"),
     )
     copy_metadata_files(
-        input_directory=Path("raw_text"),
+        input_directory=Path("papers"),
         output_directory=Path("processed_text"),
     )

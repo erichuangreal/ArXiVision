@@ -78,8 +78,6 @@ flowchart TD
 
 **Abstention**: unanswerable questions (marked `"answerable": false`) should be refused, and answerable ones should not be. Both directions are measured, because a system that refuses everything would otherwise score perfectly.
 
-**Judged** (LLM-as-judge): correctness, support, citation, and completeness, scored 0-2 against a human-written reference answer.
-
 Note on cosine similarity: `RAGClass.evaluate()` compares an embedding of the whole answer to an embedding of the whole ground truth. This measures whether the two are *about the same topic*, not whether the answer is true. An answer that reports a figure as 90% when the paper says 0% will still clear the 0.80 threshold, because almost every word around the number matches. Treat it as a rough smoke test for drift, not as a validity check — the grounding metrics above are the ones that actually detect hallucinated facts and citations.
 
 Sample size note: with a handful of questions, one question is worth double-digit percentage points. Differences between runs are noise until the question set is much larger.
@@ -89,3 +87,12 @@ Model Reliability Note
 Smaller or weaker language models may misinterpret retrieved chunks, give too much weight to less relevant evidence, or make claims that are not fully supported by the provided text. RAG reduces hallucination by grounding the model in retrieved sources, but it does not eliminate hallucinations.
 
 Testing has confirmed that models like gpt-nano and deepseek-v4-flash extract data from the wrong chunks. Currently the model is set to use gpt-4. Switched to gpt-5-nano for testing.
+
+# Version 1
+Features that I've implemented so far
+- Extracting and cleaning papers from Arxiv
+- RAG embeddings, top-N chunks
+- Evaluation metrics: retrieval, generation, abstention
+- Chroma persist (so that the embeddings stay saved between runs)
+- Dataset: 10 PAPERS, 7 question
+- GOAL: Scale up to 100, 1000 papers

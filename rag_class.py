@@ -15,6 +15,18 @@ from pathlib import Path
 
 EMBEDDING_MODEL = "text-embedding-3-small"
 
+# Refusals are detected by this exact marker rather than by matching prose, which
+# the model rephrases freely ("do not discuss", "none of these papers discuss").
+ABSTENTION_SENTINEL = "INSUFFICIENT_CONTEXT"
+
+
+def split_abstention(answer):
+    # Returns (abstained, answer with the marker removed) for display to users.
+    stripped = answer.lstrip()
+    if stripped.startswith(ABSTENTION_SENTINEL):
+        return True, stripped[len(ABSTENTION_SENTINEL):].lstrip("\n :.-").strip()
+    return False, answer
+
 
 class RAGClass:
     def __init__(self, data_path, persist_directory="chroma_store") :
@@ -215,11 +227,17 @@ class RAGClass:
                 If a claim cannot be supported by the retrieved context,
                 do not include it.
 
-                If the retrieved context is insufficient to answer the question,
-                say that the retrieved papers do not contain enough information.
+                If, and only if, the retrieved context does not let you answer
+                the question at all, make the first line of your reply exactly """
+                + ABSTENTION_SENTINEL
+                + """
+                and then say briefly what is missing. If you can answer the
+                question, even partly, answer it and never write """
+                + ABSTENTION_SENTINEL
+                + """ anywhere in your reply.
 
                 Never invent sources, citations, authors, page numbers, or results.
-                
+
                 Retrieved context:
                 {context}
                 """
@@ -251,7 +269,7 @@ class RAGClass:
         
         
         response = self.qa_chain.invoke({"input": query})
-        self.result = response["answer"]
+        _, self.result = split_abstention(response["answer"])
         print("Query:", query, "\nAnswer:", self.result)
         return self.result
 

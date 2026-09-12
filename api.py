@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 
 from rag_implementation import RAGClass
+from rag_class import split_abstention
 
 
 app = FastAPI(
@@ -73,8 +74,11 @@ def ask(request: AskRequest):
             "page_number": doc.metadata.get("page_number")
         })
 
+    abstained, answer = split_abstention(response["answer"])
+
     return {
         "query": request.query,
-        "answer": response["answer"],
+        "answer": answer,
+        "abstained": abstained,
         "sources": sources
     }
