@@ -1,0 +1,131 @@
+.evaluation {
+  min-height: 100vh;
+  padding-bottom: var(--space-8);
+}
+
+.evaluation__intro {
+  padding: var(--space-6) var(--space-6) var(--space-4);
+  max-width: 60ch;
+}
+
+.evaluation__back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  text-decoration: none;
+  color: var(--ink-secondary);
+  margin-bottom: var(--space-4);
+}
+
+.evaluation__back:hover {
+  color: var(--ink);
+}
+
+.evaluation__title {
+  font-size: 1.6rem;
+  font-style: italic;
+  margin-bottom: var(--space-3);
+}
+
+.evaluation__lede {
+  color: var(--ink-secondary);
+  font-size: 0.9rem;
+}
+
+.evaluation__notice {
+  padding: 0 var(--space-6);
+  color: var(--ink-secondary);
+  font-style: italic;
+}
+
+.evaluation__section {
+  padding: var(--space-5) var(--space-6);
+  border-top: 1px solid var(--rule);
+}
+
+.evaluation__section-title {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: var(--space-4);
+}
+
+.evaluation__metrics {
+  margin: 0;
+}
+
+.evaluation__metric-row {
+  display: grid;
+  grid-template-columns: minmax(10rem, 16rem) 5rem 1fr;
+  gap: var(--space-4);
+  padding: var(--space-2) 0;
+  border-bottom: 1px dotted var(--rule);
+  align-items: baseline;
+  font-size: 0.85rem;
+}
+
+@media (max-width: 700px) {
+  .evaluation__metric-row {
+    grid-template-columns: 1fr;
+    gap: var(--space-1);
+  }
+}
+
+.evaluation__metric-value {
+  color: var(--verified);
+  font-weight: 500;
+}
+
+.evaluation__metric-label {
+  color: var(--ink-secondary);
+  margin: 0;
+}
+
+.evaluation__questions {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.evaluation__question {
+  border-bottom: 1px dotted var(--rule);
+}
+
+.evaluation__question-toggle {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  align-items: baseline;
+  background: none;
+  border: none;
+  text-align: left;
+  padding: var(--space-3) 0;
+  font-size: 0.9rem;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.evaluation__question-flags {
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  color: var(--ink-faint);
+}
+
+.evaluation__question-topic {
+  color: var(--ink-faint);
+  text-transform: capitalize;
+  margin-right: var(--space-2);
+}
+
+.evaluation__answer {
+  white-space: pre-wrap;
+  color: var(--ink-secondary);
+  font-size: 0.85rem;
+  padding: 0 0 var(--space-4);
+  max-width: none;
+}

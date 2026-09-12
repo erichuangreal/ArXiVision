@@ -1,0 +1,103 @@
+.settings {
+  min-height: 100vh;
+  padding-bottom: var(--space-8);
+}
+
+.settings__intro {
+  padding: var(--space-4) var(--space-6) 0;
+  font-size: 0.88rem;
+  color: var(--ink-secondary);
+  max-width: 62ch;
+}
+
+.settings__error,
+.settings__loading {
+  padding: var(--space-4) var(--space-6) 0;
+}
+
+.settings__panel {
+  margin: var(--space-6);
+  max-width: 560px;
+}
+
+.settings__group {
+  border: none;
+  padding: 0;
+  margin: 0 0 var(--space-6);
+}
+
+.settings__option {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+  cursor: pointer;
+}
+
+.settings__option input {
+  transform: translateY(2px);
+}
+
+.settings__option-label {
+  margin-right: var(--space-3);
+}
+
+.settings__option-note {
+  font-size: 0.78rem;
+  color: var(--ink-faint);
+}
+
+.settings__slider-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.settings__slider-row input[type='range'] {
+  flex: 1;
+  accent-color: var(--ink);
+}
+
+.settings__slider-value {
+  width: 3ch;
+  flex-shrink: 0;
+}
+
+.settings__note {
+  margin-top: var(--space-2);
+  font-size: 0.78rem;
+  color: var(--ink-faint);
+  max-width: 50ch;
+}
+
+.settings__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.settings__save {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--ground-card);
+  padding: var(--space-3) var(--space-5);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.settings__save:hover {
+  background: var(--ink-secondary);
+}
+
+.settings__save:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.settings__saved {
+  color: var(--verified);
+  font-size: 0.8rem;
+}

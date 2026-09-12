@@ -298,7 +298,10 @@ def evaluate_grounding(rag, tests, known_authors):
     per_question = []
 
     for test in tests:
-        response = rag.qa_chain.invoke({"input": test["query"]})
+        # topic is absent on the fixed-benchmark question set - a missing/
+        # None topic makes the retriever search the whole corpus, so this is
+        # a no-op there and only scopes the new per-topic dynamic eval.
+        response = rag.qa_chain.invoke({"input": test["query"], "topic": test.get("topic")})
         answer = response["answer"]
         docs = response["context"]
         context_text = format_context(docs)
@@ -328,6 +331,7 @@ def evaluate_grounding(rag, tests, known_authors):
 
         per_question.append({
             "query": test["query"],
+            "topic": test.get("topic"),
             "answer": answer,
             "abstained": looks_like_abstention(answer),
             "citations_valid": citations["valid"],

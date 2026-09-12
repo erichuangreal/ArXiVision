@@ -18,8 +18,12 @@ def evaluate_retrieval(rag, tests):
     reciprocal_ranks = 0.0
 
     for test in tests:
+        # topic is absent on the fixed-benchmark question set (single shared
+        # corpus, no topics) - rag's retriever treats a missing/None topic as
+        # "search everything," so this stays a no-op there.
         docs = rag.retriever.invoke({
-            "input": test["query"]
+            "input": test["query"],
+            "topic": test.get("topic")
         })
 
         rank = None

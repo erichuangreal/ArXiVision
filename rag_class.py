@@ -14,6 +14,20 @@ from langchain_core.runnables import RunnableLambda
 from pathlib import Path
 
 EMBEDDING_MODEL = "text-embedding-3-small"
+DEFAULT_MODEL = "gpt-5-nano"
+DEFAULT_TEMPERATURE = 0.3
+
+LANGUAGE_STYLE_INSTRUCTIONS = {
+    "plain": (
+        "Write in plain, everyday language. Avoid jargon; when a technical "
+        "term is unavoidable, define it in the same sentence."
+    ),
+    "standard": "Write clearly for a technically literate reader.",
+    "technical": (
+        "Write with precise technical/academic language appropriate for an "
+        "expert reader in this field. Do not simplify technical terms."
+    ),
+}
 
 # Refusals are detected by this exact marker rather than by matching prose, which
 # the model rephrases freely ("do not discuss", "none of these papers discuss").
@@ -69,11 +83,15 @@ class RAGClass:
                 # Store full metadata ONCE, will access after relevant chunks are found
                 if paper_id in metadata_lookup:
                     self.paper_metadata[paper_id] = metadata_lookup[paper_id]
+                # Papers ingested before topic tagging existed have no "topic"
+                # key; they fall into one shared bucket rather than crashing
+                # or silently losing the field (Chroma metadata can't hold None).
+                topic = metadata_lookup.get(paper_id, {}).get("topic") or "uncategorized"
                 text = txt_file.read_text(encoding="utf-8")
-                
+
                 # Splitting and labelling pg numbers
                 parts = re.split(r"--- PAGE (\d+) ---", text)
-                
+
                 for i in range(1, len(parts), 2):
                     page_number = int(parts[i])
                     page_text = parts[i + 1].strip()
@@ -84,7 +102,8 @@ class RAGClass:
                         page_content=page_text,
                         metadata={
                             "paper_id": paper_id,
-                            "page_number": page_number
+                            "page_number": page_number,
+                            "topic": topic
                         }
                     )
 
@@ -139,7 +158,25 @@ class RAGClass:
             return None
         return vectorstore
 
-    def create_vectorstore(self, rebuild=False):
+    def _embed_and_store(self, chunks, ids, progress_callback=None):
+        # Two real, separately-timed steps - not one opaque call narrated as
+        # two: embedding is the network-bound OpenAI call, storing is the
+        # local Chroma write. A caller can watch either one actually happen.
+        if not chunks:
+            return
+        if progress_callback:
+            progress_callback(f"Creating embeddings for {len(chunks)} chunk(s)...")
+        texts = [c.page_content for c in chunks]
+        metadatas = [c.metadata for c in chunks]
+        vectors = self.embeddings.embed_documents(texts)
+
+        if progress_callback:
+            progress_callback(f"Saving {len(chunks)} chunk(s) to Chroma...")
+        self.vectorstore._collection.upsert(
+            ids=ids, embeddings=vectors, documents=texts, metadatas=metadatas
+        )
+
+    def create_vectorstore(self, rebuild=False, progress_callback=None):
         if not self.text_chunks:
             raise ValueError("No chunks to embed. Call split_documents() first.")
 
@@ -153,9 +190,12 @@ class RAGClass:
             self.vectorstore = self.load_vectorstore(fingerprint_path, fingerprint)
             if self.vectorstore is not None:
                 print(f"Loaded vectorstore from {self.persist_directory} (no re-embedding).")
+                if progress_callback:
+                    progress_callback("Index already up to date - nothing new to embed.")
                 return self.vectorstore
 
         current_ids = [self.chunk_id(chunk) for chunk in self.text_chunks]
+        id_to_chunk = dict(zip(current_ids, self.text_chunks))
 
         if not rebuild and store_exists and manifest_path.exists():
             # Corpus changed but the store isn't stale garbage: add only the
@@ -166,7 +206,6 @@ class RAGClass:
                 embedding_function=self.embeddings
             )
             existing_ids = set(json.loads(manifest_path.read_text(encoding="utf-8")))
-            id_to_chunk = dict(zip(current_ids, self.text_chunks))
 
             new_ids = [i for i in current_ids if i not in existing_ids]
             if new_ids:
@@ -174,13 +213,17 @@ class RAGClass:
                     f"Embedding {len(new_ids)} new chunks "
                     f"(skipping {len(current_ids) - len(new_ids)} already indexed)..."
                 )
-                self.vectorstore.add_documents(
-                    [id_to_chunk[i] for i in new_ids], ids=new_ids
+                self._embed_and_store(
+                    [id_to_chunk[i] for i in new_ids], new_ids, progress_callback
                 )
+            elif progress_callback:
+                progress_callback("No new chunks to embed.")
 
             removed_ids = existing_ids - set(current_ids)
             if removed_ids:
                 print(f"Removing {len(removed_ids)} chunks no longer in the corpus...")
+                if progress_callback:
+                    progress_callback(f"Removing {len(removed_ids)} chunk(s) no longer in the corpus...")
                 self.vectorstore.delete(ids=list(removed_ids))
         else:
             # First build, or an explicit full rebuild: drop the collection
@@ -194,14 +237,14 @@ class RAGClass:
                 ).delete_collection()
             self.persist_directory.mkdir(parents=True, exist_ok=True)
 
-            print(f"Embedding {len(self.text_chunks)} chunks into {self.persist_directory}...")
-            self.vectorstore = Chroma.from_documents(
-                self.text_chunks,
-                embedding=self.embeddings,
+            self.vectorstore = Chroma(
                 persist_directory=str(self.persist_directory),
-                ids=current_ids
+                embedding_function=self.embeddings
             )
+            self._embed_and_store(self.text_chunks, current_ids, progress_callback)
 
+        if progress_callback:
+            progress_callback("Writing the corpus fingerprint...")
         fingerprint_path.write_text(fingerprint, encoding="utf-8")
         manifest_path.write_text(json.dumps(current_ids), encoding="utf-8")
         print("Vectorstore up to date.")
@@ -210,12 +253,17 @@ class RAGClass:
     def setup_retriever(self):
         if self.vectorstore is None:
             raise ValueError("Vectorstore not initialized.")
-        base_retriever = self.vectorstore.as_retriever(search_kwargs={"k": 4})
-        
+
         def retrieve_with_metadata(inputs):
             query = inputs["input"]
+            # Optional: create_retrieval_chain passes the whole input dict
+            # through to a non-BaseRetriever Runnable like this one, so a
+            # caller can scope retrieval to one topic - or search the whole
+            # corpus when none is given.
+            topic = inputs.get("topic")
+            search_filter = {"topic": topic} if topic else None
 
-            docs = base_retriever.invoke(query)
+            docs = self.vectorstore.similarity_search(query, k=4, filter=search_filter)
 
             for doc in docs:
                 paper_id = doc.metadata["paper_id"]
@@ -241,17 +289,21 @@ class RAGClass:
 
             return docs
         self.retriever = RunnableLambda(retrieve_with_metadata)
-        print("Retriever set up from vectorstore.")
-        print("Retriever details:", base_retriever)
+        print("Retriever set up from vectorstore (topic-scoped when a topic is given).")
         return self.retriever
     
-    def setup_qa_chain(self):
+    def setup_qa_chain(self, model=DEFAULT_MODEL, temperature=DEFAULT_TEMPERATURE, language_style="standard"):
         if self.retriever is None:
             raise ValueError("Retriever not initialized.")
         llm = ChatOpenAI(
-            model="gpt-5-nano"
+            model=model,
+            temperature=temperature
         )
-        
+
+        style_instruction = LANGUAGE_STYLE_INSTRUCTIONS.get(
+            language_style, LANGUAGE_STYLE_INSTRUCTIONS["standard"]
+        )
+
         prompt = ChatPromptTemplate.from_messages([
             (
                 "system",
@@ -259,6 +311,10 @@ class RAGClass:
                 Answer the user's question using ONLY the retrieved context.
 
                 Do not use prior knowledge.
+
+                """
+                + style_instruction
+                + """
 
                 For every factual claim:
                 - It must be supported by the retrieved context.

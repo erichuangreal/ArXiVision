@@ -11,13 +11,15 @@ import re
 
 from langchain_openai import ChatOpenAI
 
-MODEL = "gpt-5-nano"
+from rag_class import DEFAULT_MODEL, DEFAULT_TEMPERATURE, LANGUAGE_STYLE_INSTRUCTIONS
 
 COMPARE_FIELDS = ("approach", "evaluation_setting", "main_finding", "author_limitation")
 
 COMPARE_SYSTEM_PROMPT = """
 You are filling in one row of a paper-comparison table for the research question:
 "{question}"
+
+{style_instruction}
 
 You are given retrieved excerpts from a single paper. Using ONLY these excerpts:
 
@@ -45,6 +47,8 @@ Retrieved excerpts:
 FOLLOWUP_SYSTEM_PROMPT = """
 You are proposing follow-up research directions for the question:
 "{question}"
+
+{style_instruction}
 
 You are given a comparison table of papers the user selected. Propose up to 5
 follow-ups. Each must be one of exactly three types, and you must not blur them:
@@ -89,11 +93,17 @@ def _format_paper_context(docs):
     return "\n\n".join(parts)
 
 
-def compare_papers(rag, question, paper_ids, k=6):
+def compare_papers(
+    rag, question, paper_ids, k=6,
+    model=DEFAULT_MODEL, temperature=DEFAULT_TEMPERATURE, language_style="standard"
+):
     if rag.vectorstore is None:
         raise ValueError("Vectorstore not initialized.")
 
-    llm = ChatOpenAI(model=MODEL)
+    llm = ChatOpenAI(model=model, temperature=temperature)
+    style_instruction = LANGUAGE_STYLE_INSTRUCTIONS.get(
+        language_style, LANGUAGE_STYLE_INSTRUCTIONS["standard"]
+    )
     rows = []
 
     for paper_id in paper_ids:
@@ -116,7 +126,7 @@ def compare_papers(rag, question, paper_ids, k=6):
             continue
 
         prompt = COMPARE_SYSTEM_PROMPT.format(
-            question=question, context=_format_paper_context(docs)
+            question=question, style_instruction=style_instruction, context=_format_paper_context(docs)
         )
         raw = llm.invoke(prompt).content
 
@@ -138,8 +148,14 @@ def compare_papers(rag, question, paper_ids, k=6):
     return rows
 
 
-def suggest_followups(question, comparison_rows, max_suggestions=5):
-    llm = ChatOpenAI(model=MODEL)
+def suggest_followups(
+    question, comparison_rows, max_suggestions=5,
+    model=DEFAULT_MODEL, temperature=DEFAULT_TEMPERATURE, language_style="standard"
+):
+    llm = ChatOpenAI(model=model, temperature=temperature)
+    style_instruction = LANGUAGE_STYLE_INSTRUCTIONS.get(
+        language_style, LANGUAGE_STYLE_INSTRUCTIONS["standard"]
+    )
 
     table_lines = []
     for row in comparison_rows:
@@ -153,7 +169,7 @@ def suggest_followups(question, comparison_rows, max_suggestions=5):
         )
     table = "\n".join(table_lines)
 
-    prompt = FOLLOWUP_SYSTEM_PROMPT.format(question=question, table=table)
+    prompt = FOLLOWUP_SYSTEM_PROMPT.format(question=question, style_instruction=style_instruction, table=table)
     raw = llm.invoke(prompt).content
 
     try:

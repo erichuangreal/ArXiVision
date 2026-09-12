@@ -1,0 +1,36 @@
+:root {
+  /* Herbarium / Specimen Ledger — cream stock, one deep ink, printed rules.
+     Light-first: the use scene is a bench/desk in ordinary daylight, and the
+     world is inherently paper-and-print, not a screen-native dark surface. */
+  --ground: #f3ecdc;
+  --ground-raised: #ece0c8;
+  --ground-card: #f8f3e7;
+
+  --ink: #2b2013;
+  --ink-secondary: #5c4a30;
+  --ink-faint: #8d7a58;
+
+  --rule: #c7b791;
+  --rule-strong: #a6906352;
+
+  --verified: #3f5b34;
+  --caution: #8a5a24;
+  --danger: #7a2e20;
+
+  --focus-ring: #2b2013;
+
+  --font-serif: 'Newsreader', 'Iowan Old Style', 'Palatino Linotype', serif;
+  --font-mono: 'IBM Plex Mono', 'SFMono-Regular', ui-monospace, monospace;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
+
+  --measure: 68ch;
+  --radius: 2px;
+}

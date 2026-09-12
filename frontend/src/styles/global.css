@@ -1,0 +1,148 @@
+@import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+@import './tokens.css';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+h1,
+h2,
+h3 {
+  font-weight: 500;
+  line-height: 1.15;
+  margin: 0;
+}
+
+p {
+  margin: 0;
+  max-width: var(--measure);
+}
+
+a {
+  color: inherit;
+}
+
+button,
+input {
+  font-family: inherit;
+  color: inherit;
+}
+
+/* Browser surfaces carry the design too. */
+::selection {
+  background: var(--ink);
+  color: var(--ground-card);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--ground);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--ink-faint);
+  border-radius: 0;
+  border: 2px solid var(--ground);
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+input:focus-visible,
+button:focus-visible {
+  outline-offset: 1px;
+}
+
+/* Tabular numerals wherever counts and IDs appear. */
+.mono,
+.mono * {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Shared across pages: the index-card / accession-card frame used anywhere
+   content needs a bordered container, instead of every page inventing its
+   own corner-bracket CSS. */
+.ledger-panel {
+  position: relative;
+  background: var(--ground-card);
+  border: 1px solid var(--rule);
+  padding: var(--space-6);
+}
+
+.ledger-panel::before,
+.ledger-panel::after {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid var(--ink);
+}
+
+.ledger-panel::before {
+  top: -1px;
+  left: -1px;
+  border-right: none;
+  border-bottom: none;
+}
+
+.ledger-panel::after {
+  bottom: -1px;
+  right: -1px;
+  border-left: none;
+  border-top: none;
+}
+
+.section-title {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--rule);
+  margin-bottom: var(--space-3);
+}
+
+.notice {
+  color: var(--ink-secondary);
+  font-size: 0.9rem;
+  font-style: italic;
+  max-width: 44ch;
+}
+
+.ruled-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ruled-list > li {
+  border-bottom: 1px dotted var(--rule);
+}

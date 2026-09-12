@@ -1,5 +1,22 @@
 .env
 .venv/
 *.pyc
+__pycache__/
 chroma_store/
 data/
+
+# Local Claude Code / Impeccable state - machine-specific, not project content.
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
+.impeccable/config.local.json
+.impeccable/hook.cache.json
+.impeccable/mocks/
+.impeccable/build/
+.impeccable/review/
+
+# Per-user runtime data created by the app (papers/processed_text/<user_id>/),
+# as opposed to the committed AI_safety demo corpus under the same roots.
+papers/*/
+!papers/AI_safety/
+processed_text/*/
+!processed_text/AI_safety/

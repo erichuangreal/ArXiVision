@@ -1,10 +1,9 @@
-"""Background pipeline: arXiv search -> download -> extract -> rebuild the RAG index.
-
-Runs in a plain thread (not asyncio), since search/download/extract/embedding
-are all blocking calls. JOBS is polled by the API for a "loading screen."
+"""Background pipeline: arXiv search -> download -> extract -> rebuild the
+user's RAG index. Runs in a plain thread (not asyncio), since search/download/
+extract/embedding are all blocking calls. Job status lives in db.py so a poll
+survives a server restart (the thread itself does not).
 """
 
-import json
 import threading
 import time
 import uuid
@@ -12,101 +11,59 @@ from pathlib import Path
 
 import requests
 
+import db
+import dynamic_eval
+import rag_registry
 from download_arxiv import clean_filename, download_pdf, save_metadata, search_arxiv
 from extract_pdf import extract_all_pdfs
 from preprocessing import copy_metadata_files
 
-PAPERS_DIR = Path("papers")
-PROCESSED_DIR = Path("processed_text")
-JOBS_PATH = Path("data") / "ingest_jobs.json"
 
-
-def _load_jobs():
-    if not JOBS_PATH.exists():
-        return {}
-    jobs = json.loads(JOBS_PATH.read_text(encoding="utf-8"))
-    # A job that was "running" when the process died has no thread left to
-    # finish it. Say so rather than leaving a client poll a job that will
-    # never update again.
-    for job in jobs.values():
-        if job["status"] == "running":
-            job["status"] = "failed"
-            job["stage"] = "failed"
-            job["error"] = "Interrupted by a server restart."
-            job["message"] = job["error"]
-    return jobs
-
-
-def _save_jobs():
-    JOBS_PATH.parent.mkdir(parents=True, exist_ok=True)
-    JOBS_PATH.write_text(json.dumps(JOBS, indent=2), encoding="utf-8")
-
-
-# Job status, keyed by job_id. Persisted to a flat file so a poll after a
-# restart sees the last known state instead of a 404 or a stale in-memory dict.
-JOBS = _load_jobs()
-
-
-def _set(job_id, **fields):
-    JOBS[job_id].update(fields)
-    JOBS[job_id]["updated_at"] = time.time()
-    _save_jobs()
-
-
-def start_ingest(topic, num_papers, rebuild_rag):
-    # rebuild_rag: no-arg callback that reloads and swaps in the RAG index
-    # once new papers are on disk. Passed in so this module doesn't import api.py.
+def start_ingest(user_id, topic, num_papers):
     job_id = uuid.uuid4().hex[:8]
-    JOBS[job_id] = {
-        "job_id": job_id,
-        "topic": topic,
-        "num_papers": num_papers,
-        "status": "running",
-        "stage": "queued",
-        "message": "Waiting to start...",
-        "current": 0,
-        "total": num_papers,
-        "error": None,
-        "started_at": time.time(),
-        "updated_at": time.time(),
-    }
-    _save_jobs()
+    db.create_job(user_id, job_id, topic, num_papers)
 
     thread = threading.Thread(
-        target=_run_ingest, args=(job_id, topic, num_papers, rebuild_rag), daemon=True
+        target=_run_ingest, args=(user_id, job_id, topic, num_papers), daemon=True
     )
     thread.start()
-    return job_id
+    return db.get_job(user_id, job_id)
 
 
-def _run_ingest(job_id, topic, num_papers, rebuild_rag):
+def _run_ingest(user_id, job_id, topic, num_papers):
     try:
-        _run_pipeline(job_id, topic, num_papers, rebuild_rag)
-        _set(job_id, status="ready", stage="ready")
+        _run_pipeline(user_id, job_id, topic, num_papers)
+        db.update_job(user_id, job_id, status="ready", stage="ready")
     except Exception as error:
-        _set(job_id, status="failed", stage="failed", message=str(error), error=str(error))
+        # stage is deliberately left as whatever it was when this raised -
+        # that's the actual failed step, and overwriting it with a generic
+        # "failed" string is exactly what made every failure look the same.
+        db.update_job(
+            user_id, job_id, status="failed",
+            message=str(error), error=str(error),
+        )
 
 
-def _run_pipeline(job_id, topic, num_papers, rebuild_rag):
+def _run_pipeline(user_id, job_id, topic, num_papers):
+    papers_dir, processed_dir, _ = rag_registry.user_paths(user_id)
     topic_slug = clean_filename(topic)
-    papers_dir = PAPERS_DIR / topic_slug
-    processed_dir = PROCESSED_DIR / topic_slug
+    papers_dir = papers_dir / topic_slug
+    processed_dir = processed_dir / topic_slug
     papers_dir.mkdir(parents=True, exist_ok=True)
 
-    _set(job_id, stage="searching_arxiv", message=f"Searching arXiv for '{topic}'...")
+    db.update_job(user_id, job_id, stage="searching_arxiv", message=f"Searching arXiv for '{topic}'...")
     papers = search_arxiv(topic=topic, max_results=num_papers)
 
     if not papers:
         raise RuntimeError(f"No arXiv results found for '{topic}'.")
 
-    _set(job_id, total=len(papers), message=f"Found {len(papers)} papers on arXiv.")
+    db.update_job(user_id, job_id, total=len(papers), message=f"Found {len(papers)} papers on arXiv.")
 
     downloaded = []
     for index, paper in enumerate(papers, start=1):
-        _set(
-            job_id,
-            stage="downloading",
-            current=index,
+        paper["topic"] = topic
+        db.update_job(
+            user_id, job_id, stage="downloading", current=index,
             message=f"Downloading {index}/{len(papers)}: {paper['title']}",
         )
         try:
@@ -126,36 +83,52 @@ def _run_pipeline(job_id, topic, num_papers, rebuild_rag):
     if not succeeded:
         raise RuntimeError("All downloads failed for this topic; nothing to extract.")
 
-    _set(
-        job_id,
-        stage="extracting",
-        current=0,
-        total=len(succeeded),
+    db.update_job(
+        user_id, job_id, stage="extracting", current=0, total=len(succeeded),
         message=f"Extracting text from {len(succeeded)} PDFs...",
     )
 
     def on_extract_progress(index, total, pdf_path, status):
-        _set(
-            job_id,
-            current=index,
-            total=total,
+        db.update_job(
+            user_id, job_id, current=index, total=total,
             message=f"Extracting {index}/{total}: {pdf_path.name} ({status})",
         )
 
     extract_all_pdfs(papers_dir, processed_dir, progress_callback=on_extract_progress)
     copy_metadata_files(papers_dir, processed_dir)
 
-    _set(
-        job_id,
-        stage="indexing",
-        current=0,
-        total=1,
-        message="Chunking and embedding the new papers...",
+    db.update_job(
+        user_id, job_id, stage="indexing", current=0, total=1,
+        message="Chunking the new papers...",
     )
-    rebuild_rag()
 
-    _set(
-        job_id,
-        current=1,
-        message=f"Added {len(succeeded)} papers on '{topic}'. Corpus ready.",
+    def on_index_progress(message):
+        db.update_job(user_id, job_id, message=message)
+
+    rag = rag_registry.rebuild_rag(user_id, progress_callback=on_index_progress)
+
+    db.update_job(
+        user_id, job_id, stage="evaluating", current=0, total=1,
+        message="Drafting verification questions...",
     )
+
+    def on_eval_progress(message):
+        db.update_job(user_id, job_id, message=message)
+
+    new_paper_ids = [Path(p["local_pdf_path"]).stem for p in succeeded]
+
+    eval_note = ""
+    try:
+        dynamic_eval.run_for_user(user_id, rag, new_paper_ids, progress_callback=on_eval_progress)
+    except Exception as error:
+        # Verification is a bonus signal on top of a successful ingest, not
+        # the point of the expedition - a failure here shouldn't undo it.
+        eval_note = f" Verification failed: {error}"
+
+    db.update_job(
+        user_id, job_id, stage="ready", current=1,
+        message=f"Added {len(succeeded)} papers on '{topic}'. Corpus ready.{eval_note}",
+    )
+
+
+db.mark_interrupted_jobs()

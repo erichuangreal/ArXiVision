@@ -16,6 +16,54 @@ HEADERS = {
     "User-Agent": "ArxivResearchDataset/1.0 (contact: huangheeh@gmail.com)"
 }
 
+# arXiv's public API rate-limits fairly aggressively and asks callers not to
+# hammer it; a 429 here is expected occasionally, not a bug, so it's retried
+# with backoff rather than failing the expedition on the first hit.
+RETRYABLE_STATUS_CODES = {429, 500, 502, 503, 504}
+MAX_RETRIES = 4
+BASE_BACKOFF_SECONDS = 5
+
+
+class ArxivUnavailable(requests.RequestException):
+    """arXiv kept failing after retries (rate limit or outage).
+
+    Subclasses RequestException so it's still caught wherever a single
+    paper's download failure is handled as a per-paper (not whole-job)
+    failure, while giving a message a user can actually act on.
+    """
+
+
+def _retry_request(attempt_fn, description):
+    # attempt_fn does one full try (request + whatever validation it needs)
+    # and either returns a result or raises a requests exception.
+    last_error = None
+    for attempt in range(MAX_RETRIES + 1):
+        try:
+            return attempt_fn()
+        except requests.HTTPError as error:
+            status = error.response.status_code if error.response is not None else None
+            if status not in RETRYABLE_STATUS_CODES:
+                raise
+            last_error = error
+            retry_after = error.response.headers.get("Retry-After") if error.response is not None else None
+        except requests.RequestException as error:
+            last_error = error
+            retry_after = None
+
+        if attempt < MAX_RETRIES:
+            wait = float(retry_after) if retry_after else BASE_BACKOFF_SECONDS * (2 ** attempt)
+            print(
+                f"{description} failed ({last_error}); "
+                f"retrying in {wait:.0f}s (attempt {attempt + 1}/{MAX_RETRIES})..."
+            )
+            time.sleep(wait)
+
+    raise ArxivUnavailable(
+        f"{description} did not succeed after {MAX_RETRIES + 1} attempts "
+        f"(last error: {last_error}). arXiv may be rate-limiting requests or "
+        "temporarily unavailable - try again in a few minutes."
+    ) from last_error
+
 
 def clean_filename(text: str, max_length: int = 120) -> str:
     """
@@ -27,12 +75,11 @@ def clean_filename(text: str, max_length: int = 120) -> str:
     return text[:max_length]
 
 
-def search_arxiv(topic: str, max_results: int = 10) -> list[dict]:
-    """
-    Search arXiv and return paper metadata.
-    """
+def _run_search_query(search_query: str, max_results: int, description: str) -> list[dict]:
+    # One raw arXiv query -> parsed paper list. No exact-phrase-vs-broad
+    # decision here; search_arxiv() owns that.
     parameters = {
-        "search_query": f'all:"{topic}"',
+        "search_query": search_query,
         "start": 0,
         "max_results": max_results,
         "sortBy": "submittedDate",
@@ -41,12 +88,12 @@ def search_arxiv(topic: str, max_results: int = 10) -> list[dict]:
 
     url = f"{ARXIV_API_URL}?{urlencode(parameters)}"
 
-    response = requests.get(
-        url,
-        headers=HEADERS,
-        timeout=90,
-    )
-    response.raise_for_status()
+    def attempt():
+        response = requests.get(url, headers=HEADERS, timeout=90)
+        response.raise_for_status()
+        return response
+
+    response = _retry_request(attempt, description)
 
     feed = feedparser.parse(response.content)
 
@@ -99,6 +146,34 @@ def search_arxiv(topic: str, max_results: int = 10) -> list[dict]:
     return papers
 
 
+def search_arxiv(topic: str, max_results: int = 10) -> list[dict]:
+    """
+    Search arXiv and return paper metadata.
+
+    Tries an exact-phrase match first (precise, but arXiv requires the
+    literal wording to appear - a multi-word topic phrased differently than
+    any paper's own text, e.g. "airplane wing designs", can legitimately
+    match zero papers even though the subject is well covered). Falls back
+    to requiring every word to appear somewhere in the paper (not
+    necessarily adjacent or in order) - looser than an exact phrase, but
+    still real boolean AND, not arXiv silently ignoring an unparseable
+    query and returning its newest submissions regardless of relevance.
+    """
+    exact_query = f'all:"{topic}"'
+    papers = _run_search_query(exact_query, max_results, f"arXiv exact-phrase search for '{topic}'")
+
+    if papers:
+        return papers
+
+    words = topic.split()
+    # A literal "+" here would be double-encoded by urlencode() into "%2B"
+    # (data), not arXiv's AND operator - a real space is what turns into the
+    # "+AND+" arXiv's query parser actually expects.
+    broad_query = " AND ".join(f"all:{word}" for word in words) if words else f"all:{topic}"
+    print(f"No exact-phrase match for '{topic}'; falling back to a broader search.")
+    return _run_search_query(broad_query, max_results, f"arXiv broad search for '{topic}'")
+
+
 def download_pdf(
     paper: dict,
     output_directory: Path,
@@ -117,27 +192,22 @@ def download_pdf(
 
     print(f"Downloading: {paper['title']}")
 
-    with requests.get(
-        paper["pdf_url"],
-        headers=HEADERS,
-        timeout=60,
-        stream=True,
-    ) as response:
-        response.raise_for_status()
+    def attempt():
+        with requests.get(paper["pdf_url"], headers=HEADERS, timeout=60, stream=True) as response:
+            response.raise_for_status()
 
-        content_type = response.headers.get("Content-Type", "").lower()
+            content_type = response.headers.get("Content-Type", "").lower()
+            if "pdf" not in content_type:
+                # Not a transient failure - retrying won't change the content type.
+                raise ValueError(f"Expected a PDF but received: {content_type}")
 
-        if "pdf" not in content_type:
-            raise ValueError(
-                f"Expected a PDF but received: {content_type}"
-            )
+            with output_path.open("wb") as file:
+                for chunk in response.iter_content(chunk_size=1024 * 64):
+                    if chunk:
+                        file.write(chunk)
+        return output_path
 
-        with output_path.open("wb") as file:
-            for chunk in response.iter_content(chunk_size=1024 * 64):
-                if chunk:
-                    file.write(chunk)
-
-    return output_path
+    return _retry_request(attempt, f"Download of '{paper['title']}'")
 
 
 def save_metadata(

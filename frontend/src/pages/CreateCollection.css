@@ -1,0 +1,119 @@
+.create-collection {
+  min-height: 100vh;
+}
+
+.create-collection__body {
+  padding: var(--space-6);
+  display: flex;
+  justify-content: center;
+}
+
+.create-collection__panel {
+  width: min(640px, 100%);
+}
+
+.create-collection__title {
+  font-size: 1.4rem;
+  font-style: italic;
+  margin-bottom: var(--space-2);
+}
+
+.create-collection__lede {
+  color: var(--ink-secondary);
+  font-size: 0.88rem;
+  margin-bottom: var(--space-5);
+}
+
+.create-collection__field {
+  display: block;
+  margin-bottom: var(--space-3);
+}
+
+.create-collection__field span {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: var(--space-1);
+}
+
+.create-collection__field input,
+.create-collection__field textarea {
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid var(--rule);
+  background: transparent;
+  padding: var(--space-2) 0;
+  font-size: 0.95rem;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.create-collection__field input:focus-visible,
+.create-collection__field textarea:focus-visible {
+  outline: none;
+  border-bottom-color: var(--ink);
+}
+
+.create-collection__papers {
+  margin-top: var(--space-3);
+}
+
+.create-collection__paper {
+  padding: var(--space-3) 0;
+}
+
+.create-collection__paper-title {
+  font-style: italic;
+  font-size: 0.92rem;
+  margin-bottom: var(--space-2);
+}
+
+.create-collection__error {
+  color: var(--danger);
+  font-size: 0.85rem;
+  margin: var(--space-3) 0;
+}
+
+.create-collection__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-top: var(--space-5);
+}
+
+.create-collection__submit {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--ground-card);
+  padding: var(--space-3) var(--space-5);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.create-collection__submit:hover {
+  background: var(--ink-secondary);
+}
+
+.create-collection__submit:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.create-collection__cancel,
+.create-collection__link {
+  color: var(--ink-secondary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-size: 0.85rem;
+}
+
+.create-collection__cancel:hover,
+.create-collection__link:hover {
+  color: var(--ink);
+}
