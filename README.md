@@ -88,6 +88,9 @@ Smaller or weaker language models may misinterpret retrieved chunks, give too mu
 
 Testing has confirmed that models like gpt-nano and deepseek-v4-flash extract data from the wrong chunks. Currently the model is set to use gpt-4. Switched to gpt-5-nano for testing.
 
+# Issues with hit@N
+Grounding first in what we actually know, not guesses: paper_hit@4 is 100% every time — the failure is entirely about pinpointing the right page inside a correctly-found paper, and the dominant pattern in the real misses is a concept stated early (often the abstract) and restated at greater length later in the paper, where the elaborated version out-competes the terse original in cosine similarity.
+
 # Version 1
 Features that I've implemented so far
 - Extracting and cleaning papers from Arxiv
@@ -96,3 +99,5 @@ Features that I've implemented so far
 - Chroma persist (so that the embeddings stay saved between runs)
 - Dataset: 10 PAPERS, 7 question
 - GOAL: Scale up to 100, 1000 papers
+
+# Version 2

@@ -31,7 +31,7 @@ export function Evaluation() {
       .catch((err) =>
         setError(
           err instanceof ApiError && err.status === 404
-            ? 'No verification ledger yet - run an expedition first, it generates one automatically.'
+            ? 'No verification ledger yet. Run an expedition first, it generates one automatically.'
             : 'Could not reach the server.'
         )
       );
@@ -48,9 +48,7 @@ export function Evaluation() {
         <h1 className="evaluation__title">Verification Ledger</h1>
         <p className="evaluation__lede">
           Test questions authored from your own ingested papers, then scored the same way every answer is
-          checked elsewhere in this app. The summary below combines every topic you've ingested into one score
-          - each question underneath is labeled with which one it came from. A snapshot from your last
-          expedition, not a live guarantee for any single answer.
+          checked elsewhere in this app. The summary below combines every topic you've ingested into one score.
         </p>
       </div>
 

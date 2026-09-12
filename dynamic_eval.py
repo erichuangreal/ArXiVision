@@ -16,7 +16,7 @@ from langchain_openai import ChatOpenAI
 
 import db
 from evaluate.abstention import evaluate_abstention
-from evaluate.grounding import collect_authors, evaluate_grounding
+from evaluate.grounding import claim_anchors, collect_authors, evaluate_grounding, SUPPORT_THRESHOLD
 from evaluate.retrieval import evaluate_retrieval
 
 # Deliberately independent of the user's own chat-model setting: a stronger
@@ -36,22 +36,12 @@ STATIC_UNANSWERABLE_QUESTIONS = [
 
 QUESTION_PROMPT = """
 You are authoring one test question for a retrieval-augmented QA system, to
-verify it can find and cite the exact passage a fact comes from - not just
-recognize the paper's general topic.
+verify it can correctly answer questions about a specific research paper.
 
 You are given one excerpt from the paper "{title}" (arXiv {arxiv_id}), page {page}.
 
-Find the most specific, concrete, uniquely-identifying detail in this excerpt:
-a number, a named method/metric/dataset, a quoted or precisely-defined term,
-a specific claim tied to a specific condition. Write ONE question whose
-answer requires that exact detail, plus the ground-truth answer.
-
-Avoid general "what does X do" or "what approach is used" phrasing when the
-excerpt's topic is also discussed elsewhere in the paper (an abstract, an
-intro, a related-work summary) - that kind of question is answerable from
-several places in the paper, which makes it a bad test of whether retrieval
-found THIS passage specifically. Anchor on what makes this passage
-distinguishable from a general summary of the same topic.
+Write ONE factual question whose answer is fully contained in this excerpt,
+plus the ground-truth answer.
 
 Return a JSON object with exactly these keys:
 - "query": the question, answerable using only this excerpt
@@ -89,6 +79,39 @@ def _pick_representative_chunk(rag, paper_id):
     return max(pool, key=lambda c: len(c.page_content))
 
 
+def _find_additional_supporting_pages(rag, paper_id, query, ground_truth, source_page, k=4):
+    # A fact stated on one page is often restated elsewhere in the same paper
+    # (an abstract's terse version vs. a results section's elaboration) - if
+    # the system lands on a different page that also genuinely contains the
+    # ground truth, that is a correct answer, not a miss. Reuses the exact
+    # anchor-presence check evaluate/grounding.py already uses for claim
+    # support, applied here to the paper's other candidate pages instead of
+    # a live answer. No new LLM calls.
+    # A single generic anchor (e.g. just "python" for a paper centrally about
+    # a Python course) recurs all over a paper regardless of context, and
+    # can't actually distinguish "this page restates the fact" from "this
+    # page happens to mention the same keyword." Require at least two
+    # independent anchors before trusting a match at all.
+    anchors = claim_anchors(ground_truth)
+    if len(anchors) < 2:
+        return []
+
+    candidates = rag.vectorstore.similarity_search(query, k=k, filter={"paper_id": paper_id})
+
+    extra_pages = []
+    for doc in candidates:
+        page = doc.metadata.get("page_number")
+        if page is None or page == source_page or page in extra_pages:
+            continue
+        lowered = doc.page_content.lower()
+        missing = [a for a in anchors if a not in lowered]
+        score = (len(anchors) - len(missing)) / len(anchors)
+        if score >= SUPPORT_THRESHOLD:
+            extra_pages.append(page)
+
+    return extra_pages
+
+
 def generate_questions_for_papers(rag, paper_ids):
     llm = ChatOpenAI(model=QUESTION_MODEL)
     questions = []
@@ -116,11 +139,17 @@ def generate_questions_for_papers(rag, paper_ids):
         if not parsed.get("query") or not parsed.get("ground_truth"):
             continue
 
+        expected_pages = [page] if page is not None else []
+        if page is not None:
+            expected_pages += _find_additional_supporting_pages(
+                rag, paper_id, parsed["query"], parsed["ground_truth"], page
+            )
+
         questions.append({
             "paper_id": paper_id,
             "query": parsed["query"],
             "expected_paper": arxiv_id,
-            "expected_pages": [page] if page is not None else [],
+            "expected_pages": expected_pages,
             "ground_truth": parsed["ground_truth"],
             "topic": metadata.get("topic") or "uncategorized",
         })
