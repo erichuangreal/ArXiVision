@@ -7,6 +7,7 @@ from langchain_chroma import Chroma
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
+from rank_bm25 import BM25Okapi
 
 from langchain_classic.chains import create_retrieval_chain
 from langchain_classic.chains.combine_documents import create_stuff_documents_chain
@@ -16,6 +17,20 @@ from pathlib import Path
 EMBEDDING_MODEL = "text-embedding-3-small"
 DEFAULT_MODEL = "gpt-5-nano"
 DEFAULT_TEMPERATURE = 0.3
+
+# Candidates pulled from each retrieval method before fusion; final result is
+# still the top FINAL_K after merging.
+HYBRID_CANDIDATE_K = 15
+FINAL_K = 4
+# Reciprocal Rank Fusion constant (standard choice - dampens the impact of
+# rank 1 vs rank 2 while still rewarding being near the top of either list).
+RRF_K = 60
+
+_TOKEN_RE = re.compile(r"[a-z0-9]+")
+
+
+def _tokenize(text):
+    return _TOKEN_RE.findall(text.lower())
 
 LANGUAGE_STYLE_INSTRUCTIONS = {
     "plain": (
@@ -52,6 +67,10 @@ class RAGClass:
         self.text_chunks = []
         self.vectorstore = None
         self.retriever = None
+        self._bm25 = None
+        self._bm25_chunk_ids = []
+        self._chunk_by_id = {}
+        self._chunk_ids_by_topic = {}
         self.qa_chain = None
         self.embeddings = None
         self.result = None
@@ -124,6 +143,22 @@ class RAGClass:
         )
         self.text_chunks = text_splitter.split_documents(self.documents)
         print(f"Split documents into {len(self.text_chunks)} chunks.")
+
+    def _build_bm25_index(self):
+        # Keyword index over the same chunks the vectorstore holds, so a
+        # terse original phrase that shares exact wording with the question
+        # can outrank a paraphrased elaboration that only wins on embedding
+        # similarity. Built once and reused for every query.
+        if self._bm25 is not None:
+            return
+        tokenized = [_tokenize(chunk.page_content) for chunk in self.text_chunks]
+        self._bm25 = BM25Okapi(tokenized)
+        self._bm25_chunk_ids = [self.chunk_id(chunk) for chunk in self.text_chunks]
+        self._chunk_by_id = dict(zip(self._bm25_chunk_ids, self.text_chunks))
+        self._chunk_ids_by_topic = {}
+        for cid, chunk in self._chunk_by_id.items():
+            topic = chunk.metadata.get("topic")
+            self._chunk_ids_by_topic.setdefault(topic, set()).add(cid)
 
     def chunk_id(self, chunk):
         # Content-addressed id: the same chunk always gets the same id, so it
@@ -254,6 +289,8 @@ class RAGClass:
         if self.vectorstore is None:
             raise ValueError("Vectorstore not initialized.")
 
+        self._build_bm25_index()
+
         def retrieve_with_metadata(inputs):
             query = inputs["input"]
             # Optional: create_retrieval_chain passes the whole input dict
@@ -263,7 +300,35 @@ class RAGClass:
             topic = inputs.get("topic")
             search_filter = {"topic": topic} if topic else None
 
-            docs = self.vectorstore.similarity_search(query, k=4, filter=search_filter)
+            embedding_hits = self.vectorstore.similarity_search(
+                query, k=HYBRID_CANDIDATE_K, filter=search_filter
+            )
+
+            bm25_scores = self._bm25.get_scores(_tokenize(query))
+            bm25_ranked_ids = [
+                self._bm25_chunk_ids[i]
+                for i in np.argsort(bm25_scores)[::-1]
+                if bm25_scores[i] > 0
+            ]
+            if topic:
+                topic_ids = self._chunk_ids_by_topic.get(topic, set())
+                bm25_ranked_ids = [cid for cid in bm25_ranked_ids if cid in topic_ids]
+            bm25_ranked_ids = bm25_ranked_ids[:HYBRID_CANDIDATE_K]
+
+            # Reciprocal Rank Fusion: a chunk's fused score is the sum of
+            # 1/(RRF_K + rank) across whichever ranked list(s) it appears in,
+            # so it doesn't matter whether embeddings, keywords, or both
+            # methods found it - it only matters how high up each found it.
+            fused_scores = {}
+            for rank, doc in enumerate(embedding_hits):
+                cid = self.chunk_id(doc)
+                fused_scores[cid] = fused_scores.get(cid, 0.0) + 1.0 / (RRF_K + rank + 1)
+            for rank, cid in enumerate(bm25_ranked_ids):
+                fused_scores[cid] = fused_scores.get(cid, 0.0) + 1.0 / (RRF_K + rank + 1)
+
+            embedding_by_id = {self.chunk_id(doc): doc for doc in embedding_hits}
+            ranked_ids = sorted(fused_scores, key=fused_scores.get, reverse=True)[:FINAL_K]
+            docs = [embedding_by_id.get(cid) or self._chunk_by_id[cid] for cid in ranked_ids]
 
             for doc in docs:
                 paper_id = doc.metadata["paper_id"]
@@ -289,7 +354,7 @@ class RAGClass:
 
             return docs
         self.retriever = RunnableLambda(retrieve_with_metadata)
-        print("Retriever set up from vectorstore (topic-scoped when a topic is given).")
+        print("Retriever set up: hybrid embeddings + BM25 fusion (topic-scoped when a topic is given).")
         return self.retriever
     
     def setup_qa_chain(self, model=DEFAULT_MODEL, temperature=DEFAULT_TEMPERATURE, language_style="standard"):
