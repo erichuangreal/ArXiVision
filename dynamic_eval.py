@@ -16,6 +16,7 @@ from langchain_openai import ChatOpenAI
 
 import db
 from evaluate.abstention import evaluate_abstention
+from evaluate.correctness import evaluate_correctness
 from evaluate.grounding import claim_anchors, collect_authors, evaluate_grounding, SUPPORT_THRESHOLD
 from evaluate.retrieval import evaluate_retrieval
 
@@ -185,11 +186,22 @@ def run_for_user(user_id, rag, new_paper_ids, progress_callback=None):
     grounding, per_question = evaluate_grounding(rag, answerable, known_authors)
 
     if progress_callback:
+        progress_callback(f"Judging answer correctness over {len(answerable)} question(s)...")
+    correctness, correctness_by_query = evaluate_correctness(answerable, per_question)
+    for q in per_question:
+        q.update(correctness_by_query.get(q["query"], {}))
+
+    if progress_callback:
         progress_callback(f"Verifying abstention over {len(STATIC_UNANSWERABLE_QUESTIONS)} out-of-corpus question(s)...")
     abstention, unanswerable_results = evaluate_abstention(rag, per_question, STATIC_UNANSWERABLE_QUESTIONS)
 
     results = {
-        "summary": {"retrieval": retrieval, "grounding": grounding, "abstention": abstention},
+        "summary": {
+            "retrieval": retrieval,
+            "grounding": grounding,
+            "correctness": correctness,
+            "abstention": abstention,
+        },
         "questions": per_question,
         "unanswerable_questions": unanswerable_results,
     }

@@ -9,6 +9,7 @@ import './Evaluation.css';
 const SECTION_TITLE = {
   retrieval: 'Retrieval',
   grounding: 'Grounding',
+  correctness: 'Correctness',
   abstention: 'Abstention',
 };
 
@@ -86,10 +87,22 @@ export function Evaluation() {
                       {q.query}
                     </span>
                     <span className="mono evaluation__question-flags">
-                      {q.citations_valid ? 'cited' : 'uncited'} · {q.claims_supported}
+                      {q.answer_correct === true && 'correct'}
+                      {q.answer_correct === false && 'incorrect'}
+                      {q.answer_correct === undefined && 'ungraded'} · {q.citations_valid ? 'cited' : 'uncited'} · {q.claims_supported}
                     </span>
                   </button>
-                  {expanded === i && <p className="evaluation__answer">{q.answer}</p>}
+                  {expanded === i && (
+                    <p className="evaluation__answer">
+                      {q.answer}
+                      {q.correctness_reason && (
+                        <>
+                          <br />
+                          <span className="mono evaluation__question-topic">{q.correctness_reason}</span>
+                        </>
+                      )}
+                    </p>
+                  )}
                 </li>
               ))}
               {report.unanswerable_questions.map((q, i) => (

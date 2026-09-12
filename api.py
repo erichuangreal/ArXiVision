@@ -47,6 +47,7 @@ EVAL_LABELS = {
     "citation_coverage": "Share of claims sitting under a citation",
     "claim_support": "Of claims with a checkable fact, share confirmed present in the cited source",
     "claims_not_applicable": "Count of claims with no checkable fact (opinions, labels) - excluded from claim_support",
+    "answer_correctness": "Share of answers judged to state the same fact as the reference answer, regardless of which page they cite",
     "numeric_grounding": "Share of numbers in the answer also present in the retrieved text (checks presence, not arithmetic correctness)",
     "name_grounding": "Share of named people in the answer also present in the retrieved text",
     "abstention_rate": "Share of unanswerable test questions the system correctly declined",
