@@ -44,7 +44,7 @@ def search_arxiv(topic: str, max_results: int = 10) -> list[dict]:
     response = requests.get(
         url,
         headers=HEADERS,
-        timeout=30,
+        timeout=90,
     )
     response.raise_for_status()
 
