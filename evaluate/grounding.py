@@ -197,6 +197,15 @@ ACRONYM_PATTERN = re.compile(r"\b[A-Z]{2,}(?:-\d+)?\b")
 TECHNICAL_PATTERN = re.compile(r"\b[A-Za-z]+[-–]?\d+\w*\b|\b[a-z]+[A-Z]\w*\b")
 PROPER_PATTERN = re.compile(r"(?<![.!?\n]\s)(?<!^)\b[A-Z][a-z]{2,}\b")
 
+# Capitalised because they open a bullet or label a citation, not because they name
+# anything. Counting them as anchors makes a grounded claim look unsupported.
+ANCHOR_STOPWORDS = {
+    "additionally", "finally", "however", "moreover", "therefore", "furthermore",
+    "similarly", "conversely", "overall", "importantly", "notably", "crucially",
+    "because", "although", "despite", "source", "sources", "paper", "papers",
+    "page", "pages", "citation", "reference", "based", "given", "unlike",
+}
+
 SUPPORT_THRESHOLD = 0.75
 
 
@@ -206,7 +215,7 @@ def claim_anchors(text):
         found |= {m.group().lower().rstrip(".,") for m in pattern.finditer(text)}
     for match in PROPER_PATTERN.finditer(text):
         found.add(match.group().lower())
-    return {a for a in found if len(a) > 1}
+    return {a for a in found if len(a) > 1 and a not in ANCHOR_STOPWORDS}
 
 
 def check_claim_support(answer, docs):

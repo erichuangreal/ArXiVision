@@ -1,6 +1,35 @@
 from pathlib import Path
 import pymupdf
-from preprocessing import preprocess, copy_metadata_files
+from preprocessing import (
+    build_vocabulary,
+    copy_metadata_files,
+    preprocess,
+    repair_ligatures,
+)
+
+# Wider than a paragraph indent, narrower than a column gutter.
+COLUMN_GAP = 40
+
+
+def page_text_by_columns(page, gap: int = COLUMN_GAP) -> str:
+    """Read each column top-to-bottom. Sorting by position alone interleaves them."""
+    blocks = [b for b in page.get_text("blocks") if b[6] == 0]
+
+    if not blocks:
+        return page.get_text("text", sort=True)
+
+    # A wide jump between consecutive block left edges starts a new column.
+    lefts = sorted(b[0] for b in blocks)
+    splits = [lefts[i + 1] for i in range(len(lefts) - 1) if lefts[i + 1] - lefts[i] > gap]
+    bounds = [0.0] + splits + [page.rect.width + 1]
+
+    lines: list[str] = []
+    for low, high in zip(bounds, bounds[1:]):
+        column = [b for b in blocks if low <= b[0] < high]
+        lines.extend(b[4] for b in sorted(column, key=lambda b: b[1]))
+
+    return "\n".join(lines)
+
 
 def extract_pdf_text(pdf_path: Path) -> str:
     """Extract embedded text from one PDF."""
@@ -8,7 +37,7 @@ def extract_pdf_text(pdf_path: Path) -> str:
 
     with pymupdf.open(pdf_path) as document:
         for page_number, page in enumerate(document, start=1):
-            text = page.get_text("text", sort=True).strip()
+            text = page_text_by_columns(page).strip()
 
             pages.append(
                 f"\n\n--- PAGE {page_number} ---\n\n{text}"
@@ -37,9 +66,26 @@ def extract_all_pdfs(input_directory: Path, output_directory: Path) -> None:
     successful = 0
     failed = 0
 
+    # Extracted first so the whole corpus can seed the vocabulary that validates
+    # ligature repairs.
+    extracted = {}
     for pdf_path in pdf_paths:
         try:
-            text = preprocess(extract_pdf_text(pdf_path))
+            extracted[pdf_path] = extract_pdf_text(pdf_path)
+        except Exception as error:
+            failed += 1
+            print(f"[FAILED] {pdf_path}: {error}")
+
+    vocabulary = build_vocabulary(extracted.values())
+    print(f"Vocabulary: {len(vocabulary)} words.")
+
+    for pdf_path, raw_text in extracted.items():
+        try:
+            text, repairs = repair_ligatures(raw_text, vocabulary)
+            if repairs:
+                print(f"[REPAIRED] {pdf_path.name}: {repairs} mis-encoded words")
+
+            text = preprocess(text)
 
             # Preserve the PDF's relative folder structure.
             relative_path = pdf_path.relative_to(input_directory)
