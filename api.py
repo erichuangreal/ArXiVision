@@ -80,5 +80,6 @@ def ask(request: AskRequest):
         "query": request.query,
         "answer": answer,
         "abstained": abstained,
+        "coverage": rag.coverage(response["context"]),
         "sources": sources
     }

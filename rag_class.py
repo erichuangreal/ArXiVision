@@ -263,6 +263,17 @@ class RAGClass:
         print("QA chain set up.")
         return self.qa_chain
     
+    def coverage(self, docs):
+        # How many distinct papers back an answer, out of the whole corpus.
+        used = {d.metadata.get("arxiv_id") for d in docs}
+        used.discard("Unknown")
+        used.discard(None)
+        return {
+            "papers_used": len(used),
+            "papers_in_corpus": len(self.paper_metadata),
+            "arxiv_ids": sorted(used),
+        }
+
     def answer_query(self, query: str):
         if self.qa_chain is None:
             raise ValueError("QA chain not initialized.")
