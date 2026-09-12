@@ -65,6 +65,7 @@ def init_db():
                 updated_at REAL NOT NULL
             )
         """)
+        _add_column_if_missing(conn, "collections", "contradictions_json", "contradictions_json TEXT")
         # One row per (user, action, day); incremented and capped in
         # api.py so a leaked or shared key can't run up unbounded API spend.
         conn.execute("""
@@ -169,6 +170,7 @@ def _collection_row_to_dict(row):
         "papers": json.loads(row["papers_json"]),
         "comparison": json.loads(row["comparison_json"]) if row["comparison_json"] else None,
         "followups": json.loads(row["followups_json"]) if row["followups_json"] else None,
+        "contradictions": json.loads(row["contradictions_json"]) if row["contradictions_json"] else None,
         "created_at": row["created_at"],
         "updated_at": row["updated_at"],
     }
@@ -208,7 +210,11 @@ def list_collections(user_id):
 def update_collection(user_id, collection_id, **fields):
     if get_collection(user_id, collection_id) is None:
         return None
-    columns = {"comparison": "comparison_json", "followups": "followups_json"}
+    columns = {
+        "comparison": "comparison_json",
+        "followups": "followups_json",
+        "contradictions": "contradictions_json",
+    }
     sets, values = [], []
     for key, value in fields.items():
         sets.append(f"{columns[key]} = ?")
@@ -236,10 +242,10 @@ def add_paper_to_collection(user_id, collection_id, paper):
     with _connect() as conn:
         conn.execute(
             # Changing the paper set invalidates any existing comparison/
-            # follow-ups, since they were computed over the old set.
+            # follow-ups/contradictions, since they were computed over the old set.
             """UPDATE collections
                SET papers_json = ?, comparison_json = NULL, followups_json = NULL,
-                   updated_at = ?
+                   contradictions_json = NULL, updated_at = ?
                WHERE collection_id = ? AND user_id = ?""",
             (json.dumps(papers), time.time(), collection_id, user_id),
         )
@@ -259,7 +265,7 @@ def remove_paper_from_collection(user_id, collection_id, paper_id):
         conn.execute(
             """UPDATE collections
                SET papers_json = ?, comparison_json = NULL, followups_json = NULL,
-                   updated_at = ?
+                   contradictions_json = NULL, updated_at = ?
                WHERE collection_id = ? AND user_id = ?""",
             (json.dumps(papers), time.time(), collection_id, user_id),
         )

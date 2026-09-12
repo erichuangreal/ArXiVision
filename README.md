@@ -101,3 +101,14 @@ Features that I've implemented so far
 - GOAL: Scale up to 100, 1000 papers
 
 # Version 2
+Features added since v1
+- Full React frontend: dashboard, corpus browser, collections/compare, ask, settings, evaluation report
+- Per-user, per-topic isolated corpora - retrieval and collections scoped to one topic at a time
+- Configurable LLM settings per user: model choice, temperature, language style
+- Background ingest with granular progress and per-stage failure messages; arXiv retry/backoff
+- Dynamic per-user evaluation: GPT-5-authored questions generated from each user's own papers, not a fixed benchmark
+- Hybrid retrieval (BM25 + embeddings, fused) - measured hit@1 40%→60%, hit@4 60%→100%
+- Answer-correctness judge - checks if the answer is actually right, independent of which chunk it came from
+- Per-day API usage caps to prevent key abuse
+- Dataset: 10 papers, 10 dynamic questions per user
+- GOAL: add a reranker for sharper retrieval; scale dataset to 100-1000 papers

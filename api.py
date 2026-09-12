@@ -417,8 +417,12 @@ def compare_collection(collection_id: str, user_id: str = Depends(get_current_us
         rag, collection["question"], paper_ids,
         model=settings["model"], temperature=settings["temperature"], language_style=settings["language_style"],
     )
+    contradictions = synthesis.find_contradictions(
+        collection["question"], rows,
+        model=settings["model"], temperature=settings["temperature"], language_style=settings["language_style"],
+    )
 
-    return db.update_collection(user_id, collection_id, comparison=rows)
+    return db.update_collection(user_id, collection_id, comparison=rows, contradictions=contradictions)
 
 
 @app.post("/collections/{collection_id}/followups")

@@ -266,6 +266,33 @@ export function CollectionDetail() {
         </section>
       )}
 
+      {collection.contradictions &&
+        (collection.contradictions.contradictions.length > 0 || collection.contradictions.gaps.length > 0) && (
+          <section className="collection-detail__contradictions">
+            <h2 className="section-title">Contradictions and gaps</h2>
+            <ol className="ruled-list">
+              {collection.contradictions.contradictions.map((c, i) => (
+                <li key={`c${i}`} className="followup">
+                  <span className="followup__type followup__type--contradiction mono">Contradiction</span>
+                  <p className="followup__title">{c.description}</p>
+                  {c.evidence?.length > 0 && (
+                    <p className="followup__evidence mono">
+                      evidence:{' '}
+                      {c.evidence.map((e) => `${(e.paper_id || '').slice(0, 24)}…p.${e.page_number}`).join('; ')}
+                    </p>
+                  )}
+                </li>
+              ))}
+              {collection.contradictions.gaps.map((g, i) => (
+                <li key={`g${i}`} className="followup">
+                  <span className="followup__type followup__type--gap mono">Gap</span>
+                  <p className="followup__title">{g.description}</p>
+                </li>
+              ))}
+            </ol>
+          </section>
+        )}
+
       {collection.followups && (
         <section className="collection-detail__followups">
           <h2 className="section-title">Possible next studies</h2>

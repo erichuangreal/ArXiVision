@@ -253,6 +253,14 @@
   color: var(--ink-secondary);
 }
 
+.followup__type--contradiction {
+  color: var(--caution);
+}
+
+.followup__type--gap {
+  color: var(--ink-faint);
+}
+
 .followup__title {
   font-style: italic;
   font-size: 1rem;

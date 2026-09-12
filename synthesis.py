@@ -21,18 +21,29 @@ You are filling in one row of a paper-comparison table for the research question
 
 {style_instruction}
 
-You are given retrieved excerpts from a single paper. Using ONLY these excerpts:
+You are given retrieved excerpts from a single paper. Using ONLY these excerpts,
+answer each field AS IT RELATES TO THE RESEARCH QUESTION ABOVE - not a generic
+summary of the paper.
 
 Return a JSON object with exactly these keys: approach, evaluation_setting,
 main_finding, author_limitation, supporting_pages.
 
-For approach, evaluation_setting, main_finding, and author_limitation:
+- approach: how this paper approaches the research question specifically.
+- evaluation_setting: how this paper evaluates whatever it reports about the
+  research question.
+- main_finding: what this paper found about the research question.
+- author_limitation: a limitation the authors state that bears on how much
+  their answer to the research question can be trusted.
+
+For all four fields:
 - Give a short (1-3 sentence) answer grounded in the excerpts.
 - If the excerpts don't cover it, use exactly "unclear" (the paper may say this,
   the excerpts just didn't surface it).
-- If the field doesn't apply to this paper (e.g. a position paper with no
-  evaluation_setting), use exactly "not applicable". Do not invent an
-  evaluation to fill the field.
+- If the field doesn't apply to this paper's relationship to the research
+  question (e.g. the paper doesn't address the question at all, or is a
+  position paper with no evaluation_setting), use exactly "not applicable".
+  Do not invent an evaluation, or answer about the paper in general, to fill
+  the field.
 - Do not use prior knowledge about this paper or topic.
 
 supporting_pages: a list of the page numbers (integers) from the excerpts that
@@ -42,6 +53,39 @@ Return ONLY the JSON object, no other text.
 
 Retrieved excerpts:
 {context}
+"""
+
+CONTRADICTIONS_SYSTEM_PROMPT = """
+You are auditing a paper-comparison table built to answer the research question:
+"{question}"
+
+{style_instruction}
+
+You are given the comparison table below, one row per selected paper. Find:
+
+- "contradictions": places where two or more papers disagree about the
+  research question - one reports X, another reports not-X (or a materially
+  different answer) for what is otherwise the same question. Only report a
+  contradiction you can point to specific rows for; do not infer one from
+  silence or from an "unclear"/"not applicable" field.
+- "gaps": aspects of the research question that NONE of the selected papers
+  address (every row is "unclear" or "not applicable" for that aspect), so
+  the user knows what this selection cannot tell them.
+
+For each contradiction, return an object with keys: description (one
+sentence stating what the papers disagree about), paper_ids (list of the
+paper_ids involved), evidence (list of objects with paper_id and
+page_number, drawn from that row's supporting_pages).
+
+For each gap, return an object with keys: description (one sentence naming
+what the research question asks that isn't covered), paper_ids (the
+paper_ids whose rows are silent on it).
+
+Return ONLY a JSON object with exactly these keys: contradictions, gaps
+(each a list, possibly empty). No other text.
+
+Comparison table:
+{table}
 """
 
 FOLLOWUP_SYSTEM_PROMPT = """
@@ -148,15 +192,7 @@ def compare_papers(
     return rows
 
 
-def suggest_followups(
-    question, comparison_rows, max_suggestions=5,
-    model=DEFAULT_MODEL, temperature=DEFAULT_TEMPERATURE, language_style="standard"
-):
-    llm = ChatOpenAI(model=model, temperature=temperature)
-    style_instruction = LANGUAGE_STYLE_INSTRUCTIONS.get(
-        language_style, LANGUAGE_STYLE_INSTRUCTIONS["standard"]
-    )
-
+def _format_comparison_table(comparison_rows):
     table_lines = []
     for row in comparison_rows:
         table_lines.append(
@@ -167,7 +203,48 @@ def suggest_followups(
             f"  author_limitation: {row.get('author_limitation')}\n"
             f"  supporting_pages: {row.get('supporting_pages')}"
         )
-    table = "\n".join(table_lines)
+    return "\n".join(table_lines)
+
+
+def find_contradictions(
+    question, comparison_rows,
+    model=DEFAULT_MODEL, temperature=DEFAULT_TEMPERATURE, language_style="standard"
+):
+    # A per-paper row is filled in isolation (compare_papers scopes retrieval
+    # to one paper at a time), so nothing sees the other rows until here -
+    # this is the only pass that can actually compare across papers.
+    llm = ChatOpenAI(model=model, temperature=temperature)
+    style_instruction = LANGUAGE_STYLE_INSTRUCTIONS.get(
+        language_style, LANGUAGE_STYLE_INSTRUCTIONS["standard"]
+    )
+
+    prompt = CONTRADICTIONS_SYSTEM_PROMPT.format(
+        question=question, style_instruction=style_instruction,
+        table=_format_comparison_table(comparison_rows),
+    )
+    raw = llm.invoke(prompt).content
+
+    try:
+        parsed = _extract_json(raw)
+    except (json.JSONDecodeError, AttributeError):
+        return {"contradictions": [], "gaps": []}
+
+    return {
+        "contradictions": parsed.get("contradictions", []),
+        "gaps": parsed.get("gaps", []),
+    }
+
+
+def suggest_followups(
+    question, comparison_rows, max_suggestions=5,
+    model=DEFAULT_MODEL, temperature=DEFAULT_TEMPERATURE, language_style="standard"
+):
+    llm = ChatOpenAI(model=model, temperature=temperature)
+    style_instruction = LANGUAGE_STYLE_INSTRUCTIONS.get(
+        language_style, LANGUAGE_STYLE_INSTRUCTIONS["standard"]
+    )
+
+    table = _format_comparison_table(comparison_rows)
 
     prompt = FOLLOWUP_SYSTEM_PROMPT.format(question=question, style_instruction=style_instruction, table=table)
     raw = llm.invoke(prompt).content
