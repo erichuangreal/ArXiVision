@@ -2,7 +2,7 @@
 
 import re
 
-from rag_class import split_abstention
+from rag.rag_class import split_abstention
 
 
 SOURCE_WORDS = r"(?:papers?|context|sources?|documents?|excerpts?|text)"

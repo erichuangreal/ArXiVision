@@ -4,7 +4,7 @@ chroma_store directory and their own in-memory RAGClass, built lazily.
 
 from pathlib import Path
 
-from rag_implementation import RAGClass  # also validates OPENAI_API_KEY on import
+from rag.rag_implementation import RAGClass  # also validates OPENAI_API_KEY on import
 import db
 
 PAPERS_ROOT = Path("papers")

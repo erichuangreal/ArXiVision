@@ -11,7 +11,7 @@ import re
 
 from langchain_openai import ChatOpenAI
 
-from rag_class import DEFAULT_MODEL, DEFAULT_TEMPERATURE, LANGUAGE_STYLE_INSTRUCTIONS
+from rag.rag_class import DEFAULT_MODEL, DEFAULT_TEMPERATURE, LANGUAGE_STYLE_INSTRUCTIONS
 
 COMPARE_FIELDS = ("approach", "evaluation_setting", "main_finding", "author_limitation")
 
