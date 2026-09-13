@@ -1,6 +1,6 @@
 from pathlib import Path
 import pymupdf
-from preprocessing import (
+from data_processing.preprocessing import (
     build_vocabulary,
     copy_metadata_files,
     preprocess,
