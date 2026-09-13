@@ -1,5 +1,5 @@
 from dotenv import load_dotenv, find_dotenv
-from rag_class import RAGClass
+from rag.rag_class import RAGClass
 import os
 
 _env_path = find_dotenv(usecwd=True)

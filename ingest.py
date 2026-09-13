@@ -13,10 +13,10 @@ import requests
 
 import db
 import dynamic_eval
-import rag_registry
-from download_arxiv import clean_filename, download_pdf, save_metadata, search_arxiv
-from extract_pdf import extract_all_pdfs
-from preprocessing import copy_metadata_files
+import rag.rag_registry as rag_registry
+from data_processing.download_arxiv import clean_filename, download_pdf, save_metadata, search_arxiv
+from data_processing.extract_pdf import extract_all_pdfs
+from data_processing.preprocessing import copy_metadata_files
 
 
 def start_ingest(user_id, topic, num_papers):

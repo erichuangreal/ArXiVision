@@ -4,7 +4,7 @@ from fastapi import Depends, FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from rag_class import split_abstention
+from rag.rag_class import split_abstention
 from evaluate.grounding import (
     check_citations,
     check_citation_coverage,
@@ -16,7 +16,7 @@ from evaluate.grounding import (
 )
 import db
 import ingest
-import rag_registry
+import rag.rag_registry as rag_registry
 import synthesis
 
 

@@ -25,7 +25,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 # Importing rag_implementation also runs the .env / OPENAI_API_KEY check.
-from rag_implementation import RAGClass  # noqa: E402
+from rag.rag_implementation import RAGClass  # noqa: E402
 
 from evaluate.abstention import evaluate_abstention  # noqa: E402
 from evaluate.grounding import collect_authors, evaluate_grounding  # noqa: E402
