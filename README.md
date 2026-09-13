@@ -110,3 +110,26 @@ Features added since v1
 - Per-day API usage caps to prevent key abuse
 - Dataset: 10 papers, 10 dynamic questions per user
 - GOAL: add a reranker for sharper retrieval; scale dataset to 100-1000 papers
+
+# Backend file map
+Everything outside `frontend/` is the backend.
+
+- `api.py` — the FastAPI app itself: every route (`/users`, `/ingest`, `/collections`, `/ask`, `/search`, `/evaluation`, `/settings`), auth, CORS, daily rate limits
+- `db.py` — SQLite persistence (`data/app.db`): users, collections, jobs, evaluation results
+- `ingest.py` — the background "expedition" pipeline: arXiv search → download → extract → embed
+- `synthesis.py` — per-collection paper comparison, contradictions/gaps, follow-up suggestions
+- `dynamic_eval.py` — generates and scores each user's own verification questions
+
+`rag/` — the retrieval engine:
+- `rag_class.py` — `RAGClass`: chunking, hybrid BM25+embeddings retrieval, the QA chain
+- `rag_registry.py` — per-user in-memory cache of `RAGClass` instances
+- `rag_implementation.py` — loads/validates `OPENAI_API_KEY` from `.env`
+
+`data_processing/` — turning arXiv into usable text:
+- `download_arxiv.py` — arXiv search + PDF download, with retry/backoff
+- `extract_pdf.py` — PDF → text extraction
+- `preprocessing.py` — cleaning (dedup, PII, etc.)
+
+`evaluate/` — the scoring logic used by `dynamic_eval.py`:
+- `retrieval.py`, `grounding.py`, `abstention.py`, `correctness.py` — one file per metric family
+- `evaluate_results.py` — an older standalone benchmark script, separate from the live per-user flow
