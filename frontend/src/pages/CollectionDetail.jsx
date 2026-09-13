@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { api, describeError } from '../api/client';
 import { useAuth } from '../context/AuthContext';
@@ -11,6 +11,41 @@ const FOLLOWUP_LABEL = {
   unresolved_in_selection: 'Unresolved in this selection',
   assistant_proposed: 'Assistant-proposed',
 };
+
+function truncateTitle(title, max = 26) {
+  return title.length > max ? `${title.slice(0, max)}…` : title;
+}
+
+// One entry per cited paper (not per page), so a paper cited on several pages
+// reads as "Title — pp. 9, 15" instead of repeating its truncated title once
+// per page. The full, untruncated title rides along as a native tooltip.
+function groupEvidence(evidence, titleByPaperId) {
+  const byTitle = new Map();
+  for (const e of evidence) {
+    const fullTitle = titleByPaperId[e.paper_id] || e.paper_id;
+    if (!byTitle.has(fullTitle)) byTitle.set(fullTitle, []);
+    byTitle.get(fullTitle).push(e.page_number);
+  }
+  return Array.from(byTitle, ([fullTitle, pages]) => ({
+    fullTitle,
+    truncated: truncateTitle(fullTitle),
+    pages,
+  }));
+}
+
+function Evidence({ items, titleByPaperId, prefix, className }) {
+  return (
+    <p className={`${className} mono`}>
+      {prefix}
+      {groupEvidence(items, titleByPaperId).map((g, i) => (
+        <span key={g.fullTitle} title={g.fullTitle}>
+          {i > 0 && '   ·   '}
+          {g.truncated} — {g.pages.length > 1 ? 'pp.' : 'p.'} {g.pages.join(', ')}
+        </span>
+      ))}
+    </p>
+  );
+}
 
 function CompareField({ label, value }) {
   const flat = value === 'unclear' || value === 'not applicable';
@@ -180,6 +215,7 @@ export function CollectionDetail() {
 
   const existingIds = new Set(collection.papers.map((p) => p.paper_id));
   const collectionTopic = collection.papers[0]?.topic;
+  const titleByPaperId = Object.fromEntries(collection.papers.map((p) => [p.paper_id, p.title]));
 
   return (
     <div className="collection-detail">
@@ -270,26 +306,50 @@ export function CollectionDetail() {
         (collection.contradictions.contradictions.length > 0 || collection.contradictions.gaps.length > 0) && (
           <section className="collection-detail__contradictions">
             <h2 className="section-title">Contradictions and gaps</h2>
-            <ol className="ruled-list">
-              {collection.contradictions.contradictions.map((c, i) => (
-                <li key={`c${i}`} className="followup">
-                  <span className="followup__type followup__type--contradiction mono">Contradiction</span>
-                  <p className="followup__title">{c.description}</p>
-                  {c.evidence?.length > 0 && (
-                    <p className="followup__evidence mono">
-                      evidence:{' '}
-                      {c.evidence.map((e) => `${(e.paper_id || '').slice(0, 24)}…p.${e.page_number}`).join('; ')}
-                    </p>
-                  )}
-                </li>
-              ))}
-              {collection.contradictions.gaps.map((g, i) => (
-                <li key={`g${i}`} className="followup">
-                  <span className="followup__type followup__type--gap mono">Gap</span>
-                  <p className="followup__title">{g.description}</p>
-                </li>
-              ))}
-            </ol>
+
+            {collection.contradictions.contradictions.length > 0 && (
+              <div className="finding-group">
+                <p className="finding-group__label mono">Where the selection disagrees</p>
+                <ol className="ruled-list">
+                  {collection.contradictions.contradictions.map((c, i) => (
+                    <li key={`c${i}`} className="contradiction">
+                      <p className="contradiction__papers">
+                        {c.paper_ids.map((pid, j) => (
+                          <Fragment key={pid}>
+                            {j > 0 && <span className="contradiction__versus mono">contradicts</span>}
+                            <span className="contradiction__paper" title={titleByPaperId[pid] || pid}>
+                              {titleByPaperId[pid] || pid}
+                            </span>
+                          </Fragment>
+                        ))}
+                      </p>
+                      <p className="contradiction__description">{c.description}</p>
+                      {c.evidence?.length > 0 && (
+                        <Evidence
+                          items={c.evidence}
+                          titleByPaperId={titleByPaperId}
+                          prefix=""
+                          className="contradiction__evidence"
+                        />
+                      )}
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            )}
+
+            {collection.contradictions.gaps.length > 0 && (
+              <div className="finding-group">
+                <p className="finding-group__label mono">Left unanswered by this selection</p>
+                <ul className="gap-list">
+                  {collection.contradictions.gaps.map((g, i) => (
+                    <li key={`g${i}`} className="gap-list__item">
+                      {g.description}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </section>
         )}
 
@@ -313,10 +373,12 @@ export function CollectionDetail() {
                   <strong>Still to check:</strong> {f.still_to_check}
                 </p>
                 {f.evidence?.length > 0 && (
-                  <p className="followup__evidence mono">
-                    evidence:{' '}
-                    {f.evidence.map((e) => `${(e.paper_id || '').slice(0, 24)}…p.${e.page_number}`).join('; ')}
-                  </p>
+                  <Evidence
+                    items={f.evidence}
+                    titleByPaperId={titleByPaperId}
+                    prefix="evidence: "
+                    className="followup__evidence"
+                  />
                 )}
               </li>
             ))}
