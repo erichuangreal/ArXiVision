@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import re
+import threading
 import time
 from pathlib import Path
 from urllib.parse import urlencode
@@ -22,6 +23,23 @@ HEADERS = {
 RETRYABLE_STATUS_CODES = {429, 500, 502, 503, 504}
 MAX_RETRIES = 4
 BASE_BACKOFF_SECONDS = 5
+
+# Every expedition runs in its own thread. Concurrent expeditions queue instead of colliding.
+_ARXIV_LOCK = threading.Lock()
+_last_request_at = 0.0
+MIN_REQUEST_INTERVAL_SECONDS = 3
+
+
+def _throttled_get(url, **kwargs):
+    global _last_request_at
+    with _ARXIV_LOCK:
+        wait = MIN_REQUEST_INTERVAL_SECONDS - (time.time() - _last_request_at)
+        if wait > 0:
+            time.sleep(wait)
+        try:
+            return requests.get(url, **kwargs)
+        finally:
+            _last_request_at = time.time()
 
 
 class ArxivUnavailable(requests.RequestException):
@@ -89,7 +107,7 @@ def _run_search_query(search_query: str, max_results: int, description: str) -> 
     url = f"{ARXIV_API_URL}?{urlencode(parameters)}"
 
     def attempt():
-        response = requests.get(url, headers=HEADERS, timeout=90)
+        response = _throttled_get(url, headers=HEADERS, timeout=90)
         response.raise_for_status()
         return response
 
@@ -193,7 +211,7 @@ def download_pdf(
     print(f"Downloading: {paper['title']}")
 
     def attempt():
-        with requests.get(paper["pdf_url"], headers=HEADERS, timeout=60, stream=True) as response:
+        with _throttled_get(paper["pdf_url"], headers=HEADERS, timeout=60, stream=True) as response:
             response.raise_for_status()
 
             content_type = response.headers.get("Content-Type", "").lower()
