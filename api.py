@@ -66,11 +66,11 @@ def get_current_user(x_api_key: str = Header(..., alias="X-API-Key")):
 # shared key has a hard ceiling instead of unbounded exposure. Read routes
 # (papers, collections, evaluation) aren't capped - they don't call an LLM.
 DAILY_LIMITS = {
-    "ingest": 5,
-    "ask": 50,
+    "ingest": 20,
+    "ask": 100,
     "search": 100,
-    "compare": 20,
-    "followups": 20,
+    "compare": 50,
+    "followups": 50,
 }
 
 
