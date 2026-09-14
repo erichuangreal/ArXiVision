@@ -16,8 +16,7 @@ export function Masthead() {
   return (
     <header className="masthead">
       <Link to="/" className="masthead__mark">
-        Specimen Ledger
-        <span className="masthead__mark-note">working name</span>
+        ArXiVision
       </Link>
 
       {userId && (
