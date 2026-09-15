@@ -1,5 +1,6 @@
 import threading
 import time
+import traceback
 import uuid
 from pathlib import Path
 
@@ -39,9 +40,7 @@ def _run_ingest(user_id, job_id, topic, num_papers):
         _run_pipeline(user_id, job_id, topic, num_papers)
         db.update_job(user_id, job_id, status="ready", stage="ready")
     except Exception as error:
-        # stage is deliberately left as whatever it was when this raised -
-        # that's the actual failed step, and overwriting it with a generic
-        # "failed" string is exactly what made every failure look the same.
+        traceback.print_exc()
         db.update_job(
             user_id, job_id, status="failed",
             message=str(error), error=str(error),

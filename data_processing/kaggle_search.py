@@ -177,26 +177,41 @@ def search_local(topic: str, max_results: int = 10, db_path: Path = INDEX_DB_PAT
     conn = sqlite3.connect(db_path)
     try:
         exact_query = f"title:{_fts5_quote(topic)} OR abstract:{_fts5_quote(topic)}"
-        rows = conn.execute(
+        exact_rows = conn.execute(
             "SELECT arxiv_id, title, abstract, authors, categories, published, updated "
             "FROM papers WHERE papers MATCH ? ORDER BY rank LIMIT ?",
             (exact_query, max_results),
         ).fetchall()
 
-        if rows:
-            return [_row_to_paper(r) for r in rows]
+        if len(exact_rows) >= max_results:
+            return [_row_to_paper(r) for r in exact_rows]
 
         words = topic.split()
         if not words:
-            return []
+            return [_row_to_paper(r) for r in exact_rows]
+
         broad_query = " AND ".join(_fts5_quote(w) for w in words)
-        print(f"No exact-phrase match for '{topic}' in local index; falling back to a broader search.")
-        rows = conn.execute(
+        remaining = max_results - len(exact_rows)
+        seen_ids = {r[0] for r in exact_rows}
+
+        broad_rows = conn.execute(
             "SELECT arxiv_id, title, abstract, authors, categories, published, updated "
             "FROM papers WHERE papers MATCH ? ORDER BY rank LIMIT ?",
-            (broad_query, max_results),
+            (broad_query, remaining + len(exact_rows)),
         ).fetchall()
-        return [_row_to_paper(r) for r in rows]
+
+        if not exact_rows:
+            print(f"No exact-phrase match for '{topic}' in local index; falling back to a broader search.")
+
+        combined = list(exact_rows)
+        for row in broad_rows:
+            if len(combined) >= max_results:
+                break
+            if row[0] not in seen_ids:
+                combined.append(row)
+                seen_ids.add(row[0])
+
+        return [_row_to_paper(r) for r in combined]
     finally:
         conn.close()
 
