@@ -133,3 +133,20 @@ Everything outside `frontend/` is the backend.
 `evaluate/` — the scoring logic used by `dynamic_eval.py`:
 - `retrieval.py`, `grounding.py`, `abstention.py`, `correctness.py` — one file per metric family
 - `evaluate_results.py` — an older standalone benchmark script, separate from the live per-user flow
+
+### Updating the paper database
+These commands are all run on my personal droplet.
+
+Run the two commands to re-fetch Kaggle paper metadata and rebuild the SQLite (backend) index from scratch
+python -m data_processing.kaggle_search download
+python -m data_processing.kaggle_search build
+
+It's important to keep on updating the database because it's a one-time build and will not continuously update when new papers are added to Arxiv.
+
+Dataset used: "arXiv dataset" by Cornell University, https://www.kaggle.com/datasets/Cornell-University/arxiv
+~Takes around 5-10 minutes, indexes 3 M pages.
+
+![Picture of the Kaggle dataset living in my droplet](Kaggle-dataset.png)
+
+sudo journalctl -u research_assistant -f
+Views the size of the database.

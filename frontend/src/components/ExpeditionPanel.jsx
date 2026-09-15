@@ -34,8 +34,8 @@ export function ExpeditionForm({ onSubmit, onCancel, busy, error, hasQueuedJob }
       setValidation('An expedition needs a subject.');
       return;
     }
-    if (numPapers < 1 || numPapers > 10) {
-      setValidation('Between 1 and 10 specimens per expedition.');
+    if (numPapers < 1 || numPapers > 100) {
+      setValidation('Between 1 and 100 specimens per expedition.');
       return;
     }
     setValidation(null);
@@ -65,7 +65,7 @@ export function ExpeditionForm({ onSubmit, onCancel, busy, error, hasQueuedJob }
         <input
           type="number"
           min={1}
-          max={10}
+          max={100}
           value={numPapers}
           onChange={(e) => setNumPapers(Number(e.target.value))}
         />

@@ -62,9 +62,7 @@ def get_current_user(x_api_key: str = Header(..., alias="X-API-Key")):
     return user_id
 
 
-# Per-day caps on the routes that spend real OpenAI money, so a leaked or
-# shared key has a hard ceiling instead of unbounded exposure. Read routes
-# (papers, collections, evaluation) aren't capped - they don't call an LLM.
+# Per-day caps.
 DAILY_LIMITS = {
     "ingest": 20,
     "ask": 100,
@@ -72,6 +70,9 @@ DAILY_LIMITS = {
     "compare": 50,
     "followups": 50,
 }
+
+# Papers per single expedition.
+MAX_PAPERS_PER_INGEST = 100
 
 
 def enforce_daily_limit(user_id, action):
@@ -285,8 +286,11 @@ def ask(request: AskRequest, user_id: str = Depends(get_current_user)):
 def start_ingest(request: IngestRequest, user_id: str = Depends(get_current_user)):
     if not request.topic.strip():
         raise HTTPException(status_code=400, detail="topic must not be empty.")
-    if not 1 <= request.num_papers <= 10:
-        raise HTTPException(status_code=400, detail="num_papers must be between 1 and 10.")
+    if not 1 <= request.num_papers <= MAX_PAPERS_PER_INGEST:
+        raise HTTPException(
+            status_code=400,
+            detail=f"num_papers must be between 1 and {MAX_PAPERS_PER_INGEST}.",
+        )
     enforce_daily_limit(user_id, "ingest")
 
     return ingest.start_ingest(user_id, request.topic, request.num_papers)
