@@ -18,12 +18,9 @@ EMBEDDING_MODEL = "text-embedding-3-small"
 DEFAULT_MODEL = "gpt-5-nano"
 DEFAULT_TEMPERATURE = 0.3
 
-# Candidates pulled from each retrieval method before fusion; final result is
-# still the top FINAL_K after merging.
+
 HYBRID_CANDIDATE_K = 15
 FINAL_K = 4
-# Reciprocal Rank Fusion constant (standard choice - dampens the impact of
-# rank 1 vs rank 2 while still rewarding being near the top of either list).
 RRF_K = 60
 
 _TOKEN_RE = re.compile(r"[a-z0-9]+")
@@ -44,8 +41,6 @@ LANGUAGE_STYLE_INSTRUCTIONS = {
     ),
 }
 
-# Refusals are detected by this exact marker rather than by matching prose, which
-# the model rephrases freely ("do not discuss", "none of these papers discuss").
 ABSTENTION_SENTINEL = "INSUFFICIENT_CONTEXT"
 
 
@@ -95,16 +90,17 @@ class RAGClass:
             metadata_lookup = {}
 
             for metadata in batch_metadata:
+                # A paper whose download failed has local_pdf_path=None and no text file, so skip it.
+                if not metadata.get("local_pdf_path"):
+                    continue
                 paper_id = Path(metadata["local_pdf_path"]).stem
                 metadata_lookup[paper_id] = metadata
             for txt_file in batch_folder.glob("*.txt"):
                 paper_id = txt_file.stem
-                # Store full metadata ONCE, will access after relevant chunks are found
+
                 if paper_id in metadata_lookup:
                     self.paper_metadata[paper_id] = metadata_lookup[paper_id]
-                # Papers ingested before topic tagging existed have no "topic"
-                # key; they fall into one shared bucket rather than crashing
-                # or silently losing the field (Chroma metadata can't hold None).
+
                 topic = metadata_lookup.get(paper_id, {}).get("topic") or "uncategorized"
                 text = txt_file.read_text(encoding="utf-8")
 
@@ -135,9 +131,7 @@ class RAGClass:
     def split_documents(self, chunk_size=500, chunk_overlap=50):
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
-        # disallowed_special=() : paper text can literally contain strings like
-        # "<|endoftext|>" (e.g. tokenization/LLM papers quoting special tokens);
-        # tiktoken otherwise refuses to encode them as ordinary text and raises.
+
         text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
             chunk_size=chunk_size, chunk_overlap=chunk_overlap, disallowed_special=()
         )
@@ -145,10 +139,6 @@ class RAGClass:
         print(f"Split documents into {len(self.text_chunks)} chunks.")
 
     def _build_bm25_index(self):
-        # Keyword index over the same chunks the vectorstore holds, so a
-        # terse original phrase that shares exact wording with the question
-        # can outrank a paraphrased elaboration that only wins on embedding
-        # similarity. Built once and reused for every query.
         if self._bm25 is not None:
             return
         tokenized = [_tokenize(chunk.page_content) for chunk in self.text_chunks]
@@ -177,7 +167,6 @@ class RAGClass:
         ).hexdigest()
 
     def load_vectorstore(self, fingerprint_path, fingerprint):
-        # Returns a stored vectorstore only if it matches and is non-empty.
         if not fingerprint_path.exists():
             return None
         if fingerprint_path.read_text(encoding="utf-8").strip() != fingerprint:
@@ -194,9 +183,6 @@ class RAGClass:
         return vectorstore
 
     def _embed_and_store(self, chunks, ids, progress_callback=None):
-        # Two real, separately-timed steps - not one opaque call narrated as
-        # two: embedding is the network-bound OpenAI call, storing is the
-        # local Chroma write. A caller can watch either one actually happen.
         if not chunks:
             return
         if progress_callback:
@@ -233,9 +219,6 @@ class RAGClass:
         id_to_chunk = dict(zip(current_ids, self.text_chunks))
 
         if not rebuild and store_exists and manifest_path.exists():
-            # Corpus changed but the store isn't stale garbage: add only the
-            # chunks not already embedded, and drop ones no longer present,
-            # instead of re-embedding chunks that haven't changed.
             self.vectorstore = Chroma(
                 persist_directory=str(self.persist_directory),
                 embedding_function=self.embeddings
@@ -261,9 +244,6 @@ class RAGClass:
                     progress_callback(f"Removing {len(removed_ids)} chunk(s) no longer in the corpus...")
                 self.vectorstore.delete(ids=list(removed_ids))
         else:
-            # First build, or an explicit full rebuild: drop the collection
-            # rather than the files, since Chroma caches an open client per
-            # directory and deleting the database under it turns it readonly.
             fingerprint_path.unlink(missing_ok=True)
             if store_exists:
                 Chroma(
@@ -293,10 +273,6 @@ class RAGClass:
 
         def retrieve_with_metadata(inputs):
             query = inputs["input"]
-            # Optional: create_retrieval_chain passes the whole input dict
-            # through to a non-BaseRetriever Runnable like this one, so a
-            # caller can scope retrieval to one topic - or search the whole
-            # corpus when none is given.
             topic = inputs.get("topic")
             search_filter = {"topic": topic} if topic else None
 
@@ -318,7 +294,7 @@ class RAGClass:
             # Reciprocal Rank Fusion: a chunk's fused score is the sum of
             # 1/(RRF_K + rank) across whichever ranked list(s) it appears in,
             # so it doesn't matter whether embeddings, keywords, or both
-            # methods found it - it only matters how high up each found it.
+            # methods found it.
             fused_scores = {}
             for rank, doc in enumerate(embedding_hits):
                 cid = self.chunk_id(doc)
