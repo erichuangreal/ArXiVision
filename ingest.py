@@ -1,9 +1,3 @@
-"""Background pipeline: arXiv search -> download -> extract -> rebuild the
-user's RAG index. Runs in a plain thread (not asyncio), since search/download/
-extract/embedding are all blocking calls. Job status lives in db.py so a poll
-survives a server restart (the thread itself does not).
-"""
-
 import threading
 import time
 import uuid
@@ -16,7 +10,17 @@ import dynamic_eval
 import rag.rag_registry as rag_registry
 from data_processing.download_arxiv import clean_filename, download_pdf, save_metadata, search_arxiv
 from data_processing.extract_pdf import extract_all_pdfs
+from data_processing.kaggle_search import search_local
 from data_processing.preprocessing import copy_metadata_files
+
+
+def _search(topic, num_papers):
+    # Falls back to the live search only if that local index hasn't been built yet
+    try:
+        return search_local(topic=topic, max_results=num_papers)
+    except FileNotFoundError:
+        print("Local arXiv index not built yet; falling back to the live search API.")
+        return search_arxiv(topic=topic, max_results=num_papers)
 
 
 def start_ingest(user_id, topic, num_papers):
@@ -52,7 +56,7 @@ def _run_pipeline(user_id, job_id, topic, num_papers):
     papers_dir.mkdir(parents=True, exist_ok=True)
 
     db.update_job(user_id, job_id, stage="searching_arxiv", message=f"Searching arXiv for '{topic}'...")
-    papers = search_arxiv(topic=topic, max_results=num_papers)
+    papers = _search(topic, num_papers)
 
     if not papers:
         raise RuntimeError(f"No arXiv results found for '{topic}'.")
