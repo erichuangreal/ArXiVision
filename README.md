@@ -1,9 +1,8 @@
-# Completed improvements/goals
-1. Scale number of texts to 100, 500, 1000 without losing accuracy or efficiency
-2. Persist Chroma vector database to prevent costly recomputaitons
-3. Build working frontend
-4. Cross-paper examination
-5. Research gap identification: findings, strengths, limitations, stated future work
+# How to access webpage
+- Go to https://research-assistant-bay.vercel.app
+- Create new user or enter existing api key to enter
+
+Use key 7dcadf58bd85eb17f6bca7f43c7cd05cd79f841bc6b7930f to view a sample account with 100+ papers.
 
 # Data collection and preprocessing
 The purpose of the data scraper is to preprocess and clean data from research papers to prepare for model training.
@@ -98,6 +97,13 @@ Features that I've implemented so far
 - Dataset: 10 PAPERS, 7 question
 - GOAL: Scale up to 100, 1000 papers
 
+# Completed improvements/goals
+1. Scale number of texts to 100, 500, 1000 without losing accuracy or efficiency
+2. Persist Chroma vector database to prevent costly recomputaitons
+3. Build working frontend
+4. Cross-paper examination
+5. Research gap identification: findings, strengths, limitations, stated future work
+6. 
 # Version 2
 Features added since v1
 - Full React frontend: dashboard, corpus browser, collections/compare, ask, settings, evaluation report
@@ -146,7 +152,11 @@ It's important to keep on updating the database because it's a one-time build an
 Dataset used: "arXiv dataset" by Cornell University, https://www.kaggle.com/datasets/Cornell-University/arxiv
 ~Takes around 5-10 minutes, indexes 3 M pages.
 
-![Picture of the Kaggle dataset living in my droplet](Kaggle-dataset.png)
+![Picture of the Kaggle dataset living in my droplet](pics/Kaggle-dataset.png)
 
 sudo journalctl -u research_assistant -f
 Views the size of the database.
+
+![Extracting and downloading papers](pics/image.png)
+![Evaluation](pics/image2.png)
+![Metrics and results](pics/image3.png)

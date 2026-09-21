@@ -9,6 +9,7 @@ data/
 .claude
 .impeccable
 PRODUCT.md
+DESIGN.md
 
 # Per-user runtime data created by the app (papers/processed_text/<user_id>/),
 # as opposed to the committed AI_safety demo corpus under the same roots.
