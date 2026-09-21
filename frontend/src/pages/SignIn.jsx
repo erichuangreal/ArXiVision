@@ -67,9 +67,7 @@ export function SignIn() {
 
   return (
     <main className="signin">
-      <div className="signin__card">
-        <span className="signin__card-corner signin__card-corner--tl" aria-hidden="true" />
-        <span className="signin__card-corner signin__card-corner--br" aria-hidden="true" />
+      <div className="ledger-panel signin__card">
 
         {issued ? (
           <div className="signin__issued">

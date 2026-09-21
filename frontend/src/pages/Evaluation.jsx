@@ -19,6 +19,19 @@ function formatValue(name, metric) {
   return metric.value;
 }
 
+// Only color a metric when it's actually notable, in the direction that
+// metric is defined to be good or bad in (e.g. a LOW false_refusal_rate is
+// the good outcome) - never a blanket "verified" green regardless of value.
+function metricTone(metric) {
+  if (typeof metric.value !== 'number' || metric.higher_is_better === null || metric.higher_is_better === undefined) {
+    return null;
+  }
+  const score = metric.higher_is_better ? metric.value : 1 - metric.value;
+  if (score >= 0.9) return 'verified';
+  if (score < 0.5) return 'caution';
+  return null;
+}
+
 export function Evaluation() {
   const { apiKey } = useAuth();
   const [report, setReport] = useState(null);
@@ -61,13 +74,20 @@ export function Evaluation() {
             <section key={section} className="evaluation__section">
               <h2 className="evaluation__section-title">{SECTION_TITLE[section] || section}</h2>
               <dl className="evaluation__metrics">
-                {Object.entries(metrics).map(([name, metric]) => (
-                  <div key={name} className="evaluation__metric-row">
-                    <dt className="mono">{name}</dt>
-                    <dd className="mono evaluation__metric-value">{formatValue(name, metric)}</dd>
-                    <dd className="evaluation__metric-label">{metric.label}</dd>
-                  </div>
-                ))}
+                {Object.entries(metrics).map(([name, metric]) => {
+                  const tone = metricTone(metric);
+                  return (
+                    <div key={name} className="evaluation__metric-row">
+                      <dt className="mono">{name}</dt>
+                      <dd
+                        className={`mono evaluation__metric-value${tone ? ` evaluation__metric-value--${tone}` : ''}`}
+                      >
+                        {formatValue(name, metric)}
+                      </dd>
+                      <dd className="evaluation__metric-label">{metric.label}</dd>
+                    </div>
+                  );
+                })}
               </dl>
             </section>
           ))}

@@ -62,7 +62,7 @@ export function Settings() {
       {!settings && !error && <p className="notice settings__loading">Reading your settings…</p>}
 
       {settings && (
-        <form className="ledger-panel settings__panel" onSubmit={handleSave}>
+        <form className="settings__panel" onSubmit={handleSave}>
           <fieldset className="settings__group">
             <legend className="section-title">Language model</legend>
             {MODEL_OPTIONS.map((opt) => (
@@ -113,7 +113,7 @@ export function Settings() {
                   onChange={() => handleField('language_style', opt.value)}
                 />
                 <span>
-                  <span className="settings__option-label">{opt.label}</span>
+                  <span className="mono settings__option-label">{opt.label}</span>
                   <span className="settings__option-note">{opt.note}</span>
                 </span>
               </label>

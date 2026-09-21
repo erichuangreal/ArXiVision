@@ -48,6 +48,13 @@ input {
   color: inherit;
 }
 
+/* Native radio/checkbox controls otherwise render in the browser's default
+   blue, the one bright/saturated color the palette explicitly forbids. */
+input[type='radio'],
+input[type='checkbox'] {
+  accent-color: var(--ink);
+}
+
 /* Browser surfaces carry the design too. */
 ::selection {
   background: var(--ink);
@@ -124,7 +131,7 @@ button:focus-visible {
   font-size: 0.72rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--ink-faint);
+  color: var(--ink-secondary);
   padding-bottom: var(--space-3);
   border-bottom: 1px solid var(--rule);
   margin-bottom: var(--space-3);

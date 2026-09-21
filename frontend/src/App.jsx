@@ -8,6 +8,7 @@ import { CollectionDetail } from './pages/CollectionDetail';
 import { Ask } from './pages/Ask';
 import { Settings } from './pages/Settings';
 import { Evaluation } from './pages/Evaluation';
+import { HowItWorks } from './pages/HowItWorks';
 
 function RequireAuth({ children }) {
   const { apiKey } = useAuth();
@@ -47,6 +48,14 @@ function AppRoutes() {
         element={
           <RequireAuth>
             <Evaluation />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/how-it-works"
+        element={
+          <RequireAuth>
+            <HowItWorks />
           </RequireAuth>
         }
       />

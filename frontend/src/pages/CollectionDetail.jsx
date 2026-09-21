@@ -157,6 +157,7 @@ export function CollectionDetail() {
   const [drafting, setDrafting] = useState(false);
   const [actionError, setActionError] = useState(null);
   const [removingId, setRemovingId] = useState(null);
+  const [confirmRemoveId, setConfirmRemoveId] = useState(null);
 
   useEffect(() => {
     api
@@ -187,6 +188,7 @@ export function CollectionDetail() {
 
   function handleRemove(paperId) {
     setRemovingId(paperId);
+    setConfirmRemoveId(null);
     setActionError(null);
     api
       .removePaperFromCollection(apiKey, id, paperId)
@@ -243,14 +245,34 @@ export function CollectionDetail() {
                 <p className="collection-detail__paper-title">{p.title}</p>
                 <p className="collection-detail__paper-why mono">{p.why_included}</p>
               </div>
-              <button
-                type="button"
-                className="collection-detail__remove"
-                disabled={removingId === p.paper_id}
-                onClick={() => handleRemove(p.paper_id)}
-              >
-                {removingId === p.paper_id ? 'removing…' : 'remove'}
-              </button>
+              {removingId === p.paper_id ? (
+                <span className="collection-detail__remove-status mono">removing…</span>
+              ) : confirmRemoveId === p.paper_id ? (
+                <span className="collection-detail__remove-confirm">
+                  <button
+                    type="button"
+                    className="collection-detail__remove-cancel"
+                    onClick={() => setConfirmRemoveId(null)}
+                  >
+                    cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="collection-detail__remove collection-detail__remove--confirm"
+                    onClick={() => handleRemove(p.paper_id)}
+                  >
+                    confirm remove
+                  </button>
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  className="collection-detail__remove"
+                  onClick={() => setConfirmRemoveId(p.paper_id)}
+                >
+                  remove
+                </button>
+              )}
             </li>
           ))}
         </ol>

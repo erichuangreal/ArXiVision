@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { api, ApiError, describeError } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { Masthead } from '../components/Masthead';
-import { VerificationStrip } from '../components/VerificationStrip';
+import { VerificationSnapshot } from '../components/VerificationSnapshot';
 import { ExpeditionForm, ExpeditionLog } from '../components/ExpeditionPanel';
 import { Icon } from '../components/icons';
 import './Dashboard.css';
@@ -145,6 +145,8 @@ export function Dashboard() {
         )}
       </div>
 
+      {mode === 'cabinet' && <VerificationSnapshot />}
+
       <main className="dashboard__body">
         {mode === 'cabinet' && (
           <>
@@ -202,7 +204,7 @@ export function Dashboard() {
         )}
 
         {mode === 'form' && (
-          <section className="dashboard__panel">
+          <section className="ledger-panel dashboard__panel">
             <h2 className="dashboard__panel-title">New Expedition</h2>
             <ExpeditionForm
               onSubmit={handleSubmitExpedition}
@@ -215,7 +217,7 @@ export function Dashboard() {
         )}
 
         {mode === 'log' && job && (
-          <section className="dashboard__panel">
+          <section className="ledger-panel dashboard__panel">
             <h2 className="dashboard__panel-title">
               Expedition{queued ? ` — next: ${queued.topic}` : ''}
             </h2>
@@ -223,8 +225,6 @@ export function Dashboard() {
           </section>
         )}
       </main>
-
-      <VerificationStrip />
     </div>
   );
 }

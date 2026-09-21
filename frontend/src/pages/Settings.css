@@ -18,6 +18,9 @@
 .settings__panel {
   margin: var(--space-6);
   max-width: 560px;
+  background: var(--ground-card);
+  border: 1px solid var(--rule);
+  padding: var(--space-6);
 }
 
 .settings__group {
@@ -44,7 +47,7 @@
 
 .settings__option-note {
   font-size: 0.78rem;
-  color: var(--ink-faint);
+  color: var(--ink-secondary);
 }
 
 .settings__slider-row {
@@ -66,7 +69,7 @@
 .settings__note {
   margin-top: var(--space-2);
   font-size: 0.78rem;
-  color: var(--ink-faint);
+  color: var(--ink-secondary);
   max-width: 50ch;
 }
 
@@ -100,4 +103,14 @@
 .settings__saved {
   color: var(--verified);
   font-size: 0.8rem;
+}
+
+@media (max-width: 640px) {
+  .settings__panel {
+    margin: var(--space-4);
+  }
+
+  .settings__actions {
+    flex-wrap: wrap;
+  }
 }

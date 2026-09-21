@@ -19,6 +19,23 @@
   gap: var(--space-3);
 }
 
+.masthead__nav-toggle {
+  display: none;
+  background: none;
+  border: 1px solid var(--rule);
+  color: var(--ink-secondary);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: var(--space-2) var(--space-3);
+  cursor: pointer;
+}
+
+.masthead__nav-toggle:hover {
+  color: var(--ink);
+  border-color: var(--ink);
+}
+
 .masthead__nav {
   display: flex;
   gap: var(--space-5);
@@ -65,4 +82,42 @@
 
 .masthead__signout:hover {
   color: var(--ink);
+}
+
+@media (max-width: 640px) {
+  .masthead {
+    justify-content: flex-start;
+  }
+
+  .masthead__mark {
+    flex: 1;
+  }
+
+  .masthead__nav-toggle {
+    display: inline-block;
+    order: 1;
+  }
+
+  .masthead__account {
+    order: 2;
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .masthead__nav {
+    display: none;
+    order: 3;
+    flex-direction: column;
+    gap: var(--space-1);
+    width: 100%;
+    margin-top: var(--space-3);
+  }
+
+  .masthead__nav--open {
+    display: flex;
+  }
+
+  .masthead__nav-link {
+    padding: var(--space-2) 0;
+  }
 }

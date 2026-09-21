@@ -73,6 +73,11 @@ export function ExpeditionForm({ onSubmit, onCancel, busy, error, hasQueuedJob }
 
       {(validation || error) && <p className="expedition-form__error">{validation || error}</p>}
 
+      <p className="expedition-form__expectation">
+        Takes longer for more specimens - downloads are paced a few seconds apart, politely, so arXiv never sees a
+        burst of requests. Capped at 20 expeditions a day per account.
+      </p>
+
       <div className="expedition-form__actions">
         <button type="submit" className="expedition-form__submit" disabled={busy}>
           {busy ? <Icon.Loading className="spin" size={16} /> : <Icon.Compass size={16} />}

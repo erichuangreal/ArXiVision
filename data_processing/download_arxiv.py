@@ -51,11 +51,14 @@ class ArxivUnavailable(requests.RequestException):
     """
 
 
-def _retry_request(attempt_fn, description):
+def _retry_request(attempt_fn, description, max_retries=MAX_RETRIES):
     # attempt_fn does one full try (request + whatever validation it needs)
     # and either returns a result or raises a requests exception.
+    # max_retries=0 (used for the first live search attempt in ingest.py's
+    # _search()) means exactly one try, so a rate limit fails fast instead
+    # of running the full backoff sequence before the local-index fallback.
     last_error = None
-    for attempt in range(MAX_RETRIES + 1):
+    for attempt in range(max_retries + 1):
         try:
             return attempt_fn()
         except requests.HTTPError as error:
@@ -68,16 +71,16 @@ def _retry_request(attempt_fn, description):
             last_error = error
             retry_after = None
 
-        if attempt < MAX_RETRIES:
+        if attempt < max_retries:
             wait = float(retry_after) if retry_after else BASE_BACKOFF_SECONDS * (2 ** attempt)
             print(
                 f"{description} failed ({last_error}); "
-                f"retrying in {wait:.0f}s (attempt {attempt + 1}/{MAX_RETRIES})..."
+                f"retrying in {wait:.0f}s (attempt {attempt + 1}/{max_retries})..."
             )
             time.sleep(wait)
 
     raise ArxivUnavailable(
-        f"{description} did not succeed after {MAX_RETRIES + 1} attempts "
+        f"{description} did not succeed after {max_retries + 1} attempts "
         f"(last error: {last_error}). arXiv may be rate-limiting requests or "
         "temporarily unavailable - try again in a few minutes."
     ) from last_error
@@ -93,7 +96,9 @@ def clean_filename(text: str, max_length: int = 120) -> str:
     return text[:max_length]
 
 
-def _run_search_query(search_query: str, max_results: int, description: str) -> list[dict]:
+def _run_search_query(
+    search_query: str, max_results: int, description: str, max_retries: int = MAX_RETRIES
+) -> list[dict]:
     # One raw arXiv query -> parsed paper list. No exact-phrase-vs-broad
     # decision here; search_arxiv() owns that.
     parameters = {
@@ -111,7 +116,7 @@ def _run_search_query(search_query: str, max_results: int, description: str) -> 
         response.raise_for_status()
         return response
 
-    response = _retry_request(attempt, description)
+    response = _retry_request(attempt, description, max_retries=max_retries)
 
     feed = feedparser.parse(response.content)
 
@@ -164,7 +169,7 @@ def _run_search_query(search_query: str, max_results: int, description: str) -> 
     return papers
 
 
-def search_arxiv(topic: str, max_results: int = 10) -> list[dict]:
+def search_arxiv(topic: str, max_results: int = 10, max_retries: int = MAX_RETRIES) -> list[dict]:
     """
     Search arXiv and return paper metadata.
 
@@ -176,9 +181,14 @@ def search_arxiv(topic: str, max_results: int = 10) -> list[dict]:
     necessarily adjacent or in order) - looser than an exact phrase, but
     still real boolean AND, not arXiv silently ignoring an unparseable
     query and returning its newest submissions regardless of relevance.
+
+    max_retries=0 (ingest.py's first live attempt) means each underlying
+    request fails fast on a single 429/5xx instead of retrying with backoff.
     """
     exact_query = f'all:"{topic}"'
-    papers = _run_search_query(exact_query, max_results, f"arXiv exact-phrase search for '{topic}'")
+    papers = _run_search_query(
+        exact_query, max_results, f"arXiv exact-phrase search for '{topic}'", max_retries=max_retries
+    )
 
     if papers:
         return papers
@@ -189,7 +199,9 @@ def search_arxiv(topic: str, max_results: int = 10) -> list[dict]:
     # "+AND+" arXiv's query parser actually expects.
     broad_query = " AND ".join(f"all:{word}" for word in words) if words else f"all:{topic}"
     print(f"No exact-phrase match for '{topic}'; falling back to a broader search.")
-    return _run_search_query(broad_query, max_results, f"arXiv broad search for '{topic}'")
+    return _run_search_query(
+        broad_query, max_results, f"arXiv broad search for '{topic}'", max_retries=max_retries
+    )
 
 
 def download_pdf(

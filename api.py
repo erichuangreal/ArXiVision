@@ -36,22 +36,67 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-EVAL_LABELS = {
-    "hit@1": "Expected evidence appeared first",
-    "hit@4": "Expected evidence appeared within the first four results",
-    "paper_hit@4": "The expected paper appeared within the first four results",
-    "mrr@4": "How near the top the expected evidence generally ranked (1.0 = always first)",
-    "answers_citing_anything": "Share of answers that cited a source at all",
-    "citation_validity": "Share of citations pointing at a source actually retrieved",
-    "citation_correctness": "Share of citations pointing at the expected page (evaluation set only)",
-    "citation_coverage": "Share of claims sitting under a citation",
-    "claim_support": "Of claims with a checkable fact, share confirmed present in the cited source",
-    "claims_not_applicable": "Count of claims with no checkable fact (opinions, labels) - excluded from claim_support",
-    "answer_correctness": "Share of answers judged to state the same fact as the reference answer, regardless of which page they cite",
-    "numeric_grounding": "Share of numbers in the answer also present in the retrieved text (checks presence, not arithmetic correctness)",
-    "name_grounding": "Share of named people in the answer also present in the retrieved text",
-    "abstention_rate": "Share of unanswerable test questions the system correctly declined",
-    "false_refusal_rate": "Share of answerable test questions the system wrongly declined",
+EVAL_METRICS = {
+    "hit@1": {
+        "label": "Expected evidence appeared first",
+        "higher_is_better": True,
+    },
+    "hit@4": {
+        "label": "Expected evidence appeared within the first four results",
+        "higher_is_better": True,
+    },
+    "paper_hit@4": {
+        "label": "The expected paper appeared within the first four results",
+        "higher_is_better": True,
+    },
+    "mrr@4": {
+        "label": "How near the top the expected evidence generally ranked (1.0 = always first)",
+        "higher_is_better": True,
+    },
+    "answers_citing_anything": {
+        "label": "Share of answers that cited a source at all",
+        "higher_is_better": True,
+    },
+    "citation_validity": {
+        "label": "Share of citations pointing at a source actually retrieved",
+        "higher_is_better": True,
+    },
+    "citation_correctness": {
+        "label": "Share of citations pointing at the expected page (evaluation set only)",
+        "higher_is_better": True,
+    },
+    "citation_coverage": {
+        "label": "Share of claims sitting under a citation",
+        "higher_is_better": True,
+    },
+    "claim_support": {
+        "label": "Of claims with a checkable fact, share confirmed present in the cited source",
+        "higher_is_better": True,
+    },
+    "claims_not_applicable": {
+        "label": "Count of claims with no checkable fact (opinions, labels) - excluded from claim_support",
+        "higher_is_better": None,  # a count, not a rate - no "better direction"
+    },
+    "answer_correctness": {
+        "label": "Share of answers judged to state the same fact as the reference answer, regardless of which page they cite",
+        "higher_is_better": True,
+    },
+    "numeric_grounding": {
+        "label": "Share of numbers in the answer also present in the retrieved text (checks presence, not arithmetic correctness)",
+        "higher_is_better": True,
+    },
+    "name_grounding": {
+        "label": "Share of named people in the answer also present in the retrieved text",
+        "higher_is_better": True,
+    },
+    "abstention_rate": {
+        "label": "Share of unanswerable test questions the system correctly declined",
+        "higher_is_better": True,
+    },
+    "false_refusal_rate": {
+        "label": "Share of answerable test questions the system wrongly declined",
+        "higher_is_better": False,
+    },
 }
 
 
@@ -467,7 +512,11 @@ def evaluation_report(user_id: str = Depends(get_current_user)):
     annotated = {}
     for section, metrics in summary.items():
         annotated[section] = {
-            name: {"value": value, "label": EVAL_LABELS.get(name, "")}
+            name: {
+                "value": value,
+                "label": EVAL_METRICS.get(name, {}).get("label", ""),
+                "higher_is_better": EVAL_METRICS.get(name, {}).get("higher_is_better"),
+            }
             for name, value in metrics.items()
         }
 

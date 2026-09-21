@@ -16,12 +16,41 @@ from data_processing.preprocessing import copy_metadata_files
 
 
 def _search(topic, num_papers):
-    # Falls back to the live search only if that local index hasn't been built yet
+    # Tries arXiv's live search first (one attempt, no retries - a 429/5xx
+    # falls back immediately instead of running the full backoff sequence
+    # search_arxiv() normally uses for a standalone call). Falling back
+    # fast keeps every rate-limited request bounded, while still preferring
+    # live results (arXiv's own index is always current; the local index is
+    # only as fresh as the last `kaggle_search build` run) whenever arXiv
+    # actually cooperates.
+    try:
+        return search_arxiv(topic=topic, max_results=num_papers, max_retries=0)
+    except requests.RequestException as error:
+        print(f"Live arXiv search failed ({error}); falling back to the local index.")
+
     try:
         return search_local(topic=topic, max_results=num_papers)
-    except FileNotFoundError:
-        print("Local arXiv index not built yet; falling back to the live search API.")
-        return search_arxiv(topic=topic, max_results=num_papers)
+    except FileNotFoundError as error:
+        raise RuntimeError(
+            "Live arXiv search failed and no local index is built yet. Run "
+            "`python -m data_processing.kaggle_search download` then `build`."
+        ) from error
+
+
+def _describe_job_error(error):
+    # Mirrors the frontend's api/client.js describeError(): translate an
+    # exception into a message a user can actually read. Our own explicitly
+    # raised RuntimeErrors above already carry a clean, specific message;
+    # anything else (a raw HTTP/SDK exception) gets a calm, generic fallback
+    # instead of a technical str(error) dump - request URLs, status lines,
+    # retry counts - straight into the Field Log.
+    if isinstance(error, RuntimeError):
+        return str(error)
+    return (
+        "Something went wrong partway through this expedition, likely a temporary "
+        "network or service issue. Try again - if it keeps happening, it's worth "
+        "reporting."
+    )
 
 
 def start_ingest(user_id, topic, num_papers):
@@ -41,9 +70,10 @@ def _run_ingest(user_id, job_id, topic, num_papers):
         db.update_job(user_id, job_id, status="ready", stage="ready")
     except Exception as error:
         traceback.print_exc()
+        message = _describe_job_error(error)
         db.update_job(
             user_id, job_id, status="failed",
-            message=str(error), error=str(error),
+            message=message, error=message,
         )
 
 
@@ -126,7 +156,7 @@ def _run_pipeline(user_id, job_id, topic, num_papers):
     except Exception as error:
         # Verification is a bonus signal on top of a successful ingest, not
         # the point of the expedition - a failure here shouldn't undo it.
-        eval_note = f" Verification failed: {error}"
+        eval_note = f" Verification failed: {_describe_job_error(error)}"
 
     db.update_job(
         user_id, job_id, stage="ready", current=1,

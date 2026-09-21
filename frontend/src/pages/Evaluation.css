@@ -76,8 +76,18 @@
 }
 
 .evaluation__metric-value {
-  color: var(--verified);
+  color: var(--ink);
   font-weight: 500;
+}
+
+/* Color only signals when a value is actually notable in the direction
+   that metric is defined to be good/bad in - never decoration by default. */
+.evaluation__metric-value--verified {
+  color: var(--verified);
+}
+
+.evaluation__metric-value--caution {
+  color: var(--caution);
 }
 
 .evaluation__metric-label {

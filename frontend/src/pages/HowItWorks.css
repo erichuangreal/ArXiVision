@@ -1,0 +1,476 @@
+.how-it-works {
+  min-height: 100vh;
+  padding-bottom: var(--space-8);
+}
+
+.how-it-works__intro {
+  padding: var(--space-6) var(--space-6) var(--space-5);
+  max-width: 60ch;
+}
+
+.how-it-works__title {
+  font-size: 1.6rem;
+  font-style: italic;
+  margin-bottom: var(--space-3);
+}
+
+.how-it-works__lede {
+  color: var(--ink-secondary);
+  font-size: 0.9rem;
+}
+
+/* --- The Live Trace: a draggable, keyboard-operable pipeline rail --- */
+
+.trace {
+  padding: 0 var(--space-6) var(--space-6);
+}
+
+.trace__track {
+  position: relative;
+  height: 2.5rem;
+  margin: 0 0.6rem;
+  cursor: grab;
+  touch-action: none;
+}
+
+.trace__track:active {
+  cursor: grabbing;
+}
+
+.trace__track::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--rule);
+  transform: translateY(-50%);
+}
+
+.trace__fill {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  height: 1px;
+  background: var(--ink);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.trace__stop {
+  position: absolute;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  margin-left: -5px;
+  transform: translateY(-50%);
+  border-radius: 2px;
+  border: 1.5px solid var(--ink);
+  background: var(--ground-card);
+  padding: 0;
+  cursor: pointer;
+}
+
+.trace__stop--filled {
+  background: var(--ink);
+}
+
+.trace__handle {
+  position: absolute;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  margin-left: -9px;
+  transform: translateY(-50%);
+  border-radius: 2px;
+  border: 1.5px solid var(--ink);
+  background: var(--ground-card);
+  box-sizing: border-box;
+}
+
+.trace__handle::after {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-radius: 1px;
+  background: var(--ink);
+}
+
+.trace__stop:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+
+.trace__labels {
+  position: relative;
+  height: 1.4em;
+  margin: var(--space-3) 0.6rem 0;
+  font-size: 0.66rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--ink-secondary);
+}
+
+.trace__labels span {
+  position: absolute;
+  top: 0;
+  max-width: 6.5rem;
+  text-align: center;
+  transform: translateX(-50%);
+}
+
+.trace__labels span:first-child {
+  text-align: left;
+  transform: translateX(0);
+}
+
+.trace__labels span:last-child {
+  text-align: right;
+  transform: translateX(-100%);
+}
+
+.trace__label--active {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.trace__hint {
+  margin-top: var(--space-3);
+  font-size: 0.68rem;
+  letter-spacing: 0.02em;
+  color: var(--ink-secondary);
+}
+
+/* --- Detail panel --- */
+
+.how-it-works__detail {
+  margin: 0 var(--space-6);
+  max-width: 900px;
+  min-height: 420px;
+}
+
+.how-it-works__stage-heading {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-secondary);
+  margin-bottom: var(--space-2);
+}
+
+.how-it-works__lede {
+  font-size: 1.05rem;
+  font-style: italic;
+  color: var(--ink);
+  max-width: 60ch;
+  margin-bottom: var(--space-4);
+}
+
+.how-it-works__status {
+  font-size: 0.85rem;
+  color: var(--ink-secondary);
+  margin-bottom: var(--space-3);
+}
+
+.how-it-works__stat {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--ink);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.how-it-works__paragraph {
+  font-size: 0.92rem;
+  color: var(--ink-secondary);
+  max-width: 68ch;
+  margin-bottom: var(--space-3);
+}
+
+.how-it-works__paragraph:last-child {
+  margin-bottom: 0;
+}
+
+.how-it-works__note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  font-size: 0.85rem;
+  font-style: italic;
+  max-width: 68ch;
+  padding: var(--space-3) 0;
+  margin: var(--space-3) 0;
+  border-top: 1px dotted var(--rule);
+  border-bottom: 1px dotted var(--rule);
+}
+
+.how-it-works__note svg {
+  flex-shrink: 0;
+  margin-top: 0.2em;
+}
+
+.how-it-works__note--caution {
+  color: var(--caution);
+}
+
+.how-it-works__note--verified {
+  color: var(--verified);
+}
+
+/* --- Per-stage diagrams: hand-built, ink-only, no charting library --- */
+
+.how-it-works__diagram {
+  margin-bottom: var(--space-4);
+  padding: var(--space-4) 0;
+  border-top: 1px dotted var(--rule);
+  border-bottom: 1px dotted var(--rule);
+}
+
+/* Flow: boxes connected by arrows, used by Search / Embed / Answer. */
+
+.flow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.flow__node {
+  border: 1px solid var(--ink);
+  border-radius: 2px;
+  background: transparent;
+  padding: var(--space-2) var(--space-3);
+  font-size: 0.78rem;
+  letter-spacing: 0.01em;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.flow__arrow {
+  color: var(--ink-secondary);
+  flex-shrink: 0;
+}
+
+.flow__arrow--vertical {
+  transform: rotate(90deg);
+}
+
+.flow__branch {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.flow__branch-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.flow--converge {
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.flow__checks {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.flow__node--check {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+/* Pace strip: paced download slots, used by Download. */
+
+.pace-strip__track {
+  position: relative;
+  height: 1.25rem;
+  margin: 0 4px;
+}
+
+.pace-strip__track::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--rule);
+  transform: translateY(-50%);
+}
+
+.pace-strip__tick {
+  position: absolute;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  margin-left: -4px;
+  transform: translateY(-50%);
+  border-radius: 2px;
+  border: 1.5px solid var(--ink);
+  background: var(--ground-card);
+}
+
+.pace-strip__intervals {
+  position: relative;
+  height: 1.2em;
+  margin: 0 4px;
+  padding-top: var(--space-1);
+  font-size: 0.62rem;
+  color: var(--ink-secondary);
+}
+
+.pace-strip__intervals span {
+  position: absolute;
+  top: var(--space-1);
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.pace-strip__caption {
+  margin-top: var(--space-3);
+  font-size: 0.7rem;
+  color: var(--ink-secondary);
+}
+
+/* Horizontal bar chart: used by Embed & Index (papers -> chunks scale). */
+
+.hbar-chart {
+  margin-top: var(--space-4);
+}
+
+.hbar-chart__row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+.hbar-chart__label {
+  width: 8rem;
+  flex-shrink: 0;
+  font-size: 0.68rem;
+  color: var(--ink-secondary);
+}
+
+.hbar-chart__track {
+  flex: 1;
+  height: 14px;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.hbar-chart__fill {
+  height: 100%;
+  background: var(--ink);
+}
+
+.hbar-chart__value {
+  width: 4rem;
+  flex-shrink: 0;
+  text-align: right;
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.hbar-chart__caption {
+  margin-top: var(--space-1);
+  font-size: 0.62rem;
+  color: var(--ink-secondary);
+}
+
+/* Chunk strip: overlapping token chunks, used by Extract & Chunk. */
+
+.chunk-strip {
+  position: relative;
+  height: 2.75rem;
+  margin-bottom: var(--space-6);
+}
+
+.chunk-strip__chunk {
+  position: absolute;
+  top: 0;
+  height: 2.25rem;
+  border: 1px solid var(--ink);
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(43, 32, 19, 0.07);
+  mix-blend-mode: multiply;
+  font-size: 0.62rem;
+  color: var(--ink);
+}
+
+.chunk-strip__caption {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: var(--space-2);
+  font-size: 0.68rem;
+  color: var(--ink-secondary);
+}
+
+/* Metric table: comparative before/after numbers, used by Hybrid Retrieve. */
+
+.metric-table {
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+
+.metric-table th,
+.metric-table td {
+  text-align: left;
+  padding: var(--space-2) var(--space-4) var(--space-2) 0;
+  border-bottom: 1px dotted var(--rule);
+}
+
+.metric-table th {
+  font-size: 0.66rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-secondary);
+  font-weight: 400;
+}
+
+.metric-table__hero-col {
+  color: var(--ink);
+}
+
+.metric-table__hero-value {
+  color: var(--verified);
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+@media (max-width: 640px) {
+  .trace__labels span {
+    font-size: 0.6rem;
+    max-width: 3.3rem;
+  }
+
+  .flow {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .flow__arrow:not(.flow__arrow--vertical) {
+    transform: rotate(90deg);
+  }
+
+  .metric-table {
+    font-size: 0.72rem;
+  }
+}

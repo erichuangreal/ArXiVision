@@ -35,7 +35,7 @@
   font-size: 0.68rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--ink-faint);
+  color: var(--ink-secondary);
   margin-bottom: var(--space-1);
 }
 
@@ -55,6 +55,7 @@
 .create-collection__field textarea:focus-visible {
   outline: none;
   border-bottom-color: var(--ink);
+  border-bottom-width: 2px;
 }
 
 .create-collection__papers {
@@ -116,4 +117,14 @@
 .create-collection__cancel:hover,
 .create-collection__link:hover {
   color: var(--ink);
+}
+
+@media (max-width: 640px) {
+  .create-collection__body {
+    padding: var(--space-4);
+  }
+
+  .create-collection__actions {
+    flex-wrap: wrap;
+  }
 }

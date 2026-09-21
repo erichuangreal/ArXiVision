@@ -50,14 +50,14 @@
 
 .collection-detail__paper-why {
   font-size: 0.72rem;
-  color: var(--ink-faint);
+  color: var(--ink-secondary);
 }
 
 .collection-detail__remove {
   flex-shrink: 0;
   background: none;
   border: none;
-  color: var(--ink-faint);
+  color: var(--ink-secondary);
   text-decoration: underline;
   text-underline-offset: 3px;
   font-size: 0.78rem;
@@ -66,6 +66,38 @@
 
 .collection-detail__remove:hover {
   color: var(--danger);
+}
+
+.collection-detail__remove-status {
+  flex-shrink: 0;
+  font-size: 0.78rem;
+  color: var(--ink-secondary);
+}
+
+.collection-detail__remove-confirm {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+
+.collection-detail__remove-cancel {
+  background: none;
+  border: none;
+  color: var(--ink-secondary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.collection-detail__remove-cancel:hover {
+  color: var(--ink);
+}
+
+.collection-detail__remove--confirm {
+  color: var(--danger);
+  font-weight: 500;
 }
 
 .collection-detail__add-toggle {
@@ -119,6 +151,7 @@
 .add-specimen__field select:focus-visible {
   outline: none;
   border-bottom-color: var(--ink);
+  border-bottom-width: 2px;
 }
 
 .add-specimen__actions {

@@ -19,7 +19,7 @@
   font-size: 0.7rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--ink-faint);
+  color: var(--ink-secondary);
   margin-bottom: var(--space-2);
 }
 
@@ -35,11 +35,19 @@
 .expedition-form__field input:focus-visible {
   outline: none;
   border-bottom-color: var(--ink);
+  border-bottom-width: 2px;
 }
 
 .expedition-form__error {
   color: var(--danger);
   font-size: 0.85rem;
+  margin-bottom: var(--space-4);
+}
+
+.expedition-form__expectation {
+  color: var(--ink-secondary);
+  font-size: 0.78rem;
+  max-width: 48ch;
   margin-bottom: var(--space-4);
 }
 
