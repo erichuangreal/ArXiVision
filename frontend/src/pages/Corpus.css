@@ -127,6 +127,8 @@
   text-underline-offset: 3px;
 }
 
+/* Always visible once specimens exist - not just after the first checkbox
+   is clicked - so the comparison feature is discoverable, not hidden. */
 .corpus__action-bar {
   position: fixed;
   bottom: 0;
@@ -137,25 +139,43 @@
   justify-content: space-between;
   gap: var(--space-4);
   padding: var(--space-4) var(--space-6);
-  background: var(--ink);
-  color: var(--ground-card);
+  background: var(--ground-raised);
+  border-top: 1px solid var(--rule);
+  color: var(--ink-secondary);
   font-size: 0.85rem;
+  transition: background 150ms ease, color 150ms ease;
+}
+
+.corpus__action-bar--active {
+  background: var(--ink);
+  border-top-color: var(--ink);
+  color: var(--ground-card);
 }
 
 .corpus__compare {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  border: 1px solid var(--ground-card);
+  border: 1px solid var(--ink-secondary);
   background: none;
-  color: var(--ground-card);
+  color: var(--ink-secondary);
   padding: var(--space-2) var(--space-4);
   cursor: pointer;
 }
 
-.corpus__compare:hover {
+.corpus__action-bar--active .corpus__compare {
+  border-color: var(--ground-card);
+  color: var(--ground-card);
+}
+
+.corpus__action-bar--active .corpus__compare:hover {
   background: var(--ground-card);
   color: var(--ink);
+}
+
+.corpus__compare:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 @media (max-width: 640px) {

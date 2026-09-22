@@ -81,8 +81,7 @@ export function Corpus() {
     <div className="corpus">
       <Masthead />
       <p className="corpus__intro">
-        A specimen is a paper in your corpus, grouped by the expedition that brought it in. A comparison can
-        only span specimens from the same expedition.
+        Check any specimens below to compare what they establish side by side.
       </p>
 
       <form className="corpus__search" onSubmit={handleSearch}>
@@ -155,12 +154,16 @@ export function Corpus() {
         ))}
       </main>
 
-      {selected.size > 0 && (
-        <div className="corpus__action-bar">
+      {papers && papers.length > 0 && (
+        <div className={`corpus__action-bar${selected.size >= 2 ? ' corpus__action-bar--active' : ''}`}>
           <span className="mono">
-            {selected.size} specimen{selected.size === 1 ? '' : 's'} selected from “{selectedTopic}”
+            {selected.size >= 2
+              ? `${selected.size} specimens selected from “${selectedTopic}”`
+              : selected.size === 1
+              ? `1 specimen selected from “${selectedTopic}” — select at least one more to compare`
+              : 'Check two or more specimens above to start a comparison'}
           </span>
-          <button type="button" className="corpus__compare" onClick={handleCompare}>
+          <button type="button" className="corpus__compare" onClick={handleCompare} disabled={selected.size < 2}>
             Compare selected
             <Icon.ArrowRight size={16} />
           </button>
