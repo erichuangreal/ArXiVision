@@ -101,11 +101,15 @@ def _run_search_query(
 ) -> list[dict]:
     # One raw arXiv query -> parsed paper list. No exact-phrase-vs-broad
     # decision here; search_arxiv() owns that.
+    # sortBy=relevance, not submittedDate: date-sorting a loose/padded match
+    # set just surfaces whatever's currently flooding arXiv's submission
+    # stream (heavily ML right now, across nearly every subfield) instead of
+    # the papers that actually best match the query - confirmed 2026-09-30.
     parameters = {
         "search_query": search_query,
         "start": 0,
         "max_results": max_results,
-        "sortBy": "submittedDate",
+        "sortBy": "relevance",
         "sortOrder": "descending",
     }
 
