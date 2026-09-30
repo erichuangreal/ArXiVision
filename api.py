@@ -1,3 +1,4 @@
+import traceback
 from typing import List, Optional
 
 from fastapi import Depends, FastAPI, Header, HTTPException
@@ -452,6 +453,24 @@ def remove_paper(collection_id: str, paper_id: str, user_id: str = Depends(get_c
     return result
 
 
+def _synthesis_failure(action: str, error: Exception):
+    # Every call here goes through an LLM; an unhandled failure previously
+    # 500'd with no detail, so the frontend's describeError() fell through
+    # to its own generic fallback text with nothing server-side to explain
+    # why - confirmed 2026-09-30 chasing a "The comparison failed" report
+    # that turned out server logs had nothing for at all. Log the real
+    # traceback here (where it's actually useful) and hand back a message
+    # a user can act on instead of a silent 500.
+    traceback.print_exc()
+    return HTTPException(
+        status_code=502,
+        detail=(
+            f"The {action} could not be completed, likely a temporary issue with the "
+            "language model service. Try again. If it keeps happening, it's worth reporting."
+        ),
+    )
+
+
 @app.post("/collections/{collection_id}/compare")
 def compare_collection(collection_id: str, user_id: str = Depends(get_current_user)):
     rag = get_user_rag(user_id)
@@ -462,14 +481,17 @@ def compare_collection(collection_id: str, user_id: str = Depends(get_current_us
 
     settings = db.get_settings(user_id)
     paper_ids = [p["paper_id"] for p in collection["papers"]]
-    rows = synthesis.compare_papers(
-        rag, collection["question"], paper_ids,
-        model=settings["model"], temperature=settings["temperature"], language_style=settings["language_style"],
-    )
-    contradictions = synthesis.find_contradictions(
-        collection["question"], rows,
-        model=settings["model"], temperature=settings["temperature"], language_style=settings["language_style"],
-    )
+    try:
+        rows = synthesis.compare_papers(
+            rag, collection["question"], paper_ids,
+            model=settings["model"], temperature=settings["temperature"], language_style=settings["language_style"],
+        )
+        contradictions = synthesis.find_contradictions(
+            collection["question"], rows,
+            model=settings["model"], temperature=settings["temperature"], language_style=settings["language_style"],
+        )
+    except Exception as error:
+        raise _synthesis_failure("comparison", error) from error
 
     return db.update_collection(user_id, collection_id, comparison=rows, contradictions=contradictions)
 
@@ -487,10 +509,13 @@ def followups_for_collection(collection_id: str, user_id: str = Depends(get_curr
     enforce_daily_limit(user_id, "followups")
 
     settings = db.get_settings(user_id)
-    suggestions = synthesis.suggest_followups(
-        collection["question"], collection["comparison"],
-        model=settings["model"], temperature=settings["temperature"], language_style=settings["language_style"],
-    )
+    try:
+        suggestions = synthesis.suggest_followups(
+            collection["question"], collection["comparison"],
+            model=settings["model"], temperature=settings["temperature"], language_style=settings["language_style"],
+        )
+    except Exception as error:
+        raise _synthesis_failure("follow-up suggestions", error) from error
 
     return db.update_collection(user_id, collection_id, followups=suggestions)
 
