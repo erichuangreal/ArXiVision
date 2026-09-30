@@ -1,3 +1,4 @@
+import threading
 import traceback
 from typing import List, Optional
 
@@ -453,22 +454,32 @@ def remove_paper(collection_id: str, paper_id: str, user_id: str = Depends(get_c
     return result
 
 
-def _synthesis_failure(action: str, error: Exception):
-    # Every call here goes through an LLM; an unhandled failure previously
-    # 500'd with no detail, so the frontend's describeError() fell through
-    # to its own generic fallback text with nothing server-side to explain
-    # why - confirmed 2026-09-30 chasing a "The comparison failed" report
-    # that turned out server logs had nothing for at all. Log the real
-    # traceback here (where it's actually useful) and hand back a message
-    # a user can act on instead of a silent 500.
-    traceback.print_exc()
-    return HTTPException(
-        status_code=502,
-        detail=(
-            f"The {action} could not be completed, likely a temporary issue with the "
-            "language model service. Try again. If it keeps happening, it's worth reporting."
-        ),
+def _synthesis_error_message(action: str, error: Exception) -> str:
+    traceback.print_exception(type(error), error, error.__traceback__)
+    return (
+        f"The {action} could not be completed, likely a temporary issue with the "
+        "language model service. Try again. If it keeps happening, it's worth reporting."
     )
+
+
+def _run_compare(user_id: str, collection_id: str, rag, question: str, paper_ids: list, settings: dict):
+    try:
+        rows = synthesis.compare_papers(
+            rag, question, paper_ids,
+            model=settings["model"], temperature=settings["temperature"], language_style=settings["language_style"],
+        )
+        contradictions = synthesis.find_contradictions(
+            question, rows,
+            model=settings["model"], temperature=settings["temperature"], language_style=settings["language_style"],
+        )
+        db.update_collection(
+            user_id, collection_id,
+            comparison=rows, contradictions=contradictions,
+            comparison_status="ready", comparison_error=None,
+        )
+    except Exception as error:
+        message = _synthesis_error_message("comparison", error)
+        db.update_collection(user_id, collection_id, comparison_status="failed", comparison_error=message)
 
 
 @app.post("/collections/{collection_id}/compare")
@@ -477,23 +488,34 @@ def compare_collection(collection_id: str, user_id: str = Depends(get_current_us
     collection = db.get_collection(user_id, collection_id)
     if collection is None:
         raise HTTPException(status_code=404, detail="Collection not found.")
+    if collection.get("comparison_status") == "running":
+        raise HTTPException(status_code=409, detail="A comparison is already running for this collection.")
     enforce_daily_limit(user_id, "compare")
 
     settings = db.get_settings(user_id)
     paper_ids = [p["paper_id"] for p in collection["papers"]]
-    try:
-        rows = synthesis.compare_papers(
-            rag, collection["question"], paper_ids,
-            model=settings["model"], temperature=settings["temperature"], language_style=settings["language_style"],
-        )
-        contradictions = synthesis.find_contradictions(
-            collection["question"], rows,
-            model=settings["model"], temperature=settings["temperature"], language_style=settings["language_style"],
-        )
-    except Exception as error:
-        raise _synthesis_failure("comparison", error) from error
+    db.update_collection(user_id, collection_id, comparison_status="running", comparison_error=None)
 
-    return db.update_collection(user_id, collection_id, comparison=rows, contradictions=contradictions)
+    thread = threading.Thread(
+        target=_run_compare,
+        args=(user_id, collection_id, rag, collection["question"], paper_ids, settings),
+        daemon=True,
+    )
+    thread.start()
+
+    return db.get_collection(user_id, collection_id)
+
+
+def _run_followups(user_id: str, collection_id: str, question: str, comparison: list, settings: dict):
+    try:
+        suggestions = synthesis.suggest_followups(
+            question, comparison,
+            model=settings["model"], temperature=settings["temperature"], language_style=settings["language_style"],
+        )
+        db.update_collection(user_id, collection_id, followups=suggestions, followups_status="ready", followups_error=None)
+    except Exception as error:
+        message = _synthesis_error_message("follow-up suggestions", error)
+        db.update_collection(user_id, collection_id, followups_status="failed", followups_error=message)
 
 
 @app.post("/collections/{collection_id}/followups")
@@ -506,18 +528,21 @@ def followups_for_collection(collection_id: str, user_id: str = Depends(get_curr
             status_code=400,
             detail="Run /collections/{id}/compare before requesting follow-ups.",
         )
+    if collection.get("followups_status") == "running":
+        raise HTTPException(status_code=409, detail="Follow-ups are already being drafted for this collection.")
     enforce_daily_limit(user_id, "followups")
 
     settings = db.get_settings(user_id)
-    try:
-        suggestions = synthesis.suggest_followups(
-            collection["question"], collection["comparison"],
-            model=settings["model"], temperature=settings["temperature"], language_style=settings["language_style"],
-        )
-    except Exception as error:
-        raise _synthesis_failure("follow-up suggestions", error) from error
+    db.update_collection(user_id, collection_id, followups_status="running", followups_error=None)
 
-    return db.update_collection(user_id, collection_id, followups=suggestions)
+    thread = threading.Thread(
+        target=_run_followups,
+        args=(user_id, collection_id, collection["question"], collection["comparison"], settings),
+        daemon=True,
+    )
+    thread.start()
+
+    return db.get_collection(user_id, collection_id)
 
 
 @app.get("/evaluation")

@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { api, describeError } from '../api/client';
 import { useAuth } from '../context/AuthContext';
@@ -147,17 +147,19 @@ function AddSpecimen({ apiKey, collectionId, existingIds, topic, onAdded }) {
   );
 }
 
+const POLL_MS = 2500;
+
 export function CollectionDetail() {
   const { id } = useParams();
   const { apiKey } = useAuth();
 
   const [collection, setCollection] = useState(null);
   const [loadError, setLoadError] = useState(null);
-  const [comparing, setComparing] = useState(false);
-  const [drafting, setDrafting] = useState(false);
   const [actionError, setActionError] = useState(null);
   const [removingId, setRemovingId] = useState(null);
   const [confirmRemoveId, setConfirmRemoveId] = useState(null);
+
+  const pollRef = useRef(null);
 
   useEffect(() => {
     api
@@ -166,24 +168,40 @@ export function CollectionDetail() {
       .catch(() => setLoadError('This comparison could not be found.'));
   }, [apiKey, id]);
 
+  // Compare and follow-ups both run as a background job server-side (several
+  // sequential LLM calls - too slow for one request/response round trip),
+  // the same pattern the expedition log already polls for.
+  const comparing = collection?.comparison_status === 'running';
+  const drafting = collection?.followups_status === 'running';
+
+  useEffect(() => {
+    if (!comparing && !drafting) {
+      clearInterval(pollRef.current);
+      return;
+    }
+    pollRef.current = setInterval(() => {
+      api
+        .getCollection(apiKey, id)
+        .then(setCollection)
+        .catch(() => clearInterval(pollRef.current));
+    }, POLL_MS);
+    return () => clearInterval(pollRef.current);
+  }, [comparing, drafting, apiKey, id]);
+
   function handleCompare() {
-    setComparing(true);
     setActionError(null);
     api
       .compareCollection(apiKey, id)
       .then(setCollection)
-      .catch((err) => setActionError(describeError(err, 'The comparison failed.')))
-      .finally(() => setComparing(false));
+      .catch((err) => setActionError(describeError(err, 'The comparison failed.')));
   }
 
   function handleFollowups() {
-    setDrafting(true);
     setActionError(null);
     api
       .followupsForCollection(apiKey, id)
       .then(setCollection)
-      .catch((err) => setActionError(describeError(err, 'Drafting follow-ups failed.')))
-      .finally(() => setDrafting(false));
+      .catch((err) => setActionError(describeError(err, 'Drafting follow-ups failed.')));
   }
 
   function handleRemove(paperId) {
@@ -285,7 +303,11 @@ export function CollectionDetail() {
         />
       </section>
 
-      {actionError && <p className="collection-detail__error">{actionError}</p>}
+      {(actionError || collection.comparison_error || collection.followups_error) && (
+        <p className="collection-detail__error">
+          {actionError || collection.comparison_error || collection.followups_error}
+        </p>
+      )}
 
       <section className="collection-detail__actions">
         <button type="button" className="collection-detail__action" onClick={handleCompare} disabled={comparing}>
