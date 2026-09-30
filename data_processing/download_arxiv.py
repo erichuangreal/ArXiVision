@@ -169,6 +169,33 @@ def _run_search_query(
     return papers
 
 
+def _word_variants(word: str) -> set[str]:
+    # A crude singular/plural fold, not real stemming - "capybaras" should
+    # still match a paper that only ever says "Capybara" (singular), which
+    # is common for a model/system name used as an adjective in a title.
+    variants = {word}
+    if word.endswith("s") and len(word) > 3:
+        variants.add(word[:-1])
+    else:
+        variants.add(word + "s")
+    return variants
+
+
+def _paper_matches_topic(paper: dict, topic: str) -> bool:
+    # arXiv's own "all:" search - even a quoted exact-phrase query - does
+    # not reliably enforce that the phrase actually appears in the result:
+    # for a narrow/unusual topic (e.g. "capybaras"), it has been observed
+    # padding results with unrelated, recently-submitted papers rather than
+    # returning fewer real matches. Verify every word ourselves instead of
+    # trusting arXiv's relevance ranking, the same way every other claim in
+    # this app is checked against real text rather than taken on faith.
+    haystack = f"{paper['title']} {paper['abstract']}".lower()
+    return all(
+        any(variant in haystack for variant in _word_variants(word.lower()))
+        for word in topic.split()
+    )
+
+
 def search_arxiv(topic: str, max_results: int = 10, max_retries: int = MAX_RETRIES) -> list[dict]:
     """
     Search arXiv and return paper metadata.
@@ -178,9 +205,12 @@ def search_arxiv(topic: str, max_results: int = 10, max_retries: int = MAX_RETRI
     any paper's own text, e.g. "airplane wing designs", can legitimately
     match zero papers even though the subject is well covered). Falls back
     to requiring every word to appear somewhere in the paper (not
-    necessarily adjacent or in order) - looser than an exact phrase, but
-    still real boolean AND, not arXiv silently ignoring an unparseable
-    query and returning its newest submissions regardless of relevance.
+    necessarily adjacent or in order) - looser than an exact phrase.
+
+    Every result is verified against its own title/abstract text before
+    being returned (see _paper_matches_topic) - arXiv's "all:" search does
+    not reliably enforce this itself, confirmed 2026-09-30 when a search
+    for "capybaras" returned unrelated recent papers alongside real matches.
 
     max_retries=0 (ingest.py's first live attempt) means each underlying
     request fails fast on a single 429/5xx instead of retrying with backoff.
@@ -189,6 +219,7 @@ def search_arxiv(topic: str, max_results: int = 10, max_retries: int = MAX_RETRI
     papers = _run_search_query(
         exact_query, max_results, f"arXiv exact-phrase search for '{topic}'", max_retries=max_retries
     )
+    papers = [p for p in papers if _paper_matches_topic(p, topic)]
 
     if papers:
         return papers
@@ -199,9 +230,10 @@ def search_arxiv(topic: str, max_results: int = 10, max_retries: int = MAX_RETRI
     # "+AND+" arXiv's query parser actually expects.
     broad_query = " AND ".join(f"all:{word}" for word in words) if words else f"all:{topic}"
     print(f"No exact-phrase match for '{topic}'; falling back to a broader search.")
-    return _run_search_query(
+    papers = _run_search_query(
         broad_query, max_results, f"arXiv broad search for '{topic}'", max_retries=max_retries
     )
+    return [p for p in papers if _paper_matches_topic(p, topic)]
 
 
 def download_pdf(

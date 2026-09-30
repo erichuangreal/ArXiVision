@@ -24,7 +24,15 @@ def _search(topic, num_papers):
     # only as fresh as the last `kaggle_search build` run) whenever arXiv
     # actually cooperates.
     try:
-        return search_arxiv(topic=topic, max_results=num_papers, max_retries=0)
+        papers = search_arxiv(topic=topic, max_results=num_papers, max_retries=0)
+        if papers:
+            return papers
+        # search_arxiv() verifies every result against its own title/abstract
+        # text (arXiv's "all:" search doesn't reliably enforce this itself -
+        # see _paper_matches_topic), so an empty list here means live search
+        # genuinely found nothing real, not that it failed. Try the local
+        # index rather than accepting arXiv's unfiltered padding.
+        print(f"Live arXiv search for '{topic}' found no genuinely matching papers; falling back to the local index.")
     except requests.RequestException as error:
         print(f"Live arXiv search failed ({error}); falling back to the local index.")
 
