@@ -153,3 +153,20 @@ button:focus-visible {
 .ruled-list > li {
   border-bottom: 1px dotted var(--rule);
 }
+
+/* Shared loading-spinner animation, used on busy buttons/icons app-wide. */
+.spin {
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spin {
+    animation: none;
+  }
+}

@@ -463,19 +463,24 @@ def _synthesis_error_message(action: str, error: Exception) -> str:
 
 
 def _run_compare(user_id: str, collection_id: str, rag, question: str, paper_ids: list, settings: dict):
+    def on_progress(message):
+        db.update_collection(user_id, collection_id, comparison_message=message)
+
     try:
         rows = synthesis.compare_papers(
             rag, question, paper_ids,
             model=settings["model"], temperature=settings["temperature"], language_style=settings["language_style"],
+            progress_callback=on_progress,
         )
         contradictions = synthesis.find_contradictions(
             question, rows,
             model=settings["model"], temperature=settings["temperature"], language_style=settings["language_style"],
+            progress_callback=on_progress,
         )
         db.update_collection(
             user_id, collection_id,
             comparison=rows, contradictions=contradictions,
-            comparison_status="ready", comparison_error=None,
+            comparison_status="ready", comparison_error=None, comparison_message="Comparison complete.",
         )
     except Exception as error:
         message = _synthesis_error_message("comparison", error)
@@ -494,7 +499,10 @@ def compare_collection(collection_id: str, user_id: str = Depends(get_current_us
 
     settings = db.get_settings(user_id)
     paper_ids = [p["paper_id"] for p in collection["papers"]]
-    db.update_collection(user_id, collection_id, comparison_status="running", comparison_error=None)
+    db.update_collection(
+        user_id, collection_id,
+        comparison_status="running", comparison_error=None, comparison_message="Starting comparison...",
+    )
 
     thread = threading.Thread(
         target=_run_compare,
@@ -507,12 +515,20 @@ def compare_collection(collection_id: str, user_id: str = Depends(get_current_us
 
 
 def _run_followups(user_id: str, collection_id: str, question: str, comparison: list, settings: dict):
+    def on_progress(message):
+        db.update_collection(user_id, collection_id, followups_message=message)
+
     try:
         suggestions = synthesis.suggest_followups(
             question, comparison,
             model=settings["model"], temperature=settings["temperature"], language_style=settings["language_style"],
+            progress_callback=on_progress,
         )
-        db.update_collection(user_id, collection_id, followups=suggestions, followups_status="ready", followups_error=None)
+        db.update_collection(
+            user_id, collection_id,
+            followups=suggestions, followups_status="ready", followups_error=None,
+            followups_message="Follow-ups drafted.",
+        )
     except Exception as error:
         message = _synthesis_error_message("follow-up suggestions", error)
         db.update_collection(user_id, collection_id, followups_status="failed", followups_error=message)
@@ -533,7 +549,10 @@ def followups_for_collection(collection_id: str, user_id: str = Depends(get_curr
     enforce_daily_limit(user_id, "followups")
 
     settings = db.get_settings(user_id)
-    db.update_collection(user_id, collection_id, followups_status="running", followups_error=None)
+    db.update_collection(
+        user_id, collection_id,
+        followups_status="running", followups_error=None, followups_message="Starting...",
+    )
 
     thread = threading.Thread(
         target=_run_followups,

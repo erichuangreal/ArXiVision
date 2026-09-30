@@ -68,8 +68,10 @@ def init_db():
         _add_column_if_missing(conn, "collections", "contradictions_json", "contradictions_json TEXT")
         _add_column_if_missing(conn, "collections", "comparison_status", "comparison_status TEXT")
         _add_column_if_missing(conn, "collections", "comparison_error", "comparison_error TEXT")
+        _add_column_if_missing(conn, "collections", "comparison_message", "comparison_message TEXT")
         _add_column_if_missing(conn, "collections", "followups_status", "followups_status TEXT")
         _add_column_if_missing(conn, "collections", "followups_error", "followups_error TEXT")
+        _add_column_if_missing(conn, "collections", "followups_message", "followups_message TEXT")
         # One row per (user, action, day); incremented and capped in
         # api.py so a leaked or shared key can't run up unbounded API spend.
         conn.execute("""
@@ -177,8 +179,10 @@ def _collection_row_to_dict(row):
         "contradictions": json.loads(row["contradictions_json"]) if row["contradictions_json"] else None,
         "comparison_status": row["comparison_status"],
         "comparison_error": row["comparison_error"],
+        "comparison_message": row["comparison_message"],
         "followups_status": row["followups_status"],
         "followups_error": row["followups_error"],
+        "followups_message": row["followups_message"],
         "created_at": row["created_at"],
         "updated_at": row["updated_at"],
     }
@@ -226,8 +230,10 @@ def update_collection(user_id, collection_id, **fields):
     plain_columns = {
         "comparison_status": "comparison_status",
         "comparison_error": "comparison_error",
+        "comparison_message": "comparison_message",
         "followups_status": "followups_status",
         "followups_error": "followups_error",
+        "followups_message": "followups_message",
     }
     sets, values = [], []
     for key, value in fields.items():
@@ -264,7 +270,8 @@ def add_paper_to_collection(user_id, collection_id, paper):
             """UPDATE collections
                SET papers_json = ?, comparison_json = NULL, followups_json = NULL,
                    contradictions_json = NULL, comparison_status = NULL, comparison_error = NULL,
-                   followups_status = NULL, followups_error = NULL, updated_at = ?
+                   comparison_message = NULL, followups_status = NULL, followups_error = NULL,
+                   followups_message = NULL, updated_at = ?
                WHERE collection_id = ? AND user_id = ?""",
             (json.dumps(papers), time.time(), collection_id, user_id),
         )
@@ -285,7 +292,8 @@ def remove_paper_from_collection(user_id, collection_id, paper_id):
             """UPDATE collections
                SET papers_json = ?, comparison_json = NULL, followups_json = NULL,
                    contradictions_json = NULL, comparison_status = NULL, comparison_error = NULL,
-                   followups_status = NULL, followups_error = NULL, updated_at = ?
+                   comparison_message = NULL, followups_status = NULL, followups_error = NULL,
+                   followups_message = NULL, updated_at = ?
                WHERE collection_id = ? AND user_id = ?""",
             (json.dumps(papers), time.time(), collection_id, user_id),
         )

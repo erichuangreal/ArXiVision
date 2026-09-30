@@ -142,16 +142,6 @@
   margin-bottom: var(--space-4);
 }
 
-.spin {
-  animation: spin 0.9s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 @media (max-width: 480px) {
   .signin {
     padding: var(--space-4) var(--space-3);

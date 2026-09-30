@@ -139,7 +139,8 @@ def _format_paper_context(docs):
 
 def compare_papers(
     rag, question, paper_ids, k=6,
-    model=DEFAULT_MODEL, temperature=DEFAULT_TEMPERATURE, language_style="standard"
+    model=DEFAULT_MODEL, temperature=DEFAULT_TEMPERATURE, language_style="standard",
+    progress_callback=None,
 ):
     if rag.vectorstore is None:
         raise ValueError("Vectorstore not initialized.")
@@ -150,8 +151,10 @@ def compare_papers(
     )
     rows = []
 
-    for paper_id in paper_ids:
+    for index, paper_id in enumerate(paper_ids, start=1):
         metadata = rag.paper_metadata.get(paper_id, {})
+        if progress_callback:
+            progress_callback(f"Comparing {index}/{len(paper_ids)}: {metadata.get('title', paper_id)}")
         docs = rag.vectorstore.similarity_search(
             question, k=k, filter={"paper_id": paper_id}
         )
@@ -208,11 +211,14 @@ def _format_comparison_table(comparison_rows):
 
 def find_contradictions(
     question, comparison_rows,
-    model=DEFAULT_MODEL, temperature=DEFAULT_TEMPERATURE, language_style="standard"
+    model=DEFAULT_MODEL, temperature=DEFAULT_TEMPERATURE, language_style="standard",
+    progress_callback=None,
 ):
     # A per-paper row is filled in isolation (compare_papers scopes retrieval
     # to one paper at a time), so nothing sees the other rows until here -
     # this is the only pass that can actually compare across papers.
+    if progress_callback:
+        progress_callback("Checking for contradictions and gaps across all specimens...")
     llm = ChatOpenAI(model=model, temperature=temperature)
     style_instruction = LANGUAGE_STYLE_INSTRUCTIONS.get(
         language_style, LANGUAGE_STYLE_INSTRUCTIONS["standard"]
@@ -237,8 +243,11 @@ def find_contradictions(
 
 def suggest_followups(
     question, comparison_rows, max_suggestions=5,
-    model=DEFAULT_MODEL, temperature=DEFAULT_TEMPERATURE, language_style="standard"
+    model=DEFAULT_MODEL, temperature=DEFAULT_TEMPERATURE, language_style="standard",
+    progress_callback=None,
 ):
+    if progress_callback:
+        progress_callback("Drafting follow-up suggestions...")
     llm = ChatOpenAI(model=model, temperature=temperature)
     style_instruction = LANGUAGE_STYLE_INSTRUCTIONS.get(
         language_style, LANGUAGE_STYLE_INSTRUCTIONS["standard"]

@@ -161,6 +161,12 @@ export function CollectionDetail() {
 
   const pollRef = useRef(null);
 
+  // Live progress log per job, same idea as the expedition log.
+  const [compareLines, setCompareLines] = useState([]);
+  const lastCompareMessage = useRef(null);
+  const [followupLines, setFollowupLines] = useState([]);
+  const lastFollowupMessage = useRef(null);
+
   useEffect(() => {
     api
       .getCollection(apiKey, id)
@@ -173,6 +179,18 @@ export function CollectionDetail() {
   // the same pattern the expedition log already polls for.
   const comparing = collection?.comparison_status === 'running';
   const drafting = collection?.followups_status === 'running';
+
+  useEffect(() => {
+    if (!collection?.comparison_message || collection.comparison_message === lastCompareMessage.current) return;
+    lastCompareMessage.current = collection.comparison_message;
+    setCompareLines((prev) => [...prev, { message: collection.comparison_message, at: collection.updated_at }]);
+  }, [collection?.comparison_message, collection?.updated_at]);
+
+  useEffect(() => {
+    if (!collection?.followups_message || collection.followups_message === lastFollowupMessage.current) return;
+    lastFollowupMessage.current = collection.followups_message;
+    setFollowupLines((prev) => [...prev, { message: collection.followups_message, at: collection.updated_at }]);
+  }, [collection?.followups_message, collection?.updated_at]);
 
   useEffect(() => {
     if (!comparing && !drafting) {
@@ -190,6 +208,8 @@ export function CollectionDetail() {
 
   function handleCompare() {
     setActionError(null);
+    setCompareLines([]);
+    lastCompareMessage.current = null;
     api
       .compareCollection(apiKey, id)
       .then(setCollection)
@@ -198,6 +218,8 @@ export function CollectionDetail() {
 
   function handleFollowups() {
     setActionError(null);
+    setFollowupLines([]);
+    lastFollowupMessage.current = null;
     api
       .followupsForCollection(apiKey, id)
       .then(setCollection)
@@ -325,6 +347,28 @@ export function CollectionDetail() {
           {drafting ? 'Drafting…' : 'Suggest follow-ups'}
         </button>
       </section>
+
+      {comparing && (
+        <ol className="collection-detail__progress mono">
+          {compareLines.map((line, i) => (
+            <li key={i} className="collection-detail__progress-line">
+              <Icon.Loading className="spin" size={12} />
+              <span>{line.message}</span>
+            </li>
+          ))}
+        </ol>
+      )}
+
+      {drafting && (
+        <ol className="collection-detail__progress mono">
+          {followupLines.map((line, i) => (
+            <li key={i} className="collection-detail__progress-line">
+              <Icon.Loading className="spin" size={12} />
+              <span>{line.message}</span>
+            </li>
+          ))}
+        </ol>
+      )}
 
       {collection.comparison && (
         <section className="collection-detail__comparison">
