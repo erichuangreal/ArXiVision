@@ -159,4 +159,7 @@ Views the size of the database.
 
 ![Extracting and downloading papers](pics/image.png)
 ![Evaluation](pics/image2.png)
-![Metrics and results](pics/image3.png)
+### Metrics and results
+![Metrics and results](pics/metrics1.png)
+### Evaluation
+![Evaluation](pics/metrics2.png)
